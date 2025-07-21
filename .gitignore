@@ -2,7 +2,7 @@
 node_modules/
 
 # Build output
-dist/
+build/
 
 # Logs
 *.log
@@ -48,3 +48,7 @@ trees/
 specs/
 temp/
 systemprompt-mcp-reddit/
+Effect-TS/
+Effect-TS
+exa-mcp-server-websets/
+exa-mcp-server-websets

@@ -52,3 +52,6 @@ Thumbs.db
 *.temp
 .cache/
 systemprompt-mcp-reddit/
+
+exa-mcp-server-websets/
+Effect-TS/
