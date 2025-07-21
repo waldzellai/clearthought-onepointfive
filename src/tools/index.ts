@@ -14,6 +14,7 @@ import { registerScientificMethod } from './scientific-method.js';
 import { registerStructuredArgumentation } from './structured-argumentation.js';
 import { registerVisualReasoning } from './visual-reasoning.js';
 import { registerSessionManagement } from './session-management.js';
+import { registerClearThoughtManager } from './clearThoughtManager.js';
 
 /**
  * Registers all Clear Thought tools with the provided MCP server instance
@@ -21,7 +22,10 @@ import { registerSessionManagement } from './session-management.js';
  * @param sessionState - The session state manager
  */
 export function registerTools(server: McpServer, sessionState: SessionState): void {
-  // Register all thinking and reasoning tools
+  // Register the unified Clear Thought Manager tool (NEW!)
+  registerClearThoughtManager(server, sessionState);
+  
+  // Register all individual thinking and reasoning tools (for backward compatibility)
   registerSequentialThinking(server, sessionState);
   registerMentalModel(server, sessionState);
   registerDebuggingApproach(server, sessionState);

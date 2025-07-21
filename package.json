@@ -10,7 +10,7 @@
     },
     "type": "module",
     "bin": {
-        "clear-thought-mcp": "build/index.js"
+        "clear-thought-onepointfive": "build/index.js"
     },
     "files": [
         "dist",
