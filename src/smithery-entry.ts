@@ -4,17 +4,9 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { randomUUID } from "node:crypto";
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-import {
-  ListResourcesRequestSchema,
-  ReadResourceRequestSchema,
-  ListToolsRequestSchema,
-  CallToolRequestSchema,
-} from "@modelcontextprotocol/sdk/types.js";
-import { handleListResources, handleResourceCall } from "./handlers/resource-handlers.js";
-import { handleListTools, handleToolCall } from "./handlers/tool-handlers.js";
-import { serverConfig, serverCapabilities } from "./config/server-config.js";
+import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import createClearThoughtServer from "./index.js";
 
 config();
 
@@ -24,9 +16,16 @@ export class ClearThoughtMCPServer {
   private mcpTransport: StreamableHTTPServerTransport;
 
   constructor() {
-    // Initialize MCP server
-    this.mcpServer = new Server(serverConfig as any, serverCapabilities as any);
-    this.setupMCPHandlers();
+    // Initialize MCP server using the proper factory function
+    this.mcpServer = createClearThoughtServer({
+      sessionId: randomUUID(),
+      config: {
+        debug: false,
+        maxThoughtsPerSession: 1000,
+        sessionTimeout: 3600000,
+        enableMetrics: true
+      }
+    });
 
     // Initialize MCP transport
     this.mcpTransport = new StreamableHTTPServerTransport({
@@ -39,13 +38,6 @@ export class ClearThoughtMCPServer {
     this.app = express();
     this.setupMiddleware();
     this.setupRoutes();
-  }
-
-  private setupMCPHandlers(): void {
-    this.mcpServer.setRequestHandler(ListResourcesRequestSchema, handleListResources);
-    this.mcpServer.setRequestHandler(ReadResourceRequestSchema, handleResourceCall);
-    this.mcpServer.setRequestHandler(ListToolsRequestSchema, handleListTools);
-    this.mcpServer.setRequestHandler(CallToolRequestSchema, handleToolCall);
   }
 
   private setupMCPTransport(): void {
@@ -72,15 +64,7 @@ export class ClearThoughtMCPServer {
         capabilities: {
           mcp: true,
           tools: [
-            "sequentialthinking",
-            "mentalmodel",
-            "debuggingapproach",
-            "collaborativereasoning",
-            "decisionframework",
-            "metacognitivemonitoring",
-            "scientificmethod",
-            "structuredargumentation",
-            "visualreasoning"
+            "clear_thought_manager"
           ]
         },
       });
@@ -129,14 +113,16 @@ if (isMainModule) {
 
 // Export for Smithery - returns the MCP server instance
 export default function () {
-  // Create MCP server
-  const mcpServer = new Server(serverConfig as any, serverCapabilities as any);
-  
-  // Set up handlers
-  mcpServer.setRequestHandler(ListResourcesRequestSchema, handleListResources);
-  mcpServer.setRequestHandler(ReadResourceRequestSchema, handleResourceCall);
-  mcpServer.setRequestHandler(ListToolsRequestSchema, handleListTools);
-  mcpServer.setRequestHandler(CallToolRequestSchema, handleToolCall);
+  // Create MCP server using the proper factory function
+  const mcpServer = createClearThoughtServer({
+    sessionId: randomUUID(),
+    config: {
+      debug: false,
+      maxThoughtsPerSession: 1000,
+      sessionTimeout: 3600000,
+      enableMetrics: true
+    }
+  });
   
   // For HTTP support, we need to start the HTTP server in the background
   const httpServer = new ClearThoughtMCPServer();

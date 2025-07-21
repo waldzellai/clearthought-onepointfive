@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import type { SessionState } from '../../state/SessionState.js';
-import type { CollaborativeSession, PersonaData, ContributionData } from '../../types/index.js';
+import type { SessionState } from '../../../state/SessionState.js';
+import type { CollaborativeSession, PersonaData, ContributionData } from '../../../types/index.js';
 
 const PersonaSchema = z.object({
   id: z.string(),

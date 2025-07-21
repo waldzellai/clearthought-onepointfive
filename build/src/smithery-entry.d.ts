@@ -5,7 +5,6 @@ export declare class ClearThoughtMCPServer {
     private mcpServer;
     private mcpTransport;
     constructor();
-    private setupMCPHandlers;
     private setupMCPTransport;
     private setupMiddleware;
     private setupRoutes;

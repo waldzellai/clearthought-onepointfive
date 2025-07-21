@@ -4,6 +4,5 @@ export declare const serverConfig: {
 };
 export declare const serverCapabilities: {
     tools: {};
-    resources: {};
 };
 //# sourceMappingURL=server-config.d.ts.map
