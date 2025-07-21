@@ -4,6 +4,5 @@ export const serverConfig = {
 };
 export const serverCapabilities = {
     tools: {},
-    resources: {},
 };
 //# sourceMappingURL=server-config.js.map

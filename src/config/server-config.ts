@@ -5,5 +5,4 @@ export const serverConfig = {
 
 export const serverCapabilities = {
   tools: {},
-  resources: {},
 };

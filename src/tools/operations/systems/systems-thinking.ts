@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import type { SessionState } from '../../state/SessionState.js';
-import type { SystemsData } from '../../types/index.js';
+import type { SessionState } from '../../../state/SessionState.js';
+import type { SystemsData } from '../../../types/index.js';
 
 export function registerSystemsThinking(server: McpServer, sessionState: SessionState) {
   server.tool(
@@ -62,7 +62,7 @@ export function registerSystemsThinking(server: McpServer, sessionState: Session
             sessionContext: {
               sessionId: sessionState.sessionId,
               totalSystemsAnalyses: systemsAnalyses.length,
-              recentAnalyses: recentAnalyses.map(a => ({
+              recentAnalyses: recentAnalyses.map((a: any) => ({
                 system: a.system,
                 componentsCount: a.components.length,
                 iteration: a.iteration
