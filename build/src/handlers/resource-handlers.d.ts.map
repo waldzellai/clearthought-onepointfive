@@ -1,1 +1,0 @@
-{"version":3,"file":"resource-handlers.d.ts","sourceRoot":"","sources":["../../../src/handlers/resource-handlers.ts"],"names":[],"mappings":"AAAA,OAAO,EACL,oBAAoB,EACpB,mBAAmB,EACnB,mBAAmB,EACnB,kBAAkB,EACnB,MAAM,oCAAoC,CAAC;AAE5C,wBAAsB,mBAAmB,CACvC,OAAO,EAAE,oBAAoB,GAC5B,OAAO,CAAC,mBAAmB,CAAC,CAW9B;AAED,wBAAsB,kBAAkB,CACtC,OAAO,EAAE,mBAAmB,GAC3B,OAAO,CAAC,kBAAkB,CAAC,CAmB7B"}

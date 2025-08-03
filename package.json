@@ -10,7 +10,7 @@
     },
     "type": "module",
     "bin": {
-        "clear-thought-onepointfive": "build/index.js"
+        "clear-thought-onepointfive": "dist/index.js"
     },
     "files": [
         "dist",
@@ -20,59 +20,45 @@
         "LICENSE"
     ],
     "scripts": {
-        "build": "tsc && tsc-alias && chmod +x build/index.js",
+        "build": "tsc && tsc-alias && chmod +x dist/index.js",
         "build:smithery": "npx @smithery/cli build",
         "test": "vitest",
         "test:coverage": "vitest --coverage",
-        "clean": "rm -rf build dist",
+        "clean": "rm -rf dist",
         "typecheck": "tsc --noEmit",
         "lint": "echo \"No linting configured\" && exit 0",
         "docker:build": "docker build -t waldzellai/clear-thought .",
         "docker:run": "docker run -p 3000:3000 waldzellai/clear-thought",
         "dev": "tsx watch src/index.ts",
         "dev:http": "tsx src/smithery-entry.ts",
-        "start": "node build/index.js",
+        "start": "node dist/index.js",
         "start:dev": "tsx src/index.ts",
-        "start:http": "node build/src/smithery-entry.js",
+        "start:http": "node dist/smithery-entry.js",
         "prepare": "npm run build",
         "watch": "tsc --watch",
         "prebuild": "npm run clean",
         "prepublishOnly": "npm run build",
         "dev:watch": "npm run watch",
         "deploy": "smithery deploy",
-        "inspector": "npx @modelcontextprotocol/inspector build/index.js"
+        "inspector": "npx @modelcontextprotocol/inspector dist/index.js"
     },
     "repository": {
         "type": "git",
         "url": "git+https://github.com/waldzellai/waldzell-mcp.git"
     },
     "dependencies": {
-        "@modelcontextprotocol/sdk": "^1.5.0",
-        "@smithery/sdk": "^1.4.3",
-        "express": "^4.18.2",
-        "lodash": "^4.17.21",
-        "zod": "^3.25.27",
-        "zod-to-json-schema": "^3.22.4",
-        "dotenv": "^16.5.0",
-        "cors": "^2.8.5",
-        "cookie-parser": "^1.4.7",
-        "ajv": "^8.17.1",
-        "json-schema": "^0.4.0"
+        "@modelcontextprotocol/sdk": "^1.17.0",
+        "@smithery/sdk": "^1.5.5",
+        "zod": "^3.23.8"
     },
     "devDependencies": {
-        "@types/express": "^4.17.21",
-        "@types/lodash": "^4.14.202",
+        "@types/json-schema": "^7.0.15",
         "@types/node": "^22",
-        "@types/supertest": "^6.0.2",
         "@vitest/coverage-v8": "^1.2.0",
-        "supertest": "^6.3.4",
+        "tsc-alias": "^1.8.16",
         "tsx": "^4.7.0",
         "typescript": "^5.3.3",
-        "vitest": "^1.2.0",
-        "tsc-alias": "^1.8.16",
-        "@types/cors": "^2.8.18",
-        "@types/cookie-parser": "^1.4.8",
-        "@types/json-schema": "^7.0.15"
+        "vitest": "^1.2.0"
     },
     "keywords": [
         "mcp",
@@ -86,16 +72,16 @@
     "engines": {
         "node": ">=18"
     },
-    "main": "./build/index.js",
-    "module": "./build/src/smithery-entry.js",
+    "main": "./dist/index.js",
+    "module": "./dist/smithery-entry.js",
     "exports": {
         ".": {
             "import": "./dist/index.js",
             "require": "./dist/index.js"
         },
         "./server": {
-            "import": "./dist/server.js",
-            "require": "./dist/server.js"
+            "import": "./dist/smithery-entry.js",
+            "require": "./dist/smithery-entry.js"
         },
         "./tools/*": {
             "import": "./dist/tools/*.js",
