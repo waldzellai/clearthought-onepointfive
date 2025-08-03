@@ -47,4 +47,3 @@ export function safeParseConfig(config) {
     console.warn('Invalid configuration provided, using defaults:', result.error.issues);
     return defaultConfig;
 }
-//# sourceMappingURL=config.js.map

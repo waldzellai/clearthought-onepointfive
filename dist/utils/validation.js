@@ -13,4 +13,3 @@ export function validateWithErrors(data, schema) {
         throw new Error(`Validation failed: ${errorMessages.join(', ')}`);
     }
 }
-//# sourceMappingURL=validation.js.map

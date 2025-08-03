@@ -1,8 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { SessionState } from './state/SessionState.js';
 import { registerTools } from './tools/index.js';
-// Export the config schema for Smithery
-export { ServerConfigSchema as configSchema } from './config.js';
 /**
  * Creates a Clear Thought MCP server instance for a specific session
  * @param sessionId - Unique identifier for this session
@@ -19,7 +17,6 @@ export default function createClearThoughtServer({ sessionId, config }) {
     const sessionState = new SessionState(sessionId, config);
     // Register all tools for this session
     registerTools(mcpServer, sessionState);
-    // Return the underlying Server instance for Smithery SDK
-    return mcpServer.server;
+    // Return the MCP server instance
+    return mcpServer;
 }
-//# sourceMappingURL=index.js.map

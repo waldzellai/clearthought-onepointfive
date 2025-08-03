@@ -5,7 +5,7 @@
  * that manages all types of reasoning data through a single interface.
  */
 
-import { BaseStore } from './BaseStore.js';
+
 import { 
   ThoughtData, 
   MentalModelData, 
@@ -41,9 +41,10 @@ export type ClearThoughtData =
 /**
  * Unified store that manages all Clear Thought data types
  */
-export class UnifiedStore extends BaseStore<ClearThoughtData> {
+export class UnifiedStore {
+  private data = new Map<string, ClearThoughtData>();
+
   constructor() {
-    super('UnifiedStore');
   }
 
   /**
