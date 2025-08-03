@@ -53,358 +53,284 @@ export function registerTools(server: McpServer, sessionState: SessionState): vo
       }).optional().describe('Advanced reasoning options')
     },
     async (args, extra) => {
-      // Route to the appropriate operation handler based on the operation parameter
-      switch (args.operation) {
-        case 'sequential_thinking':
-          return await handleSequentialThinking(args, sessionState);
-        case 'mental_model':
-          return await handleMentalModel(args, sessionState);
-        case 'debugging_approach':
-          return await handleDebuggingApproach(args, sessionState);
-        case 'creative_thinking':
-          return await handleCreativeThinking(args, sessionState);
-        case 'visual_reasoning':
-          return await handleVisualReasoning(args, sessionState);
-        case 'metacognitive_monitoring':
-          return await handleMetacognitiveMonitoring(args, sessionState);
-        case 'scientific_method':
-          return await handleScientificMethod(args, sessionState);
+      const { operation, prompt, parameters = {} } = args;
+      
+      // Unified handler for all operations
+      switch (operation) {
+        case 'sequential_thinking': {
+          const thoughtData = {
+            thought: prompt,
+            thoughtNumber: parameters.thoughtNumber || 1,
+            totalThoughts: parameters.totalThoughts || 1,
+            nextThoughtNeeded: parameters.nextThoughtNeeded || false,
+            isRevision: parameters.isRevision,
+            revisesThought: parameters.revisesThought,
+            branchFromThought: parameters.branchFromThought,
+            branchId: parameters.branchId,
+            needsMoreThoughts: parameters.needsMoreThoughts
+          };
+          
+          const added = sessionState.addThought(thoughtData);
+          const allThoughts = sessionState.getThoughts();
+          const recentThoughts = allThoughts.slice(-3);
+          
+          return {
+            content: [{
+              type: 'text' as const,
+              text: JSON.stringify({
+                toolOperation: 'sequential_thinking',
+                ...thoughtData,
+                status: added ? 'success' : 'limit_reached',
+                sessionContext: {
+                  sessionId: sessionState.sessionId,
+                  totalThoughts: allThoughts.length,
+                  remainingThoughts: sessionState.getRemainingThoughts(),
+                  recentThoughts: recentThoughts.map(t => ({
+                    thoughtNumber: t.thoughtNumber,
+                    isRevision: t.isRevision
+                  }))
+                }
+              }, null, 2)
+            }]
+          };
+        }
+        
+        case 'mental_model': {
+          const modelData = {
+            modelName: parameters.model || 'first_principles',
+            problem: prompt,
+            steps: parameters.steps || [],
+            reasoning: parameters.reasoning || '',
+            conclusion: parameters.conclusion || ''
+          };
+          
+          sessionState.addMentalModel(modelData);
+          const allModels = sessionState.getMentalModels();
+          
+          return {
+            content: [{
+              type: 'text' as const,
+              text: JSON.stringify({
+                toolOperation: 'mental_model',
+                ...modelData,
+                sessionContext: {
+                  sessionId: sessionState.sessionId,
+                  totalModels: allModels.length,
+                  recentModels: allModels.slice(-3).map(m => ({ modelName: m.modelName, problem: m.problem }))
+                }
+              }, null, 2)
+            }]
+          };
+        }
+        
+        case 'debugging_approach': {
+          const debugData = {
+            approachName: parameters.approach || 'binary_search',
+            issue: prompt,
+            steps: parameters.steps || [],
+            findings: parameters.findings || '',
+            resolution: parameters.resolution || ''
+          };
+          
+          sessionState.addDebuggingSession(debugData);
+          const allSessions = sessionState.getDebuggingSessions();
+          
+          return {
+            content: [{
+              type: 'text' as const,
+              text: JSON.stringify({
+                toolOperation: 'debugging_approach',
+                ...debugData,
+                sessionContext: {
+                  sessionId: sessionState.sessionId,
+                  totalSessions: allSessions.length,
+                  recentSessions: allSessions.slice(-3).map(s => ({ approachName: s.approachName, issue: s.issue }))
+                }
+              }, null, 2)
+            }]
+          };
+        }
+        
+        case 'creative_thinking': {
+          const creativeData = {
+            prompt: prompt,
+            ideas: parameters.ideas || [],
+            techniques: parameters.techniques || ['brainstorming'],
+            connections: parameters.connections || [],
+            insights: parameters.insights || [],
+            sessionId: `creative-${Date.now()}`,
+            iteration: parameters.iteration || 1,
+            nextIdeaNeeded: parameters.nextIdeaNeeded || false
+          };
+          
+          sessionState.addCreativeSession(creativeData);
+          const allSessions = sessionState.getCreativeSessions();
+          
+          return {
+            content: [{
+              type: 'text' as const,
+              text: JSON.stringify({
+                toolOperation: 'creative_thinking',
+                ...creativeData,
+                sessionContext: {
+                  sessionId: sessionState.sessionId,
+                  totalSessions: allSessions.length,
+                  recentSessions: allSessions.slice(-3).map(s => ({ prompt: s.prompt, techniques: s.techniques }))
+                }
+              }, null, 2)
+            }]
+          };
+        }
+        
+        case 'visual_reasoning': {
+          const visualData = {
+            operation: 'create' as const,
+            diagramId: parameters.diagramId || `diagram-${Date.now()}`,
+            diagramType: parameters.diagramType || 'flowchart',
+            iteration: parameters.iteration || 1,
+            nextOperationNeeded: parameters.nextOperationNeeded || false
+          };
+          
+          sessionState.addVisualOperation(visualData);
+          const allOperations = sessionState.getVisualOperations();
+          
+          return {
+            content: [{
+              type: 'text' as const,
+              text: JSON.stringify({
+                toolOperation: 'visual_reasoning',
+                ...visualData,
+                sessionContext: {
+                  sessionId: sessionState.sessionId,
+                  totalOperations: allOperations.length,
+                  recentOperations: allOperations.slice(-3).map(v => ({ diagramType: v.diagramType, operation: v.operation }))
+                }
+              }, null, 2)
+            }]
+          };
+        }
+        
+        case 'metacognitive_monitoring': {
+          const metaData = {
+            task: prompt,
+            stage: parameters.stage || 'monitoring',
+            overallConfidence: parameters.overallConfidence || 0.5,
+            uncertaintyAreas: parameters.uncertaintyAreas || [],
+            recommendedApproach: parameters.recommendedApproach || '',
+            monitoringId: `meta-${Date.now()}`,
+            iteration: parameters.iteration || 1,
+            nextAssessmentNeeded: parameters.nextAssessmentNeeded || false
+          };
+          
+          sessionState.addMetacognitive(metaData);
+          const allSessions = sessionState.getMetacognitiveSessions();
+          
+          return {
+            content: [{
+              type: 'text' as const,
+              text: JSON.stringify({
+                toolOperation: 'metacognitive_monitoring',
+                ...metaData,
+                sessionContext: {
+                  sessionId: sessionState.sessionId,
+                  totalSessions: allSessions.length,
+                  recentSessions: allSessions.slice(-3).map(m => ({ task: m.task, stage: m.stage }))
+                }
+              }, null, 2)
+            }]
+          };
+        }
+        
+        case 'scientific_method': {
+          const scientificData = {
+            stage: parameters.stage || 'hypothesis',
+            inquiryId: `sci-${Date.now()}`,
+            iteration: parameters.iteration || 1,
+            nextStageNeeded: parameters.nextStageNeeded || false
+          };
+          
+          sessionState.addScientificInquiry(scientificData);
+          const allInquiries = sessionState.getScientificInquiries();
+          
+          return {
+            content: [{
+              type: 'text' as const,
+              text: JSON.stringify({
+                toolOperation: 'scientific_method',
+                ...scientificData,
+                sessionContext: {
+                  sessionId: sessionState.sessionId,
+                  totalInquiries: allInquiries.length,
+                  recentInquiries: allInquiries.slice(-3).map(s => ({ stage: s.stage }))
+                }
+              }, null, 2)
+            }]
+          };
+        }
+        
         case 'collaborative_reasoning':
-          return await handleCollaborativeReasoning(args, sessionState);
         case 'decision_framework':
-          return await handleDecisionFramework(args, sessionState);
         case 'socratic_method':
-          return await handleSocraticMethod(args, sessionState);
         case 'structured_argumentation':
-          return await handleStructuredArgumentation(args, sessionState);
-        case 'systems_thinking':
-          return await handleSystemsThinking(args, sessionState);
-        case 'session_info':
-        case 'session_export':
-        case 'session_import':
-          return await handleSessionOperations(args, sessionState);
+        case 'systems_thinking': {
+          // Placeholder implementations for operations that don't have full data structures yet
+          return {
+            content: [{
+              type: 'text' as const,
+              text: JSON.stringify({
+                toolOperation: operation,
+                prompt: prompt,
+                parameters: parameters,
+                result: `${operation} operation completed`,
+                sessionContext: {
+                  sessionId: sessionState.sessionId,
+                  stats: sessionState.getStats()
+                }
+              }, null, 2)
+            }]
+          };
+        }
+        
+        case 'session_info': {
+          return {
+            content: [{
+              type: 'text' as const,
+              text: JSON.stringify({
+                toolOperation: 'session_info',
+                sessionId: sessionState.sessionId,
+                stats: sessionState.getStats()
+              }, null, 2)
+            }]
+          };
+        }
+        
+        case 'session_export': {
+          return {
+            content: [{
+              type: 'text' as const,
+              text: JSON.stringify({
+                toolOperation: 'session_export',
+                sessionData: sessionState.export()
+              }, null, 2)
+            }]
+          };
+        }
+        
+        case 'session_import': {
+          return {
+            content: [{
+              type: 'text' as const,
+              text: JSON.stringify({
+                toolOperation: 'session_import',
+                result: 'Session import completed'
+              }, null, 2)
+            }]
+          };
+        }
+        
         default:
-          throw new Error(`Unknown operation: ${args.operation}`);
+          throw new Error(`Unknown operation: ${operation}`);
       }
     }
   );
-}
-
-// Handler functions for the unified tool
-async function handleSequentialThinking(args: any, sessionState: SessionState) {
-  const thoughtData = {
-    thought: args.prompt,
-    thoughtNumber: args.parameters?.thoughtNumber || 1,
-    totalThoughts: args.parameters?.totalThoughts || 1,
-    nextThoughtNeeded: args.parameters?.nextThoughtNeeded || false,
-    isRevision: args.parameters?.isRevision,
-    revisesThought: args.parameters?.revisesThought,
-    branchFromThought: args.parameters?.branchFromThought,
-    branchId: args.parameters?.branchId,
-    needsMoreThoughts: args.parameters?.needsMoreThoughts
-  };
-  
-  const added = sessionState.addThought(thoughtData);
-  const allThoughts = sessionState.getThoughts();
-  const recentThoughts = allThoughts.slice(-3);
-  
-  return {
-    content: [{
-      type: 'text' as const,
-      text: JSON.stringify({
-        ...thoughtData,
-        status: added ? 'success' : 'limit_reached',
-        sessionContext: {
-          sessionId: sessionState.sessionId,
-          totalThoughts: allThoughts.length,
-          remainingThoughts: sessionState.getRemainingThoughts(),
-          recentThoughts: recentThoughts.map(t => ({
-            thoughtNumber: t.thoughtNumber,
-            isRevision: t.isRevision
-          }))
-        }
-      }, null, 2)
-    }]
-  };
-}
-
-async function handleMentalModel(args: any, sessionState: SessionState) {
-  const modelData = {
-    modelName: args.parameters?.model || 'first_principles',
-    problem: args.prompt,
-    steps: args.parameters?.steps || [],
-    reasoning: args.parameters?.reasoning || '',
-    conclusion: args.parameters?.conclusion || ''
-  };
-  
-  sessionState.addMentalModel(modelData);
-  const allModels = sessionState.getMentalModels();
-  
-  return {
-    content: [{
-      type: 'text' as const,
-      text: JSON.stringify({
-        toolOperation: 'mental_model',
-        ...modelData,
-        sessionContext: {
-          sessionId: sessionState.sessionId,
-          totalModels: allModels.length,
-          recentModels: allModels.slice(-3).map(m => ({ modelName: m.modelName, problem: m.problem }))
-        }
-      }, null, 2)
-    }]
-  };
-}
-
-async function handleDebuggingApproach(args: any, sessionState: SessionState) {
-  const debugData = {
-    approachName: args.parameters?.approach || 'binary_search',
-    issue: args.prompt,
-    steps: args.parameters?.steps || [],
-    findings: args.parameters?.findings || '',
-    resolution: args.parameters?.resolution || ''
-  };
-  
-  sessionState.addDebuggingSession(debugData);
-  const allSessions = sessionState.getDebuggingSessions();
-  
-  return {
-    content: [{
-      type: 'text' as const,
-      text: JSON.stringify({
-        toolOperation: 'debugging_approach',
-        ...debugData,
-        sessionContext: {
-          sessionId: sessionState.sessionId,
-          totalSessions: allSessions.length,
-          recentSessions: allSessions.slice(-3).map(s => ({ approachName: s.approachName, issue: s.issue }))
-        }
-      }, null, 2)
-    }]
-  };
-}
-
-async function handleCreativeThinking(args: any, sessionState: SessionState) {
-  const creativeData = {
-    prompt: args.prompt,
-    ideas: args.parameters?.ideas || [],
-    techniques: args.parameters?.techniques || ['brainstorming'],
-    connections: args.parameters?.connections || [],
-    insights: args.parameters?.insights || [],
-    sessionId: `creative-${Date.now()}`,
-    iteration: args.parameters?.iteration || 1,
-    nextIdeaNeeded: args.parameters?.nextIdeaNeeded || false
-  };
-  
-  sessionState.addCreativeSession(creativeData);
-  const allSessions = sessionState.getCreativeSessions();
-  
-  return {
-    content: [{
-      type: 'text' as const,
-      text: JSON.stringify({
-        toolOperation: 'creative_thinking',
-        ...creativeData,
-        sessionContext: {
-          sessionId: sessionState.sessionId,
-          totalSessions: allSessions.length,
-          recentSessions: allSessions.slice(-3).map(s => ({ prompt: s.prompt, techniques: s.techniques }))
-        }
-      }, null, 2)
-    }]
-  };
-}
-
-async function handleVisualReasoning(args: any, sessionState: SessionState) {
-  const visualData = {
-    operation: 'create' as const,
-    diagramId: args.parameters?.diagramId || `diagram-${Date.now()}`,
-    diagramType: args.parameters?.diagramType || 'flowchart',
-    iteration: args.parameters?.iteration || 1,
-    nextOperationNeeded: args.parameters?.nextOperationNeeded || false
-  };
-  
-  sessionState.addVisualOperation(visualData);
-  const allOperations = sessionState.getVisualOperations();
-  
-  return {
-    content: [{
-      type: 'text' as const,
-      text: JSON.stringify({
-        toolOperation: 'visual_reasoning',
-        ...visualData,
-        sessionContext: {
-          sessionId: sessionState.sessionId,
-          totalOperations: allOperations.length,
-          recentOperations: allOperations.slice(-3).map(v => ({ diagramType: v.diagramType, operation: v.operation }))
-        }
-      }, null, 2)
-    }]
-  };
-}
-
-async function handleMetacognitiveMonitoring(args: any, sessionState: SessionState) {
-  const metaData = {
-    task: args.prompt,
-    stage: args.parameters?.stage || 'monitoring',
-    overallConfidence: args.parameters?.overallConfidence || 0.5,
-    uncertaintyAreas: args.parameters?.uncertaintyAreas || [],
-    recommendedApproach: args.parameters?.recommendedApproach || '',
-    monitoringId: `meta-${Date.now()}`,
-    iteration: args.parameters?.iteration || 1,
-    nextAssessmentNeeded: args.parameters?.nextAssessmentNeeded || false
-  };
-  
-  sessionState.addMetacognitive(metaData);
-  const allSessions = sessionState.getMetacognitiveSessions();
-  
-  return {
-    content: [{
-      type: 'text' as const,
-      text: JSON.stringify({
-        toolOperation: 'metacognitive_monitoring',
-        ...metaData,
-        sessionContext: {
-          sessionId: sessionState.sessionId,
-          totalSessions: allSessions.length,
-          recentSessions: allSessions.slice(-3).map(m => ({ task: m.task, stage: m.stage }))
-        }
-      }, null, 2)
-    }]
-  };
-}
-
-async function handleScientificMethod(args: any, sessionState: SessionState) {
-  const scientificData = {
-    stage: args.parameters?.stage || 'hypothesis',
-    inquiryId: `sci-${Date.now()}`,
-    iteration: args.parameters?.iteration || 1,
-    nextStageNeeded: args.parameters?.nextStageNeeded || false
-  };
-  
-  sessionState.addScientificInquiry(scientificData);
-  const allInquiries = sessionState.getScientificInquiries();
-  
-  return {
-    content: [{
-      type: 'text' as const,
-      text: JSON.stringify({
-        toolOperation: 'scientific_method',
-        ...scientificData,
-        sessionContext: {
-          sessionId: sessionState.sessionId,
-          totalInquiries: allInquiries.length,
-          recentInquiries: allInquiries.slice(-3).map(s => ({ stage: s.stage }))
-        }
-      }, null, 2)
-    }]
-  };
-}
-
-async function handleCollaborativeReasoning(args: any, sessionState: SessionState) {
-  return {
-    content: [{
-      type: 'text' as const,
-      text: JSON.stringify({
-        toolOperation: 'collaborative_reasoning',
-        prompt: args.prompt,
-        personas: args.parameters?.personas || ['analyst', 'critic'],
-        result: 'Collaborative reasoning completed'
-      }, null, 2)
-    }]
-  };
-}
-
-async function handleDecisionFramework(args: any, sessionState: SessionState) {
-  return {
-    content: [{
-      type: 'text' as const,
-      text: JSON.stringify({
-        toolOperation: 'decision_framework',
-        prompt: args.prompt,
-        framework: args.parameters?.framework || 'pros_cons',
-        result: 'Decision framework applied successfully'
-      }, null, 2)
-    }]
-  };
-}
-
-async function handleSocraticMethod(args: any, sessionState: SessionState) {
-  return {
-    content: [{
-      type: 'text' as const,
-      text: JSON.stringify({
-        toolOperation: 'socratic_method',
-        prompt: args.prompt,
-        stage: args.parameters?.stage || 'clarification',
-        result: 'Socratic method applied successfully'
-      }, null, 2)
-    }]
-  };
-}
-
-async function handleStructuredArgumentation(args: any, sessionState: SessionState) {
-  return {
-    content: [{
-      type: 'text' as const,
-      text: JSON.stringify({
-        toolOperation: 'structured_argumentation',
-        prompt: args.prompt,
-        claim: args.parameters?.claim || args.prompt,
-        result: 'Structured argumentation completed'
-      }, null, 2)
-    }]
-  };
-}
-
-async function handleSystemsThinking(args: any, sessionState: SessionState) {
-  return {
-    content: [{
-      type: 'text' as const,
-      text: JSON.stringify({
-        toolOperation: 'systems_thinking',
-        prompt: args.prompt,
-        analysisType: args.parameters?.analysisType || 'components',
-        result: 'Systems thinking analysis completed'
-      }, null, 2)
-    }]
-  };
-}
-
-async function handleSessionOperations(args: any, sessionState: SessionState) {
-  switch (args.operation) {
-    case 'session_info':
-              return {
-          content: [{
-            type: 'text' as const,
-            text: JSON.stringify({
-              toolOperation: 'session_info',
-              sessionId: sessionState.sessionId,
-              stats: sessionState.getStats()
-            }, null, 2)
-          }]
-        };
-    case 'session_export':
-              return {
-          content: [{
-            type: 'text' as const,
-            text: JSON.stringify({
-              toolOperation: 'session_export',
-              sessionData: sessionState.export()
-            }, null, 2)
-          }]
-        };
-    case 'session_import':
-              return {
-          content: [{
-            type: 'text' as const,
-            text: JSON.stringify({
-              toolOperation: 'session_import',
-              result: 'Session import completed'
-            }, null, 2)
-          }]
-        };
-    default:
-      throw new Error(`Unknown session operation: ${args.operation}`);
-  }
 }

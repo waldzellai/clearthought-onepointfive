@@ -1,1 +1,0 @@
-{"version":3,"file":"tool-handlers.d.ts","sourceRoot":"","sources":["../../../src/handlers/tool-handlers.ts"],"names":[],"mappings":"AAAA,OAAO,EACL,eAAe,EACf,cAAc,EACd,gBAAgB,EAChB,eAAe,EAChB,MAAM,oCAAoC,CAAC;AAqC5C,wBAAsB,eAAe,CAAC,OAAO,EAAE,gBAAgB,GAAG,OAAO,CAAC,eAAe,CAAC,CAOzF;AAED,wBAAsB,cAAc,CAClC,OAAO,EAAE,eAAe,GACvB,OAAO,CAAC,cAAc,CAAC,CAuCzB"}
