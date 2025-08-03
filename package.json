@@ -20,7 +20,7 @@
         "LICENSE"
     ],
     "scripts": {
-        "build": "tsc && tsc-alias && chmod +x dist/index.js",
+        "build": "tsc && chmod +x dist/index.js",
         "build:smithery": "npx @smithery/cli build",
         "test": "vitest",
         "test:coverage": "vitest --coverage",

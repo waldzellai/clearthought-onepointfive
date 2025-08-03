@@ -1,9 +1,7 @@
 #!/usr/bin/env node
-import { config } from "dotenv";
 import { randomUUID } from "node:crypto";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import createClearThoughtServer from "./index.js";
-config();
 // Export for Smithery - returns the MCP server instance
 export default function () {
     // Create MCP server using the proper factory function

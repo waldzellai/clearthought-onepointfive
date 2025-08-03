@@ -12,10 +12,7 @@
     "resolveJsonModule": true,
     "declaration": false,
     "sourceMap": false,
-    "allowSyntheticDefaultImports": true,
-    "paths": {
-      "@/*": ["./src/*"]
-    }
+    "allowSyntheticDefaultImports": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "coverage", "**/*.test.ts", "tests/**/*"]
