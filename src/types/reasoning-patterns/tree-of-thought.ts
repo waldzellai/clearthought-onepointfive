@@ -5,7 +5,7 @@
  * explicit branching and evaluation.
  */
 
-import { BaseReasoningNode } from './base.js';
+import { BaseReasoningNode, BaseReasoningSession } from './base.js';
 
 /**
  * Node in a Tree of Thought structure
@@ -56,7 +56,7 @@ export interface TreeOfThoughtMetadata {
 /**
  * Tree of Thought session state
  */
-export interface TreeOfThoughtSession {
+export interface TreeOfThoughtSession extends BaseReasoningSession {
   /** Session identifier */
   sessionId: string;
   
