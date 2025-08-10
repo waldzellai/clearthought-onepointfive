@@ -12,7 +12,15 @@ async function runDev() {
       debug: true,
       maxThoughtsPerSession: 100,
       sessionTimeout: 3600000,
-      enableMetrics: false
+      enableMetrics: false,
+      persistenceEnabled: false,
+      persistenceDir: '.ct-data',
+      knowledgeGraphFile: 'knowledge-graph.json',
+      researchProvider: 'none',
+      researchApiKeyEnv: '',
+      allowCodeExecution: false,
+      pythonCommand: 'python3',
+      executionTimeoutMs: 10000
     }
   });
   

@@ -734,3 +734,142 @@ export interface ProcessResult {
     details?: any;
   };
 }
+
+export interface ResearchSource {
+  title: string;
+  url: string;
+  snippet?: string;
+  publishedAt?: string;
+  author?: string;
+}
+
+export interface ResearchFinding {
+  claim: string;
+  evidence: string;
+  confidence: number;
+  sources: ResearchSource[];
+}
+
+export interface ResearchResult {
+  query: string;
+  findings: ResearchFinding[];
+  citations: ResearchSource[];
+}
+
+// ---------------------------------------------------------------------------
+// Analogical reasoning
+// ---------------------------------------------------------------------------
+export interface AnalogyMapping {
+  sourceConcept: string;
+  targetConcept: string;
+  mappingType: 'role' | 'structure' | 'behavior' | 'constraint';
+  strength?: number; // 0..1
+}
+
+export interface AnalogicalReasoningData {
+  sourceDomain: string;
+  targetDomain: string;
+  mappings: AnalogyMapping[];
+  inferredInsights: string[];
+  sessionId: string;
+}
+
+// ---------------------------------------------------------------------------
+// Causal and counterfactual
+// ---------------------------------------------------------------------------
+export interface CausalEdge {
+  from: string;
+  to: string;
+  weight?: number; // causal strength
+}
+
+export interface CausalGraph {
+  nodes: string[];
+  edges: CausalEdge[];
+}
+
+export interface Intervention {
+  variable: string;
+  setTo?: number | string | boolean;
+  delta?: number;
+}
+
+export interface CausalAnalysisResult {
+  graph: CausalGraph;
+  intervention?: Intervention;
+  predictedEffects?: Record<string, number>;
+  counterfactual?: Record<string, number>;
+  notes?: string[];
+}
+
+// ---------------------------------------------------------------------------
+// Statistics and probabilistic inference
+// ---------------------------------------------------------------------------
+export interface SummaryStats {
+  mean: number;
+  variance: number;
+  stddev: number;
+  min: number;
+  max: number;
+  n: number;
+}
+
+export interface HypothesisTestResult {
+  test: 'z' | 't' | 'chi2' | 'f' | 'binomial';
+  statistic: number;
+  pValue: number;
+  dof?: number;
+  effectSize?: number;
+}
+
+export interface BayesianUpdateResult<T extends string | number | symbol = string> {
+  prior: Record<T, number>;
+  likelihood: Record<T, number>;
+  posterior: Record<T, number>;
+  evidence: number;
+}
+
+export interface MonteCarloResult {
+  samples: number;
+  mean: number;
+  stddev: number;
+  percentile: Record<string, number>;
+}
+
+// ---------------------------------------------------------------------------
+// Simulation and optimization
+// ---------------------------------------------------------------------------
+export interface SimulationResult {
+  steps: number;
+  trajectory: Array<Record<string, number>>;
+  finalState: Record<string, number>;
+}
+
+export interface OptimizationResult {
+  bestDecisionVector: number[];
+  bestObjective: number;
+  iterations: number;
+  constraintsSatisfied: boolean;
+}
+
+// ---------------------------------------------------------------------------
+// Ethics and impact analysis
+// ---------------------------------------------------------------------------
+export interface EthicalAssessment {
+  framework: 'utilitarian' | 'rights' | 'fairness' | 'compliance';
+  findings: string[];
+  risks: string[];
+  mitigations: string[];
+  score?: number;
+}
+
+// ---------------------------------------------------------------------------
+// Code execution metadata
+// ---------------------------------------------------------------------------
+export interface CodeExecutionResult {
+  language: 'python' | 'shell' | 'javascript';
+  stdout: string;
+  stderr: string;
+  exitCode: number;
+  durationMs: number;
+}

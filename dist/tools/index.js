@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { executePython } from '../utils/execution.js';
 /**
  * Registers the unified Clear Thought tool with the MCP server
  *
@@ -28,7 +29,19 @@ export function registerTools(server, sessionState) {
             'systems_thinking',
             'session_info',
             'session_export',
-            'session_import'
+            'session_import',
+            // New modules
+            'research',
+            'analogical_reasoning',
+            'causal_analysis',
+            'statistical_reasoning',
+            'simulation',
+            'optimization',
+            'ethical_analysis',
+            'visual_dashboard',
+            'custom_framework',
+            'code_execution',
+            'orchestration_suggest'
         ]).describe('What type of reasoning operation to perform'),
         // Common parameters
         prompt: z.string().describe('The problem, question, or challenge to work on'),
@@ -43,6 +56,21 @@ export function registerTools(server, sessionState) {
             generateNextSteps: z.boolean().default(true).describe('Generate recommended next steps')
         }).optional().describe('Advanced reasoning options')
     }, async (args, extra) => {
+        // Special handling for code execution to allow real run
+        if (args.operation === 'code_execution') {
+            const params = (args.parameters || {});
+            const lang = params.language || 'python';
+            const code = String(params.code || '');
+            const cfg = sessionState.getConfig();
+            if (lang !== 'python' || !cfg.allowCodeExecution) {
+                const preview = executeClearThoughtOperation(sessionState, args.operation, { prompt: args.prompt, parameters: args.parameters });
+                return { content: [{ type: 'text', text: JSON.stringify(preview, null, 2) }] };
+            }
+            const result = await executePython(code, cfg.pythonCommand, cfg.executionTimeoutMs);
+            return {
+                content: [{ type: 'text', text: JSON.stringify({ toolOperation: 'code_execution', ...result }, null, 2) }]
+            };
+        }
         const result = executeClearThoughtOperation(sessionState, args.operation, { prompt: args.prompt, parameters: args.parameters });
         return {
             content: [{
@@ -356,6 +384,154 @@ export function executeClearThoughtOperation(sessionState, operation, args) {
                 toolOperation: 'session_import',
                 result: 'Session import completed'
             };
+        }
+        // -------------------- New modules --------------------
+        case 'research': {
+            const result = {
+                query: prompt,
+                findings: [],
+                citations: []
+            };
+            return { toolOperation: 'research', ...result };
+        }
+        case 'analogical_reasoning': {
+            const data = {
+                sourceDomain: getParam('sourceDomain', ''),
+                targetDomain: getParam('targetDomain', ''),
+                mappings: parameters.mappings || [],
+                inferredInsights: parameters.inferredInsights || [],
+                sessionId: `analogy-${Date.now()}`
+            };
+            return { toolOperation: 'analogical_reasoning', ...data };
+        }
+        case 'causal_analysis': {
+            const result = {
+                graph: getParam('graph', { nodes: [], edges: [] }),
+                intervention: parameters.intervention,
+                predictedEffects: parameters.predictedEffects,
+                counterfactual: parameters.counterfactual,
+                notes: parameters.notes
+            };
+            return { toolOperation: 'causal_analysis', ...result };
+        }
+        case 'statistical_reasoning': {
+            const mode = getParam('mode', 'summary');
+            let out = { mode };
+            if (mode === 'summary') {
+                const arr = parameters.data || [];
+                const n = arr.length;
+                const mean = n ? arr.reduce((a, b) => a + b, 0) / n : 0;
+                const variance = n ? arr.reduce((s, x) => s + (x - mean) ** 2, 0) / n : 0;
+                const stddev = Math.sqrt(variance);
+                const stats = {
+                    mean,
+                    variance,
+                    stddev,
+                    min: n ? Math.min(...arr) : 0,
+                    max: n ? Math.max(...arr) : 0,
+                    n
+                };
+                out = { toolOperation: 'statistical_reasoning', stats };
+            }
+            else if (mode === 'bayes') {
+                const result = {
+                    prior: parameters.prior || {},
+                    likelihood: parameters.likelihood || {},
+                    posterior: parameters.posterior || {},
+                    evidence: typeof parameters.evidence === 'number' ? parameters.evidence : 1
+                };
+                out = { toolOperation: 'statistical_reasoning', bayes: result };
+            }
+            else if (mode === 'test') {
+                const ht = {
+                    test: getParam('test', 'z'),
+                    statistic: Number(parameters.statistic) || 0,
+                    pValue: Number(parameters.pValue) || 1,
+                    dof: parameters.dof,
+                    effectSize: parameters.effectSize
+                };
+                out = { toolOperation: 'statistical_reasoning', test: ht };
+            }
+            else if (mode === 'montecarlo') {
+                const mc = {
+                    samples: Number(parameters.samples) || 0,
+                    mean: Number(parameters.mean) || 0,
+                    stddev: Number(parameters.stddev) || 0,
+                    percentile: parameters.percentile || {}
+                };
+                out = { toolOperation: 'statistical_reasoning', montecarlo: mc };
+            }
+            return out;
+        }
+        case 'simulation': {
+            const sim = {
+                steps: Number(parameters.steps) || 0,
+                trajectory: parameters.trajectory || [],
+                finalState: parameters.finalState || {}
+            };
+            return { toolOperation: 'simulation', ...sim };
+        }
+        case 'optimization': {
+            const opt = {
+                bestDecisionVector: parameters.bestDecisionVector || [],
+                bestObjective: Number(parameters.bestObjective) || 0,
+                iterations: Number(parameters.iterations) || 0,
+                constraintsSatisfied: Boolean(parameters.constraintsSatisfied)
+            };
+            return { toolOperation: 'optimization', ...opt };
+        }
+        case 'ethical_analysis': {
+            const assessment = {
+                framework: getParam('framework', 'utilitarian'),
+                findings: parameters.findings || [],
+                risks: parameters.risks || [],
+                mitigations: parameters.mitigations || [],
+                score: typeof parameters.score === 'number' ? parameters.score : undefined
+            };
+            return { toolOperation: 'ethical_analysis', ...assessment };
+        }
+        case 'visual_dashboard': {
+            return {
+                toolOperation: 'visual_dashboard',
+                dashboard: {
+                    diagrams: sessionState.getVisualOperations(),
+                    reasoning: sessionState.getThoughts(),
+                    arguments: [],
+                    decisions: sessionState.getDecisions(),
+                    causal: [],
+                    knowledgeGraph: sessionState.getStore().getKnowledgeGraph()
+                }
+            };
+        }
+        case 'custom_framework': {
+            return {
+                toolOperation: 'custom_framework',
+                result: 'Framework registered or updated',
+                framework: parameters
+            };
+        }
+        case 'code_execution': {
+            const lang = getParam('language', 'python');
+            if (lang !== 'python') {
+                return { toolOperation: 'code_execution', error: 'Only python is supported in this environment' };
+            }
+            const code = String(parameters.code || '');
+            const cfg = sessionState.getConfig();
+            if (!cfg.allowCodeExecution) {
+                return { toolOperation: 'code_execution', error: 'Code execution is disabled by configuration' };
+            }
+            return {
+                toolOperation: 'code_execution',
+                request: { language: 'python', preview: code.slice(0, 120) }
+            };
+        }
+        case 'orchestration_suggest': {
+            const suggestions = [
+                'Consider causal_analysis to validate assumptions',
+                'Run research to add citations',
+                'Add metacognitive_monitoring to assess uncertainty'
+            ];
+            return { toolOperation: 'orchestration_suggest', prompt, suggestions };
         }
         default:
             throw new Error(`Unknown operation: ${operation}`);
