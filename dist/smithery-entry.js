@@ -11,7 +11,15 @@ export default function () {
             debug: false,
             maxThoughtsPerSession: 1000,
             sessionTimeout: 3600000,
-            enableMetrics: true
+            enableMetrics: true,
+            persistenceEnabled: false,
+            persistenceDir: '.ct-data',
+            knowledgeGraphFile: 'knowledge-graph.json',
+            researchProvider: 'none',
+            researchApiKeyEnv: '',
+            allowCodeExecution: false,
+            pythonCommand: 'python3',
+            executionTimeoutMs: 10000
         }
     });
     // Initialize MCP transport

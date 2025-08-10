@@ -62,6 +62,12 @@ export class SessionState {
   /** Unified data store */
   private readonly unifiedStore: UnifiedStore;
   
+  /** Expose config via getter */
+  getConfig(): ServerConfig { return this.config; }
+
+  /** Expose unified store via getter (read-only reference) */
+  getStore(): UnifiedStore { return this.unifiedStore; }
+  
   /**
    * Create a new session state
    * @param sessionId - Unique identifier for this session
@@ -74,7 +80,7 @@ export class SessionState {
     this.lastAccessedAt = new Date();
     
     // Initialize unified store
-    this.unifiedStore = new UnifiedStore();
+    this.unifiedStore = new UnifiedStore(config.persistenceEnabled ? { persistenceDir: config.persistenceDir, knowledgeGraphFile: config.knowledgeGraphFile } : undefined);
     
     // Start timeout timer
     this.resetTimeout();
