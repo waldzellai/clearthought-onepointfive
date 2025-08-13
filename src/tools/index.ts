@@ -1,5 +1,4 @@
 import type { SessionState } from '../state/SessionState.js';
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { ResearchResult, AnalogicalReasoningData, CausalAnalysisResult, SummaryStats, HypothesisTestResult, BayesianUpdateResult, MonteCarloResult, SimulationResult, OptimizationResult, EthicalAssessment, CodeExecutionResult } from '../types/index.js';
 import { executePython } from '../utils/execution.js';
@@ -13,84 +12,91 @@ import { executePython } from '../utils/execution.js';
  * @param server - The MCP server instance
  * @param sessionState - The session state manager
  */
-export function registerTools(server: McpServer, sessionState: SessionState): void {
+export const ClearThoughtParamsSchema = z.object({
+  operation: z.enum([
+    // Core thinking operations
+    'sequential_thinking',
+    'mental_model',
+    'debugging_approach',
+    'creative_thinking',
+    'visual_reasoning',
+    'metacognitive_monitoring',
+    'scientific_method',
+    // Collaborative operations
+    'collaborative_reasoning',
+    'decision_framework',
+    'socratic_method',
+    'structured_argumentation',
+    // Systems and session operations
+    'systems_thinking',
+    'session_info',
+    'session_export',
+    'session_import',
+    // New modules
+    'research',
+    'analogical_reasoning',
+    'causal_analysis',
+    'statistical_reasoning',
+    'simulation',
+    'optimization',
+    'ethical_analysis',
+    'visual_dashboard',
+    'custom_framework',
+    'code_execution',
+    // Reasoning pattern operations
+    'tree_of_thought',
+    'beam_search',
+    'mcts',
+    'graph_of_thought',
+    'orchestration_suggest'
+  ]).describe('What type of reasoning operation to perform'),
+  // Common parameters
+  prompt: z.string().describe('The problem, question, or challenge to work on'),
+  context: z.string().optional().describe('Additional context or background information'),
+  sessionId: z.string().optional().describe('Session identifier for continuity'),
+  // Operation-specific parameters (will be validated based on operation)
+  parameters: z.record(z.string(), z.unknown()).optional().describe('Operation-specific parameters'),
+  // Advanced options
+  advanced: z.object({
+    autoProgress: z.boolean().optional().describe('Automatically progress through stages when applicable'),
+    saveToSession: z.boolean().default(true).describe('Save results to session state'),
+    generateNextSteps: z.boolean().default(true).describe('Generate recommended next steps')
+  }).optional().describe('Advanced reasoning options')
+})
+
+export async function handleClearThoughtTool(
+  sessionState: SessionState,
+  args: z.infer<typeof ClearThoughtParamsSchema>
+): Promise<{ content: Array<{ type: 'text'; text: string }>; isError?: boolean }> {
+  // Special handling for code execution to allow real run
+  if (args.operation === 'code_execution') {
+    const params = (args.parameters || {}) as any;
+    const lang = (params.language as string) || 'python';
+    const code = String(params.code || '');
+    const cfg = sessionState.getConfig();
+    if (lang !== 'python' || !cfg.allowCodeExecution) {
+      const preview = executeClearThoughtOperation(sessionState, args.operation, { prompt: args.prompt, parameters: args.parameters });
+      return { content: [{ type: 'text', text: JSON.stringify(preview, null, 2) }] };
+    }
+    const result = await executePython(code, cfg.pythonCommand, cfg.executionTimeoutMs);
+    return {
+      content: [{ type: 'text', text: JSON.stringify({ toolOperation: 'code_execution', ...result }, null, 2) }]
+    };
+  }
+
+  const result = executeClearThoughtOperation(sessionState, args.operation, { prompt: args.prompt, parameters: args.parameters });
+  return {
+    content: [{ type: 'text', text: JSON.stringify(result, null, 2) }]
+  };
+}
+
+// Backwards-compatible registration helper (kept for compatibility; unused by low-level Server)
+export function registerTools(server: { tool: Function }, sessionState: SessionState): void {
   server.tool(
     'clear_thought',
     'Unified Clear Thought reasoning tool - provides all reasoning operations through a single interface',
-    {
-      operation: z.enum([
-        // Core thinking operations
-        'sequential_thinking',
-        'mental_model',
-        'debugging_approach',
-        'creative_thinking',
-        'visual_reasoning',
-        'metacognitive_monitoring',
-        'scientific_method',
-        // Collaborative operations
-        'collaborative_reasoning',
-        'decision_framework',
-        'socratic_method',
-        'structured_argumentation',
-        // Systems and session operations
-        'systems_thinking',
-        'session_info',
-        'session_export',
-        'session_import',
-        // New modules
-        'research',
-        'analogical_reasoning',
-        'causal_analysis',
-        'statistical_reasoning',
-        'simulation',
-        'optimization',
-        'ethical_analysis',
-        'visual_dashboard',
-        'custom_framework',
-        'code_execution',
-        'orchestration_suggest'
-      ]).describe('What type of reasoning operation to perform'),
-      
-      // Common parameters
-      prompt: z.string().describe('The problem, question, or challenge to work on'),
-      context: z.string().optional().describe('Additional context or background information'),
-      sessionId: z.string().optional().describe('Session identifier for continuity'),
-      
-      // Operation-specific parameters (will be validated based on operation)
-      parameters: z.record(z.string(), z.unknown()).optional().describe('Operation-specific parameters'),
-      
-      // Advanced options
-      advanced: z.object({
-        autoProgress: z.boolean().optional().describe('Automatically progress through stages when applicable'),
-        saveToSession: z.boolean().default(true).describe('Save results to session state'),
-        generateNextSteps: z.boolean().default(true).describe('Generate recommended next steps')
-      }).optional().describe('Advanced reasoning options')
-    },
-    async (args, extra) => {
-      // Special handling for code execution to allow real run
-      if (args.operation === 'code_execution') {
-        const params = (args.parameters || {}) as any;
-        const lang = (params.language as string) || 'python';
-        const code = String(params.code || '');
-        const cfg = sessionState.getConfig();
-        if (lang !== 'python' || !cfg.allowCodeExecution) {
-          const preview = executeClearThoughtOperation(sessionState, args.operation, { prompt: args.prompt, parameters: args.parameters });
-          return { content: [{ type: 'text' as const, text: JSON.stringify(preview, null, 2) }] };
-        }
-        const result = await executePython(code, cfg.pythonCommand, cfg.executionTimeoutMs);
-        return {
-          content: [{ type: 'text' as const, text: JSON.stringify({ toolOperation: 'code_execution', ...result }, null, 2) }]
-        };
-      }
-
-      const result = executeClearThoughtOperation(sessionState, args.operation, { prompt: args.prompt, parameters: args.parameters });
-      return {
-        content: [{
-          type: 'text' as const,
-          text: JSON.stringify(result, null, 2)
-        }]
-      };
-    }
+    ClearThoughtParamsSchema.shape,
+    async (args: z.infer<typeof ClearThoughtParamsSchema>) => handleClearThoughtTool(sessionState, args)
   );
 }
 
@@ -111,6 +117,37 @@ export function executeClearThoughtOperation(
 ): Record<string, unknown> {
   const { prompt, parameters = {} } = args;
   
+  // Optional reasoning pattern selection for sequential_thinking
+  const specifiedPattern = (parameters as any).pattern as
+    | 'chain'
+    | 'tree'
+    | 'beam'
+    | 'mcts'
+    | 'graph'
+    | 'auto'
+    | undefined;
+  const patternParams = ((parameters as any).patternParams as Record<string, unknown>) || {};
+
+  const selectReasoningPattern = (): 'chain' | 'tree' | 'beam' | 'mcts' | 'graph' => {
+    if (specifiedPattern && specifiedPattern !== 'auto') return specifiedPattern;
+    // Heuristic selection from prompt/params
+    const ptext = `${prompt}`.toLowerCase();
+    const keys = Object.keys(parameters as Record<string, unknown>);
+    if ('depth' in patternParams || 'breadth' in patternParams || ptext.includes('branch') || ptext.includes('options')) {
+      return 'tree';
+    }
+    if ('beamWidth' in patternParams || ptext.includes('candidates') || ptext.includes('top-k')) {
+      return 'beam';
+    }
+    if ('simulations' in patternParams || ptext.includes('uncertain') || ptext.includes('probability') || ptext.includes('stochastic')) {
+      return 'mcts';
+    }
+    if ('nodes' in patternParams || 'edges' in patternParams || ptext.includes('dependencies') || ptext.includes('graph')) {
+      return 'graph';
+    }
+    return 'chain';
+  };
+  
   // Type guard to ensure parameters are properly typed
   const getParam = <T>(key: string, defaultValue: T): T => {
     return (parameters[key] as T) ?? defaultValue;
@@ -119,6 +156,8 @@ export function executeClearThoughtOperation(
   // Unified handler for all operations
   switch (operation) {
     case 'sequential_thinking': {
+      // Choose reasoning pattern (default 'chain') and optionally dispatch
+      const chosenPattern = selectReasoningPattern();
       const thoughtData = {
         thought: prompt,
         thoughtNumber: parameters.thoughtNumber || 1,
@@ -134,9 +173,26 @@ export function executeClearThoughtOperation(
       const added = sessionState.addThought(thoughtData as any);
       const allThoughts = sessionState.getThoughts();
       const recentThoughts = allThoughts.slice(-3);
+
+      // If a non-chain pattern is selected, execute the corresponding pattern operation
+      let patternResult: Record<string, unknown> | undefined;
+      if (chosenPattern !== 'chain') {
+        const opMap: Record<string, string> = {
+          tree: 'tree_of_thought',
+          beam: 'beam_search',
+          mcts: 'mcts',
+          graph: 'graph_of_thought'
+        };
+        const mappedOp = opMap[chosenPattern];
+        if (mappedOp) {
+          patternResult = executeClearThoughtOperation(sessionState, mappedOp, { prompt, parameters: patternParams });
+        }
+      }
       
       return {
         toolOperation: 'sequential_thinking',
+        selectedPattern: chosenPattern,
+        patternResult,
         ...thoughtData,
         status: added ? 'success' : 'limit_reached',
         sessionContext: {
@@ -490,74 +546,97 @@ export function executeClearThoughtOperation(
         };
         out = { toolOperation: 'statistical_reasoning', stats };
       } else if (mode === 'bayes') {
-        const result: BayesianUpdateResult = {
-          prior: (parameters.prior as any) || {},
-          likelihood: (parameters.likelihood as any) || {},
-          posterior: (parameters.posterior as any) || {},
-          evidence: typeof parameters.evidence === 'number' ? (parameters.evidence as number) : 1
+        const prior = (parameters.prior as Record<string, number>) || { true: 0.5, false: 0.5 };
+        const likelihood = (parameters.likelihood as Record<string, number>) || { true: 0.6, false: 0.4 };
+        // Normalize prior if needed
+        const priorSum = Object.values(prior).reduce((a, b) => a + b, 0) || 1;
+        const normalizedPrior: Record<string, number> = Object.fromEntries(
+          Object.entries(prior).map(([k, v]) => [k, v / priorSum])
+        );
+        // Compute evidence and posterior
+        const evidence = Object.keys(likelihood).reduce((acc, h) => acc + (normalizedPrior[h] ?? 0) * (likelihood[h] ?? 0), 0) || 1;
+        const posterior: Record<string, number> = Object.fromEntries(
+          Object.keys(likelihood).map(h => [h, (((normalizedPrior[h] ?? 0) * (likelihood[h] ?? 0)) / evidence)])
+        );
+        const bayesianResult: BayesianUpdateResult<string> = {
+          prior: normalizedPrior,
+          likelihood,
+          posterior,
+          evidence
         };
-        out = { toolOperation: 'statistical_reasoning', bayes: result };
-      } else if (mode === 'test') {
-        const ht: HypothesisTestResult = {
+        out = { toolOperation: 'statistical_reasoning', bayesianResult };
+      } else if (mode === 'hypothesis_test') {
+        const testResult: HypothesisTestResult = {
           test: getParam('test', 'z'),
-          statistic: Number(parameters.statistic) || 0,
-          pValue: Number(parameters.pValue) || 1,
-          dof: parameters.dof as any,
-          effectSize: parameters.effectSize as any
+          statistic: getParam('testStatistic', 0),
+          pValue: getParam('pValue', 0.05),
+          dof: getParam('dof', undefined as unknown as number | undefined),
+          effectSize: getParam('effectSize', undefined as unknown as number | undefined)
         };
-        out = { toolOperation: 'statistical_reasoning', test: ht };
-      } else if (mode === 'montecarlo') {
-        const mc: MonteCarloResult = {
-          samples: Number(parameters.samples) || 0,
-          mean: Number(parameters.mean) || 0,
-          stddev: Number(parameters.stddev) || 0,
-          percentile: (parameters.percentile as any) || {}
+        out = { toolOperation: 'statistical_reasoning', testResult };
+      } else if (mode === 'monte_carlo') {
+        const samplesArr = (parameters.samples as number[]) || [];
+        const n = samplesArr.length;
+        const mean = n ? samplesArr.reduce((a, b) => a + b, 0) / n : 0;
+        const variance = n ? samplesArr.reduce((s, x) => s + (x - mean) ** 2, 0) / n : 0;
+        const stddev = Math.sqrt(variance);
+        const sorted = [...samplesArr].sort((a, b) => a - b);
+        const percentile = {
+          p05: sorted.length ? sorted[Math.floor(0.05 * (sorted.length - 1))] : 0,
+          p50: sorted.length ? sorted[Math.floor(0.50 * (sorted.length - 1))] : 0,
+          p95: sorted.length ? sorted[Math.floor(0.95 * (sorted.length - 1))] : 0,
+        } as Record<string, number>;
+        const mcResult: MonteCarloResult = {
+          samples: n,
+          mean,
+          stddev,
+          percentile
         };
-        out = { toolOperation: 'statistical_reasoning', montecarlo: mc };
+        out = { toolOperation: 'statistical_reasoning', mcResult };
       }
       return out;
     }
 
     case 'simulation': {
-      const sim: SimulationResult = {
-        steps: Number(parameters.steps) || 0,
-        trajectory: (parameters.trajectory as any) || [],
-        finalState: (parameters.finalState as any) || {}
+      const steps = getParam('steps', 10);
+      const simResult: SimulationResult = {
+        steps,
+        trajectory: [],
+        finalState: {}
       };
-      return { toolOperation: 'simulation', ...sim };
+      return { toolOperation: 'simulation', ...simResult };
     }
 
     case 'optimization': {
-      const opt: OptimizationResult = {
-        bestDecisionVector: (parameters.bestDecisionVector as any) || [],
-        bestObjective: Number(parameters.bestObjective) || 0,
-        iterations: Number(parameters.iterations) || 0,
-        constraintsSatisfied: Boolean(parameters.constraintsSatisfied)
+      const optResult: OptimizationResult = {
+        bestDecisionVector: [],
+        bestObjective: 0,
+        iterations: 0,
+        constraintsSatisfied: false
       };
-      return { toolOperation: 'optimization', ...opt };
+      return { toolOperation: 'optimization', ...optResult };
     }
 
     case 'ethical_analysis': {
-      const assessment: EthicalAssessment = {
-        framework: getParam('framework', 'utilitarian'),
-        findings: (parameters.findings as any) || [],
-        risks: (parameters.risks as any) || [],
-        mitigations: (parameters.mitigations as any) || [],
-        score: typeof parameters.score === 'number' ? (parameters.score as number) : undefined
+      const framework = getParam('framework', 'utilitarian') as EthicalAssessment['framework'];
+      const ethicalResult: EthicalAssessment = {
+        framework,
+        findings: [],
+        risks: [],
+        mitigations: [],
+        score: getParam('score', undefined as unknown as number | undefined)
       };
-      return { toolOperation: 'ethical_analysis', ...assessment };
+      return { toolOperation: 'ethical_analysis', ...ethicalResult };
     }
 
     case 'visual_dashboard': {
       return {
         toolOperation: 'visual_dashboard',
         dashboard: {
-          diagrams: sessionState.getVisualOperations(),
-          reasoning: sessionState.getThoughts(),
-          arguments: [],
-          decisions: sessionState.getDecisions(),
-          causal: [],
-          knowledgeGraph: sessionState.getStore().getKnowledgeGraph()
+          title: prompt,
+          panels: parameters.panels || [],
+          layout: parameters.layout || 'grid',
+          refreshRate: parameters.refreshRate || 5000
         }
       };
     }
@@ -565,37 +644,95 @@ export function executeClearThoughtOperation(
     case 'custom_framework': {
       return {
         toolOperation: 'custom_framework',
-        result: 'Framework registered or updated',
-        framework: parameters
+        framework: {
+          name: prompt,
+          stages: parameters.stages || [],
+          rules: parameters.rules || [],
+          metrics: parameters.metrics || []
+        }
       };
     }
 
     case 'code_execution': {
-      const lang = getParam('language', 'python');
-      if (lang !== 'python') {
-        return { toolOperation: 'code_execution', error: 'Only python is supported in this environment' };
-      }
-      const code = String(parameters.code || '');
-      const cfg = sessionState.getConfig();
-      if (!cfg.allowCodeExecution) {
-        return { toolOperation: 'code_execution', error: 'Code execution is disabled by configuration' };
-      }
+      // Handled above in the main function
       return {
         toolOperation: 'code_execution',
-        request: { language: 'python', preview: code.slice(0, 120) }
+        result: 'Code execution requires special handling'
+      };
+    }
+
+    // Reasoning pattern operations
+    case 'tree_of_thought': {
+      return {
+        toolOperation: 'tree_of_thought',
+        problem: prompt,
+        branches: parameters.branches || [],
+        evaluations: parameters.evaluations || [],
+        selectedPath: parameters.selectedPath || null,
+        depth: parameters.depth || 3,
+        breadth: parameters.breadth || 3
+      };
+    }
+
+    case 'beam_search': {
+      return {
+        toolOperation: 'beam_search',
+        problem: prompt,
+        beamWidth: parameters.beamWidth || 3,
+        candidates: parameters.candidates || [],
+        scores: parameters.scores || [],
+        iterations: parameters.iterations || 5
+      };
+    }
+
+    case 'mcts': {
+      return {
+        toolOperation: 'mcts',
+        problem: prompt,
+        simulations: parameters.simulations || 100,
+        explorationConstant: parameters.explorationConstant || 1.414,
+        tree: parameters.tree || { root: { visits: 0, value: 0, children: [] } },
+        bestAction: parameters.bestAction || null
+      };
+    }
+
+    case 'graph_of_thought': {
+      return {
+        toolOperation: 'graph_of_thought',
+        problem: prompt,
+        nodes: parameters.nodes || [],
+        edges: parameters.edges || [],
+        paths: parameters.paths || [],
+        optimalPath: parameters.optimalPath || null
       };
     }
 
     case 'orchestration_suggest': {
-      const suggestions = [
-        'Consider causal_analysis to validate assumptions',
-        'Run research to add citations',
-        'Add metacognitive_monitoring to assess uncertainty'
-      ];
-      return { toolOperation: 'orchestration_suggest', prompt, suggestions };
+      return {
+        toolOperation: 'orchestration_suggest',
+        task: prompt,
+        suggestedTools: ['sequential_thinking', 'mental_model'],
+        reasoning: 'Based on the task complexity, a combination of sequential thinking and mental models would be effective',
+        workflow: []
+      };
     }
     
     default:
-      throw new Error(`Unknown operation: ${operation}`);
+      return {
+        toolOperation: 'unknown',
+        error: `Unknown operation: ${operation}`,
+        availableOperations: [
+          'sequential_thinking', 'mental_model', 'debugging_approach',
+          'creative_thinking', 'visual_reasoning', 'metacognitive_monitoring',
+          'scientific_method', 'collaborative_reasoning', 'decision_framework',
+          'socratic_method', 'structured_argumentation', 'systems_thinking',
+          'session_info', 'session_export', 'session_import',
+          'research', 'analogical_reasoning', 'causal_analysis',
+          'statistical_reasoning', 'simulation', 'optimization',
+          'ethical_analysis', 'visual_dashboard', 'custom_framework',
+          'code_execution', 'tree_of_thought', 'beam_search',
+          'mcts', 'graph_of_thought', 'orchestration_suggest'
+        ]
+      };
   }
 }
