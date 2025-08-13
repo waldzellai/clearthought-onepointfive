@@ -15,6 +15,7 @@ This specification details how to extend the current sequential thinking impleme
    - [Monte Carlo Tree Search (MCTS)](#monte-carlo-tree-search-mcts)
    - [Recursive Reasoning](#recursive-reasoning)
    - [Dialectical Reasoning](#dialectical-reasoning)
+   - [Progressive Deep Research (PDR)](#progressive-deep-research-pdr)
 4. [Core Interfaces](#core-interfaces)
 5. [Implementation Strategy](#implementation-strategy)
 6. [Examples](#examples)
@@ -341,6 +342,109 @@ export interface DialecticalSession {
 }
 ```
 
+### Progressive Deep Research (PDR)
+
+Progressive Deep Research orchestrates breadth-first discovery followed by selective deepening across multiple passes. Each pass can assign a different reasoning approach per subject (sequential/tree/beam/mcts/graph), enabling adaptive exploration with budgets and stop conditions.
+
+#### Key Features:
+- Breadth→depth multi-pass workflow (scan → cluster → select → deepen → synthesize)
+- Per-subject approach selection (rule-based or auto)
+- Budgeting per pass and per subject
+- Selection criteria and pruning between passes
+- Confidence tracking and pass-level termination conditions
+
+#### Interface Design:
+
+```typescript
+export type PDRApproach = 'sequential' | 'tree' | 'beam' | 'mcts' | 'graph' | 'auto';
+
+export interface PDRSubject {
+  id: string;
+  title: string;
+  description?: string;
+  tags?: string[];
+  passScores: Record<string, number>; // passId → score
+  confidence?: number; // 0-1
+  selected?: boolean; // selected for next pass
+  metadata?: Record<string, unknown>;
+}
+
+export interface PDRSelectionCriteria {
+  minScore?: number;
+  topK?: number;
+  diversity?: number; // 0-1 penalty for redundancy
+  custom?: string; // DSL or description of selection rule
+}
+
+export interface PDRPassPolicy {
+  id: string;
+  name: 'scan' | 'cluster' | 'select' | 'deepen' | 'synthesize';
+  defaultApproach?: PDRApproach; // used when perSubjectApproach rule returns 'auto'
+  perSubjectApproach?: {
+    rules?: Array<{
+      when: string; // rule expression over subject metadata/tags/scores
+      use: PDRApproach;
+    }>;
+    fallback?: PDRApproach; // default if no rule matches
+  };
+  selection?: PDRSelectionCriteria; // which subjects advance to next pass
+  budget?: {
+    subjectsLimit?: number; // max subjects to process in this pass
+    timeMs?: number; // soft budget
+  };
+}
+
+export interface PDRPassTrace {
+  id: string;
+  policyId: string;
+  startedAt: string;
+  completedAt?: string;
+  processedSubjectIds: string[];
+  approachBySubject: Record<string, PDRApproach>; // subjectId → approach used
+  resultsBySubject: Record<string, {
+    score?: number;
+    confidence?: number;
+    notes?: string;
+    artifacts?: Array<{ kind: 'markdown'|'mermaid'|'json'|'code'; content: string }>;
+  }>;
+}
+
+export interface PDRSession {
+  id: string;
+  subjects: Map<string, PDRSubject>;
+  passes: PDRPassPolicy[];
+  traces: PDRPassTrace[];
+  maxPasses: number;
+  globalSelection?: PDRSelectionCriteria;
+  stopConditions?: {
+    maxTimeMs?: number;
+    minImprovement?: number; // stop if improvement < threshold across last N passes
+    confidenceThreshold?: number; // stop when avg confidence ≥ threshold
+  };
+  summary?: {
+    chosenSubjectIds: string[];
+    synthesis?: string; // final narrative/summary
+    decisions?: Array<{ subjectId: string; decision: string; rationale?: string }>;
+  };
+}
+```
+
+#### Minimal Workflow (example control flow):
+1. Pass 0 (scan): `sequential` + `orchestration_suggest` to enumerate/seed subjects.
+2. Pass 1 (cluster/select): `graph` for clustering; `beam` to pick top‑K per cluster.
+3. Pass 2+ (deepen): choose per subject:
+   - `tree` for divergent ideation,
+   - `beam` for narrowing,
+   - `mcts` for uncertainty/cost tradeoffs,
+   - `graph` for evidence/relations,
+   - `sequential` for linear drill‑down.
+4. Final: `decision_framework` ranks outputs; `metacognitive_monitoring` records confidence.
+
+#### Compatibility Notes:
+- PDR composes existing modes; no breaking change to current operations.
+- Each per‑subject step can append artifacts (markdown/mermaid/code) that align with the notebook model.
+- PDR state can be serialized into session export alongside sequential thoughts.
+
 ## Core Interfaces
 
 ### Base Reasoning Node
@@ -449,10 +553,9 @@ export interface UnifiedReasoningResult {
 
 ```typescript
 // Initialize a Tree of Thought session for problem solving
-const totSession = await mcp.callTool("unified-reasoning", {
-  pattern: "tree",
-  operation: "create",
-  content: "How can we optimize the delivery route for 10 packages?",
+const totSession = await mcp.callTool("clear_thought", {
+  operation: "tree_of_thought",
+  prompt: "How can we optimize the delivery route for 10 packages?",
   sessionId: "delivery-optimization-001",
   parameters: {
     explorationStrategy: "best-first",
@@ -462,13 +565,12 @@ const totSession = await mcp.callTool("unified-reasoning", {
 });
 
 // Explore a branch
-const branch1 = await mcp.callTool("unified-reasoning", {
-  pattern: "tree",
-  operation: "branch",
-  content: "Group packages by geographic proximity",
+const branch1 = await mcp.callTool("clear_thought", {
+  operation: "tree_of_thought",
+  prompt: "Group packages by geographic proximity",
   sessionId: "delivery-optimization-001",
-  nodeId: totSession.currentNodeId,
   parameters: {
+    nodeId: totSession.currentNodeId,
     evaluationScore: 0.8
   }
 });
@@ -478,10 +580,9 @@ const branch1 = await mcp.callTool("unified-reasoning", {
 
 ```typescript
 // Create a Graph of Thought for analyzing relationships
-const gotSession = await mcp.callTool("unified-reasoning", {
-  pattern: "graph",
-  operation: "create",
-  content: "Climate change impacts on agriculture",
+const gotSession = await mcp.callTool("clear_thought", {
+  operation: "graph_of_thought",
+  prompt: "Climate change impacts on agriculture",
   sessionId: "climate-agriculture-001",
   parameters: {
     nodeType: "hypothesis"
@@ -489,10 +590,9 @@ const gotSession = await mcp.callTool("unified-reasoning", {
 });
 
 // Add supporting evidence
-const evidence = await mcp.callTool("unified-reasoning", {
-  pattern: "graph",
-  operation: "create",
-  content: "Rising temperatures reduce wheat yields by 6% per degree",
+const evidence = await mcp.callTool("clear_thought", {
+  operation: "graph_of_thought",
+  prompt: "Rising temperatures reduce wheat yields by 6% per degree",
   sessionId: "climate-agriculture-001",
   parameters: {
     nodeType: "evidence",
@@ -507,10 +607,9 @@ const evidence = await mcp.callTool("unified-reasoning", {
 
 ```typescript
 // Initialize beam search for exploring multiple solutions
-const beamSession = await mcp.callTool("unified-reasoning", {
-  pattern: "beam",
-  operation: "create",
-  content: "Design a sustainable city transportation system",
+const beamSession = await mcp.callTool("clear_thought", {
+  operation: "beam_search",
+  prompt: "Design a sustainable city transportation system",
   sessionId: "transport-design-001",
   parameters: {
     beamWidth: 5,
@@ -519,11 +618,12 @@ const beamSession = await mcp.callTool("unified-reasoning", {
 });
 
 // Continue exploration
-const nextGeneration = await mcp.callTool("unified-reasoning", {
-  pattern: "beam",
-  operation: "continue",
+const nextGeneration = await mcp.callTool("clear_thought", {
+  operation: "beam_search",
+  prompt: "Continue beam search exploration",
   sessionId: "transport-design-001",
   parameters: {
+    action: "continue",
     generationLimit: 3
   }
 });
@@ -540,32 +640,38 @@ const nextGeneration = await mcp.callTool("unified-reasoning", {
 ### Migration Example
 
 ```typescript
-// Old API (still supported)
-const result = await mcp.callTool("sequentialthinking", {
-  thought: "Analyzing the problem",
-  thoughtNumber: 1,
-  totalThoughts: 5,
-  nextThoughtNeeded: true
+// Current API (sequential thinking operation)
+const result = await mcp.callTool("clear_thought", {
+  operation: "sequential_thinking",
+  prompt: "Analyzing the problem",
+  parameters: {
+    thoughtNumber: 1,
+    totalThoughts: 5,
+    nextThoughtNeeded: true
+  }
 });
 
-// New API (with pattern specification)
-const result = await mcp.callTool("unified-reasoning", {
-  pattern: "chain",
-  operation: "create",
-  content: "Analyzing the problem",
+// Enhanced API (with pattern specification)
+const result = await mcp.callTool("clear_thought", {
+  operation: "sequential_thinking",
+  prompt: "Analyzing the problem",
   sessionId: "analysis-001",
   parameters: {
-    totalExpectedNodes: 5
+    pattern: "tree",  // or "chain", "graph", "beam", "mcts", "auto"
+    patternParams: {
+      maxDepth: 5,
+      explorationStrategy: "best-first"
+    }
   }
 });
 ```
 
 ### Backward Compatibility
 
-- Existing `sequentialthinking` tool remains functional
-- Automatic conversion between old and new formats
-- Legacy data accessible through new interfaces
-- Gradual deprecation with clear timeline
+- Current `sequential_thinking` operation continues to work with existing parameters
+- Default behavior uses chain-of-thought pattern when no pattern is specified
+- All existing thought data fields (`branchFromThought`, `isRevision`, etc.) remain supported
+- Pattern selection is optional - omitting it maintains current behavior
 
 ## Performance Considerations
 
