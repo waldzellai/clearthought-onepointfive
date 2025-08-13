@@ -84,9 +84,34 @@ export async function handleClearThoughtTool(
     };
   }
 
+  // Auto-seed most operations with a brief sequential_thinking step
+  const seedExclusions = new Set([
+    'sequential_thinking',
+    'code_execution',
+    'session_info',
+    'session_export',
+    'session_import'
+  ]);
+
+  const shouldSeed = !seedExclusions.has(args.operation);
   const result = executeClearThoughtOperation(sessionState, args.operation, { prompt: args.prompt, parameters: args.parameters });
+  const enriched = shouldSeed
+    ? {
+        ...result,
+        initialThought: executeClearThoughtOperation(sessionState, 'sequential_thinking', {
+          prompt: `Plan approach for: ${args.prompt}`,
+          parameters: {
+            thoughtNumber: 1,
+            totalThoughts: 3,
+            nextThoughtNeeded: true,
+            needsMoreThoughts: true,
+            pattern: 'chain'
+          }
+        })
+      }
+    : result;
   return {
-    content: [{ type: 'text', text: JSON.stringify(result, null, 2) }]
+    content: [{ type: 'text', text: JSON.stringify(enriched, null, 2) }]
   };
 }
 

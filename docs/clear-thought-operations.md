@@ -44,6 +44,8 @@ This server exposes a single tool `clear_thought` with many operations. Each cal
 
 Each operation returns a JSON object with `toolOperation` and operation-specific fields. Some include `sessionContext`.
 
+Most operations now automatically include an `initialThought` field produced by a brief `sequential_thinking` seed step (1–3 thoughts) to provide immediate decomposition/context. Exclusions: `sequential_thinking`, `code_execution`, `session_info`, `session_export`, `session_import`.
+
 ## Notes
 
 - Input schema is exposed via JSON Schema; see tools/list.
