@@ -30,6 +30,7 @@
     "dependencies": {
         "@modelcontextprotocol/sdk": "^1.17.0",
         "@smithery/sdk": "^1.5.5",
+        "effect": "^3.17.7",
         "zod": "^3.23.8"
     },
     "devDependencies": {

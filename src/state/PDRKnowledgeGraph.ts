@@ -442,4 +442,45 @@ export class PDRKnowledgeGraph {
     
     return graph;
   }
+  
+  getMode(): DeploymentMode {
+    return this.mode;
+  }
+  
+  getSessionId(): string {
+    return this.sessionId;
+  }
+  
+  getResourceLimits() {
+    return PDRKnowledgeGraph.LIMITS[this.mode];
+  }
+  
+  removeNode(nodeId: string): boolean {
+    const node = this.nodes.get(nodeId);
+    if (!node) return false;
+    
+    // Remove all edges connected to this node
+    const edgesToRemove = [
+      ...this.getIncomingEdges(nodeId),
+      ...this.getOutgoingEdges(nodeId)
+    ];
+    
+    edgesToRemove.forEach(edge => this.removeEdge(edge.id));
+    
+    // Remove from parent's children
+    if (node.parentId) {
+      const parent = this.nodes.get(node.parentId);
+      if (parent) {
+        parent.childrenIds.delete(nodeId);
+      }
+    }
+    
+    // Remove node
+    this.nodes.delete(nodeId);
+    return true;
+  }
+  
+  removeEdge(edgeId: string): boolean {
+    return this.edges.delete(edgeId);
+  }
 }
