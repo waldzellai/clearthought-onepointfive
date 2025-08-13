@@ -188,8 +188,8 @@ docker run -it waldzellai/clear-thought
 
 1. Clone the repository
 2. Install dependencies: `npm install`
-3. Build the project: `npm run build`
-4. Start the server: `npm start`
+3. Dev server (single entry via CLI): `npx @smithery/cli dev`
+4. Build for deployment: `npx @smithery/cli build`
 
 ## Contributing
 

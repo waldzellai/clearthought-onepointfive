@@ -9,9 +9,6 @@
         "url": "https://github.com/waldzellai/waldzell-mcp/issues"
     },
     "type": "module",
-    "bin": {
-        "clear-thought-onepointfive": "dist/index.js"
-    },
     "files": [
         "dist",
         "src",
@@ -20,27 +17,10 @@
         "LICENSE"
     ],
     "scripts": {
-        "build": "tsc && chmod +x dist/index.js",
-        "build:smithery": "npx @smithery/cli build",
-        "test": "vitest",
-        "test:coverage": "vitest --coverage",
-        "clean": "rm -rf dist",
+        "build": "npx @smithery/cli build",
+        "dev": "npx @smithery/cli dev",
         "typecheck": "tsc --noEmit",
-        "lint": "echo \"No linting configured\" && exit 0",
-        "docker:build": "docker build -t waldzellai/clear-thought .",
-        "docker:run": "docker run -p 3000:3000 waldzellai/clear-thought",
-        "dev": "tsx watch src/index.ts",
-        "dev:http": "tsx src/smithery-entry.ts",
-        "start": "node dist/index.js",
-        "start:dev": "tsx src/index.ts",
-        "start:http": "node dist/smithery-entry.js",
-        "prepare": "npm run build",
-        "watch": "tsc --watch",
-        "prebuild": "npm run clean",
-        "prepublishOnly": "npm run build",
-        "dev:watch": "npm run watch",
-        "deploy": "smithery deploy",
-        "inspector": "npx @modelcontextprotocol/inspector dist/index.js"
+        "check": "npx @biomejs/biome check --write --unsafe"
     },
     "repository": {
         "type": "git",
@@ -52,40 +32,30 @@
         "zod": "^3.23.8"
     },
     "devDependencies": {
-        "@types/json-schema": "^7.0.15",
+        "@smithery/cli": "^1.2.4",
         "@types/node": "^22",
-        "@vitest/coverage-v8": "^1.2.0",
-        "tsc-alias": "^1.8.16",
-        "tsx": "^4.7.0",
-        "typescript": "^5.3.3",
-        "vitest": "^1.2.0"
+        "typescript": "^5.3.3"
     },
     "keywords": [
         "mcp",
+        "modelcontextprotocol",
+        "reasoning",
+        "sd",
+        "complex-systems",
+        "tree-of-thought",
+        "mcts",
+        "graph-of-thought",
+        "beam-search",
+        "chain-of-thought",
         "sequential-thinking",
         "mental-models",
-        "debugging",
-        "problem-solving",
-        "ai",
-        "cognitive-tools"
+        "james-clear",
+        "cognitive-tools",
+        "model-enhancement",
+        "sequentialthinking"
     ],
     "engines": {
         "node": ">=18"
     },
-    "main": "./dist/index.js",
-    "module": "./dist/smithery-entry.js",
-    "exports": {
-        ".": {
-            "import": "./dist/index.js",
-            "require": "./dist/index.js"
-        },
-        "./server": {
-            "import": "./dist/smithery-entry.js",
-            "require": "./dist/smithery-entry.js"
-        },
-        "./tools/*": {
-            "import": "./dist/tools/*.js",
-            "require": "./dist/tools/*.js"
-        }
-    }
+    "module": "src/index.ts"
 }
