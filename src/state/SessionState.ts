@@ -26,6 +26,8 @@ import {
 import { UnifiedStore, type ClearThoughtData } from './stores/UnifiedStore.js';
 import { PDRKnowledgeGraph, DeploymentMode } from './PDRKnowledgeGraph.js';
 import { PDRSession } from '../types/reasoning-patterns/pdr.js';
+import { OODASession } from '../types/reasoning-patterns/ooda-loop.js';
+import { UlyssesSession } from '../types/reasoning-patterns/ulysses-protocol.js';
 
 /**
  * Comprehensive session statistics
@@ -69,6 +71,22 @@ export class SessionState {
   
   /** PDR Sessions */
   private pdrSessions: Map<string, PDRSession> = new Map();
+  
+  /** OODA Loop Sessions */
+  private oodaSessions: Map<string, OODASession> = new Map();
+  
+  /** Ulysses Protocol Sessions */
+  private ulyssesSessions: Map<string, UlyssesSession> = new Map();
+  
+  /** Metagame KPI tracking */
+  private metagameKPIs: Map<string, {
+    key: string;
+    label: string;
+    value: number;
+    target?: number;
+    direction: 'up' | 'down';
+    history: Array<{ timestamp: string; value: number }>;
+  }> = new Map();
   
   /** Expose config via getter */
   getConfig(): ServerConfig { return this.config; }
@@ -867,5 +885,85 @@ export class SessionState {
    */
   isActive(): boolean {
     return !!this.timeoutTimer;
+  }
+  
+  // ============= Metagame Session Management =============
+  
+  /**
+   * Create or get an OODA Loop session
+   */
+  getOODASession(sessionId: string): OODASession | undefined {
+    return this.oodaSessions.get(sessionId);
+  }
+  
+  setOODASession(sessionId: string, session: OODASession): void {
+    this.oodaSessions.set(sessionId, session);
+    this.updateAccess();
+  }
+  
+  /**
+   * Create or get a Ulysses Protocol session
+   */
+  getUlyssesSession(sessionId: string): UlyssesSession | undefined {
+    return this.ulyssesSessions.get(sessionId);
+  }
+  
+  setUlyssesSession(sessionId: string, session: UlyssesSession): void {
+    this.ulyssesSessions.set(sessionId, session);
+    this.updateAccess();
+  }
+  
+  /**
+   * Track KPI metrics for metagames
+   */
+  updateKPI(
+    key: string,
+    value: number,
+    label?: string,
+    target?: number,
+    direction?: 'up' | 'down'
+  ): void {
+    const existing = this.metagameKPIs.get(key);
+    const timestamp = new Date().toISOString();
+    
+    if (existing) {
+      existing.value = value;
+      existing.history.push({ timestamp, value });
+      // Keep only last 100 history entries
+      if (existing.history.length > 100) {
+        existing.history = existing.history.slice(-100);
+      }
+    } else {
+      this.metagameKPIs.set(key, {
+        key,
+        label: label || key,
+        value,
+        target,
+        direction: direction || 'up',
+        history: [{ timestamp, value }]
+      });
+    }
+    
+    this.updateAccess();
+  }
+  
+  /**
+   * Get all KPIs or a specific one
+   */
+  getKPIs(key?: string) {
+    if (key) {
+      return this.metagameKPIs.get(key);
+    }
+    return Array.from(this.metagameKPIs.values());
+  }
+  
+  /**
+   * Clear metagame sessions
+   */
+  clearMetagameSessions(): void {
+    this.oodaSessions.clear();
+    this.ulyssesSessions.clear();
+    this.metagameKPIs.clear();
+    this.updateAccess();
   }
 }

@@ -23,6 +23,10 @@ export * from './mcts.js';
 // Progressive Deep Reasoning
 export * from './pdr.js';
 
+// Metagame patterns
+export * from './ooda-loop.js';
+export * from './ulysses-protocol.js';
+
 // Re-export commonly used types for convenience
 export type {
   BaseReasoningNode,

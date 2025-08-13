@@ -54,6 +54,9 @@ export const ClearThoughtParamsSchema = z.object({
     'mcts',
     'graph_of_thought',
     'orchestration_suggest',
+    // Metagame operations
+    'ooda_loop',
+    'ulysses_protocol',
     // Notebook operations
     'notebook_create',
     'notebook_add_cell',
@@ -85,7 +88,7 @@ export async function handleClearThoughtTool(
     const code = String(params.code || '');
     const cfg = sessionState.getConfig();
     if (lang !== 'python' || !cfg.allowCodeExecution) {
-      const preview = executeClearThoughtOperation(sessionState, args.operation, { prompt: args.prompt, parameters: args.parameters });
+      const preview = await executeClearThoughtOperation(sessionState, args.operation, { prompt: args.prompt, parameters: args.parameters });
       return { content: [{ type: 'text', text: JSON.stringify(preview, null, 2) }] };
     }
     const result = await executePython(code, cfg.pythonCommand, cfg.executionTimeoutMs);
@@ -147,11 +150,11 @@ export async function handleClearThoughtTool(
     }
   }
   
-  const result = executeClearThoughtOperation(sessionState, args.operation, { prompt: args.prompt, parameters: args.parameters });
+  const result = await executeClearThoughtOperation(sessionState, args.operation, { prompt: args.prompt, parameters: args.parameters });
   const enriched = shouldSeed
     ? {
         ...result,
-        initialThought: executeClearThoughtOperation(sessionState, 'sequential_thinking', {
+        initialThought: await executeClearThoughtOperation(sessionState, 'sequential_thinking', {
           prompt: `Plan approach for: ${args.prompt}`,
           parameters: {
             thoughtNumber: 1,
@@ -188,11 +191,11 @@ export function registerTools(server: { tool: Function }, sessionState: SessionS
  * @param operation - The operation to perform
  * @param args - Operation arguments
  */
-export function executeClearThoughtOperation(
+export async function executeClearThoughtOperation(
   sessionState: SessionState,
   operation: string,
   args: { prompt: string; parameters?: Record<string, unknown> }
-): Record<string, unknown> {
+): Promise<Record<string, unknown>> {
   const { prompt, parameters = {} } = args;
   
   // Optional reasoning pattern selection for sequential_thinking
@@ -263,7 +266,7 @@ export function executeClearThoughtOperation(
         };
         const mappedOp = opMap[chosenPattern];
         if (mappedOp) {
-          patternResult = executeClearThoughtOperation(sessionState, mappedOp, { prompt, parameters: patternParams });
+          patternResult = await executeClearThoughtOperation(sessionState, mappedOp, { prompt, parameters: patternParams });
         }
       }
       
@@ -755,7 +758,7 @@ export function executeClearThoughtOperation(
       }
       
       // Alias to sequential_thinking with tree pattern
-      return executeClearThoughtOperation(sessionState, 'sequential_thinking', {
+      return await executeClearThoughtOperation(sessionState, 'sequential_thinking', {
         prompt,
         parameters: {
           pattern: 'tree',
@@ -791,7 +794,7 @@ export function executeClearThoughtOperation(
       }
       
       // Alias to sequential_thinking with beam pattern
-      return executeClearThoughtOperation(sessionState, 'sequential_thinking', {
+      return await executeClearThoughtOperation(sessionState, 'sequential_thinking', {
         prompt,
         parameters: {
           pattern: 'beam',
@@ -826,7 +829,7 @@ export function executeClearThoughtOperation(
       }
       
       // Alias to sequential_thinking with mcts pattern
-      return executeClearThoughtOperation(sessionState, 'sequential_thinking', {
+      return await executeClearThoughtOperation(sessionState, 'sequential_thinking', {
         prompt,
         parameters: {
           pattern: 'mcts',
@@ -861,7 +864,7 @@ export function executeClearThoughtOperation(
       }
       
       // Alias to sequential_thinking with graph pattern
-      return executeClearThoughtOperation(sessionState, 'sequential_thinking', {
+      return await executeClearThoughtOperation(sessionState, 'sequential_thinking', {
         prompt,
         parameters: {
           pattern: 'graph',
@@ -896,7 +899,7 @@ export function executeClearThoughtOperation(
       }
       
       // Kick off a brief sequential_thinking step to seed orchestration with context
-      const initialThought = executeClearThoughtOperation(sessionState, 'sequential_thinking', {
+      const initialThought = await executeClearThoughtOperation(sessionState, 'sequential_thinking', {
         prompt: `Plan approach for task: ${prompt}`,
         parameters: {
           thoughtNumber: 1,
@@ -1000,6 +1003,210 @@ export function executeClearThoughtOperation(
           success: json !== null
         };
       }
+    }
+    
+    // =============== Metagame Operations ===============
+    
+    case 'ooda_loop': {
+      const { 
+        createOODASession, 
+        advancePhase, 
+        createOODANode, 
+        suggestNextActions, 
+        evaluateEvidenceQuality,
+        exportToMarkdown 
+      } = await import('../types/reasoning-patterns/ooda-loop.js');
+      
+      // Get or create session
+      const oodaSessionId = getParam('sessionId', `ooda-${Date.now()}`) as string;
+      let oodaSession = sessionState.getOODASession(oodaSessionId);
+      
+      if (!oodaSession) {
+        oodaSession = createOODASession({
+          maxLoopTimeMs: getParam('maxLoopTimeMs', 15 * 60 * 1000) as number,
+          autoAdvance: getParam('autoAdvance', true) as boolean,
+          minEvidence: getParam('minEvidence', 2) as number
+        });
+        sessionState.setOODASession(oodaSessionId, oodaSession);
+      }
+      
+      // Process the current phase
+      const action = getParam('action', 'observe') as string;
+      const evidence = getParam('evidence', []) as string[];
+      
+      // Create node for current phase
+      const node = createOODANode(prompt, oodaSession.currentPhase, evidence);
+      
+      // Add hypotheses if provided
+      const hypotheses = getParam('hypotheses', []) as Array<{
+        statement: string;
+        confidence: number;
+      }>;
+      
+      for (const hyp of hypotheses) {
+        const hypId = `hyp-${Date.now()}-${Math.random()}`;
+        oodaSession.hypotheses.set(hypId, {
+          id: hypId,
+          statement: hyp.statement,
+          confidence: hyp.confidence,
+          status: 'proposed',
+          carriedForward: false
+        });
+      }
+      
+      // Calculate metrics
+      node.phaseTimeMs = Date.now() - new Date(oodaSession.loopStartTime || oodaSession.createdAt).getTime();
+      oodaSession.metrics.evidenceQuality = evaluateEvidenceQuality(node);
+      
+      // Add node to session
+      oodaSession.nodes.push(node);
+      oodaSession.iteration++;
+      
+      // Track KPIs
+      sessionState.updateKPI('ooda_loop_time', oodaSession.metrics.avgLoopTimeMs, 'Avg Loop Time (ms)', 5 * 60 * 1000, 'down');
+      sessionState.updateKPI('ooda_learning_rate', oodaSession.metrics.learningRate, 'Learning Rate', 0.7, 'up');
+      sessionState.updateKPI('ooda_evidence_quality', oodaSession.metrics.evidenceQuality, 'Evidence Quality', 0.8, 'up');
+      
+      // Auto-advance if configured
+      if (oodaSession.config.autoAdvance && evidence.length >= oodaSession.config.minEvidence) {
+        oodaSession = advancePhase(oodaSession);
+      }
+      
+      // Get suggestions
+      const suggestions = suggestNextActions(oodaSession);
+      
+      // Save session
+      sessionState.setOODASession(oodaSessionId, oodaSession);
+      
+      return {
+        toolOperation: 'ooda_loop',
+        sessionId: oodaSessionId,
+        currentPhase: oodaSession.currentPhase,
+        loopNumber: oodaSession.loopNumber,
+        metrics: oodaSession.metrics,
+        suggestions,
+        hypotheses: Array.from(oodaSession.hypotheses.values()),
+        export: getParam('includeExport', false) ? exportToMarkdown(oodaSession) : undefined,
+        sessionContext: {
+          sessionId: sessionState.sessionId,
+          kpis: sessionState.getKPIs()
+        }
+      };
+    }
+    
+    case 'ulysses_protocol': {
+      const {
+        createUlyssesSession,
+        advancePhase,
+        createUlyssesNode,
+        checkConstraints,
+        suggestNextActions,
+        makeFinalDecision,
+        exportToMarkdown
+      } = await import('../types/reasoning-patterns/ulysses-protocol.js');
+      
+      // Get or create session
+      const ulyssesSessionId = getParam('sessionId', `ulysses-${Date.now()}`) as string;
+      let ulyssesSession = sessionState.getUlyssesSession(ulyssesSessionId);
+      
+      if (!ulyssesSession) {
+        ulyssesSession = createUlyssesSession({
+          constraints: {
+            timeboxMs: getParam('timeboxMs', 4 * 60 * 60 * 1000) as number,
+            maxIterations: getParam('maxIterations', 3) as number,
+            minConfidence: getParam('minConfidence', 0.8) as number,
+            maxScopeDrift: getParam('maxScopeDrift', 1) as number
+          },
+          policy: {
+            autoEscalate: getParam('autoEscalate', true) as boolean,
+            notifyWhen: getParam('notifyWhen', ['gateFail', 'timeboxNear']) as any,
+            allowOverride: getParam('allowOverride', false) as boolean
+          }
+        });
+        sessionState.setUlyssesSession(ulyssesSessionId, ulyssesSession);
+      }
+      
+      // Process the current phase
+      const confidence = getParam('confidence', 0.5) as number;
+      const evidence = getParam('evidence', []) as string[];
+      const iteration = ulyssesSession.currentPhase === 'implementation' 
+        ? ulyssesSession.implementationIteration 
+        : undefined;
+      
+      // Create node
+      const node = createUlyssesNode(prompt, ulyssesSession.currentPhase, confidence, iteration);
+      node.evidence = evidence;
+      node.timeSpentMs = Date.now() - new Date(ulyssesSession.startTime).getTime();
+      
+      // Check for scope changes
+      const scopeChange = getParam('scopeChange', null) as any;
+      if (scopeChange) {
+        node.scopeChange = scopeChange;
+      }
+      
+      // Add node to session
+      ulyssesSession.nodes.push(node);
+      ulyssesSession.iteration++;
+      
+      // Increment implementation iteration if in that phase
+      if (ulyssesSession.currentPhase === 'implementation') {
+        ulyssesSession.implementationIteration++;
+        ulyssesSession.metrics.iterations = ulyssesSession.implementationIteration;
+      }
+      
+      // Check constraints and escalate if needed
+      const constraintCheck = checkConstraints(ulyssesSession);
+      if (constraintCheck.escalation) {
+        node.escalated = constraintCheck.escalation;
+      }
+      
+      // Track KPIs
+      sessionState.updateKPI('ulysses_confidence', ulyssesSession.metrics.confidence, 'Confidence', 0.8, 'up');
+      sessionState.updateKPI('ulysses_iterations', ulyssesSession.metrics.iterations, 'Iterations', 3, 'down');
+      sessionState.updateKPI('ulysses_scope_drift', ulyssesSession.metrics.scopeDrift, 'Scope Drift', 1, 'down');
+      sessionState.updateKPI('ulysses_time_remaining', ulyssesSession.metrics.timeRemainingMs, 'Time Remaining (ms)', 0, 'up');
+      
+      // Try to advance phase if requested
+      const attemptAdvance = getParam('attemptAdvance', false) as boolean;
+      let phaseAdvanced = false;
+      if (attemptAdvance) {
+        const result = advancePhase(ulyssesSession, evidence);
+        phaseAdvanced = result.success;
+        if (result.success && result.newPhase) {
+          ulyssesSession.currentPhase = result.newPhase;
+        }
+      }
+      
+      // Make final decision if in ship_or_abort phase
+      if (ulyssesSession.currentPhase === 'ship_or_abort' && getParam('makeFinalDecision', false)) {
+        const rationale = getParam('decisionRationale', 'Based on current metrics and constraints') as string;
+        ulyssesSession.finalDecision = makeFinalDecision(ulyssesSession, rationale);
+      }
+      
+      // Get suggestions
+      const suggestions = suggestNextActions(ulyssesSession);
+      
+      // Save session
+      sessionState.setUlyssesSession(ulyssesSessionId, ulyssesSession);
+      
+      return {
+        toolOperation: 'ulysses_protocol',
+        sessionId: ulyssesSessionId,
+        currentPhase: ulyssesSession.currentPhase,
+        gates: ulyssesSession.gates,
+        metrics: ulyssesSession.metrics,
+        constraints: ulyssesSession.constraints,
+        constraintViolations: constraintCheck.violations,
+        escalation: constraintCheck.escalation,
+        suggestions,
+        phaseAdvanced,
+        finalDecision: ulyssesSession.finalDecision,
+        export: getParam('includeExport', false) ? exportToMarkdown(ulyssesSession) : undefined,
+        sessionContext: {
+          sessionId: sessionState.sessionId,
+          kpis: sessionState.getKPIs()
+        }
+      };
     }
     
     default:

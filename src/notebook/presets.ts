@@ -686,13 +686,415 @@ plan.forEach((step, index) => {
   ]
 };
 
+export const OODA_LOOP_PRESET: NotebookPreset = {
+  name: 'OODA Loop Sprint',
+  description: 'Observe-Orient-Decide-Act rapid decision cycles',
+  cells: [
+    {
+      type: 'markdown',
+      source: `# OODA Loop Sprint Session
+
+## Overview
+The OODA Loop (Observe-Orient-Decide-Act) is a rapid decision-making framework with automated timing and hypothesis tracking.
+
+## Current Loop
+- **Phase**: Observe
+- **Loop #**: 1
+- **Target Loop Time**: < 15 minutes
+
+## Phase Checklist
+- [ ] Collect raw data from environment
+- [ ] Note anomalies and changes  
+- [ ] Identify emerging patterns
+- [ ] Document observations without interpretation`
+    },
+    {
+      type: 'code',
+      source: `// Initialize OODA Loop Session
+const session = {
+  loopNumber: 1,
+  currentPhase: 'observe',
+  startTime: Date.now(),
+  hypotheses: [],
+  observations: [],
+  decisions: [],
+  actions: []
+};
+
+// Phase transition helper
+function advancePhase() {
+  const phases = ['observe', 'orient', 'decide', 'act'];
+  const currentIndex = phases.indexOf(session.currentPhase);
+  session.currentPhase = phases[(currentIndex + 1) % 4];
+  
+  if (session.currentPhase === 'observe') {
+    session.loopNumber++;
+    console.log(\`Starting Loop #\${session.loopNumber}\`);
+  }
+  
+  return session.currentPhase;
+}
+
+// Evidence collection
+function collectEvidence(phase, evidence) {
+  const entry = {
+    phase,
+    evidence,
+    timestamp: new Date().toISOString(),
+    loopNumber: session.loopNumber
+  };
+  
+  switch(phase) {
+    case 'observe':
+      session.observations.push(entry);
+      break;
+    case 'decide':
+      session.decisions.push(entry);
+      break;
+    case 'act':
+      session.actions.push(entry);
+      break;
+  }
+  
+  return entry;
+}
+
+// Example observation
+collectEvidence('observe', [
+  'System response time increased by 200ms',
+  'Memory usage at 78%',
+  'Error rate spike at 14:30'
+]);
+
+console.log('Current session:', session);`,
+      language: 'javascript'
+    },
+    {
+      type: 'markdown',
+      source: `## Hypothesis Tracking
+
+Track hypotheses across loops to measure learning rate:`
+    },
+    {
+      type: 'code',
+      source: `// Hypothesis management
+class Hypothesis {
+  constructor(statement, confidence = 0.5) {
+    this.id = \`hyp-\${Date.now()}\`;
+    this.statement = statement;
+    this.confidence = confidence;
+    this.status = 'proposed';
+    this.evidence = [];
+    this.loopProposed = session.loopNumber;
+  }
+  
+  addEvidence(evidence, supportive = true) {
+    this.evidence.push({ evidence, supportive, loop: session.loopNumber });
+    
+    // Adjust confidence based on evidence
+    if (supportive) {
+      this.confidence = Math.min(1, this.confidence + 0.1);
+    } else {
+      this.confidence = Math.max(0, this.confidence - 0.15);
+    }
+    
+    // Update status
+    if (this.confidence > 0.8) {
+      this.status = 'validated';
+    } else if (this.confidence < 0.2) {
+      this.status = 'invalidated';
+    }
+  }
+}
+
+// Create and track hypotheses
+const h1 = new Hypothesis('Database queries are causing the latency', 0.6);
+const h2 = new Hypothesis('Memory leak in background job', 0.4);
+
+session.hypotheses.push(h1, h2);
+
+// Test hypothesis with evidence
+h1.addEvidence('Query logs show 5s+ execution times', true);
+h1.addEvidence('CPU usage normal during spikes', false);
+
+console.log('Hypothesis status:', h1);`,
+      language: 'javascript'
+    },
+    {
+      type: 'markdown',
+      source: `## Learning Rate Calculation
+
+Learning rate = (validated hypotheses / total) × loop efficiency`
+    },
+    {
+      type: 'code',
+      source: `// Calculate learning metrics
+function calculateLearningRate() {
+  const validated = session.hypotheses.filter(h => h.status === 'validated').length;
+  const total = session.hypotheses.length;
+  
+  if (total === 0) return 0;
+  
+  const validationRate = validated / total;
+  const loopTime = Date.now() - session.startTime;
+  const targetTime = 15 * 60 * 1000; // 15 minutes
+  const efficiency = Math.min(1, targetTime / loopTime);
+  
+  return {
+    learningRate: validationRate * efficiency,
+    validationRate,
+    efficiency,
+    loopTimeMinutes: Math.round(loopTime / 1000 / 60)
+  };
+}
+
+const metrics = calculateLearningRate();
+console.log('Learning Metrics:', metrics);`,
+      language: 'javascript'
+    }
+  ]
+};
+
+export const ULYSSES_PROTOCOL_PRESET: NotebookPreset = {
+  name: 'Ulysses Protocol',
+  description: 'Time-boxed execution with iteration limits and confidence tracking',
+  cells: [
+    {
+      type: 'markdown',
+      source: `# Ulysses Protocol Session
+
+## Overview
+Enforces disciplined, time-boxed execution with strict iteration limits to prevent scope creep.
+
+## Constraints
+- **Time Budget**: 4 hours
+- **Max Iterations**: 3
+- **Min Confidence**: 80%
+- **Max Scope Drift**: 1 change
+
+## Current Status
+- **Phase**: Reconnaissance
+- **Gate Status**: 🔓 Open
+- **Confidence**: 0%
+- **Time Remaining**: 4:00:00`
+    },
+    {
+      type: 'code',
+      source: `// Initialize Ulysses Protocol Session
+const protocol = {
+  sessionId: \`ulysses-\${Date.now()}\`,
+  startTime: Date.now(),
+  currentPhase: 'reconnaissance',
+  gates: [
+    { id: 'recon', phase: 'reconnaissance', status: 'open', entryCriteria: [], exitCriteria: [] },
+    { id: 'plan', phase: 'planning', status: 'locked', entryCriteria: [], exitCriteria: [] },
+    { id: 'impl', phase: 'implementation', status: 'locked', entryCriteria: [], exitCriteria: [] },
+    { id: 'validate', phase: 'validation', status: 'locked', entryCriteria: [], exitCriteria: [] },
+    { id: 'ship_abort', phase: 'ship_or_abort', status: 'locked', entryCriteria: [], exitCriteria: [] }
+  ],
+  constraints: {
+    timeboxMs: 4 * 60 * 60 * 1000, // 4 hours
+    maxIterations: 3,
+    minConfidence: 0.8,
+    maxScopeDrift: 1
+  },
+  metrics: {
+    iterations: 0,
+    confidence: 0,
+    scopeDrift: 0,
+    escalations: 0
+  }
+};
+
+// Gate management
+function checkGateCriteria(gateId, evidence) {
+  const gate = protocol.gates.find(g => g.id === gateId);
+  if (!gate) return { passed: false, reason: 'Gate not found' };
+  
+  // Simple criteria check
+  const requiredEvidence = 3;
+  if (evidence.length < requiredEvidence) {
+    return { passed: false, reason: \`Need \${requiredEvidence} evidence items, have \${evidence.length}\` };
+  }
+  
+  return { passed: true };
+}
+
+// Attempt gate passage
+const evidence = [
+  'Requirements documented',
+  'Stakeholders identified',
+  'Success criteria defined'
+];
+
+const result = checkGateCriteria('recon', evidence);
+console.log('Gate check result:', result);`,
+      language: 'javascript'
+    },
+    {
+      type: 'markdown',
+      source: `## Constraint Monitoring & Auto-Escalation`
+    },
+    {
+      type: 'code',
+      source: `// Constraint violation detection
+function checkConstraints() {
+  const violations = [];
+  const elapsed = Date.now() - protocol.startTime;
+  
+  // Time constraint
+  if (elapsed > protocol.constraints.timeboxMs) {
+    violations.push({
+      type: 'time',
+      message: \`Time limit exceeded: \${Math.round(elapsed/1000/60)} min\`
+    });
+  }
+  
+  // Iteration constraint (only in implementation)
+  if (protocol.currentPhase === 'implementation' && 
+      protocol.metrics.iterations > protocol.constraints.maxIterations) {
+    violations.push({
+      type: 'iteration',
+      message: \`Iteration limit exceeded: \${protocol.metrics.iterations}/\${protocol.constraints.maxIterations}\`
+    });
+  }
+  
+  // Confidence constraint
+  if (protocol.metrics.confidence < protocol.constraints.minConfidence) {
+    violations.push({
+      type: 'confidence', 
+      message: \`Confidence below threshold: \${(protocol.metrics.confidence*100).toFixed(0)}%\`
+    });
+  }
+  
+  // Auto-escalation
+  if (violations.length > 0) {
+    protocol.metrics.escalations++;
+    
+    const escalation = {
+      timestamp: new Date().toISOString(),
+      violations,
+      action: violations.some(v => v.type === 'time' || v.type === 'iteration') 
+        ? 'abort' 
+        : 'reduce_scope'
+    };
+    
+    console.log('⚠️ AUTO-ESCALATION TRIGGERED:', escalation);
+    return escalation;
+  }
+  
+  return null;
+}
+
+// Simulate some progress
+protocol.metrics.iterations = 4;
+protocol.metrics.confidence = 0.65;
+
+const escalation = checkConstraints();`,
+      language: 'javascript'
+    },
+    {
+      type: 'markdown',
+      source: `## Confidence Tracking
+
+Track confidence throughout phases to ensure quality decisions:`
+    },
+    {
+      type: 'code',
+      source: `// Confidence calculation
+class ConfidenceTracker {
+  constructor() {
+    this.history = [];
+    this.factors = {
+      evidenceQuality: 0,
+      testCoverage: 0,
+      riskMitigation: 0,
+      stakeholderAlignment: 0
+    };
+  }
+  
+  updateFactor(factor, value) {
+    this.factors[factor] = Math.max(0, Math.min(1, value));
+    this.calculate();
+  }
+  
+  calculate() {
+    // Weighted average of factors
+    const weights = {
+      evidenceQuality: 0.3,
+      testCoverage: 0.3,
+      riskMitigation: 0.2,
+      stakeholderAlignment: 0.2
+    };
+    
+    let confidence = 0;
+    for (const [factor, weight] of Object.entries(weights)) {
+      confidence += this.factors[factor] * weight;
+    }
+    
+    // Apply iteration penalty
+    if (protocol.metrics.iterations > protocol.constraints.maxIterations) {
+      const penalty = 0.1 * (protocol.metrics.iterations - protocol.constraints.maxIterations);
+      confidence = Math.max(0, confidence - penalty);
+    }
+    
+    protocol.metrics.confidence = confidence;
+    this.history.push({
+      timestamp: new Date().toISOString(),
+      confidence,
+      phase: protocol.currentPhase
+    });
+    
+    return confidence;
+  }
+  
+  getRecommendation() {
+    const conf = protocol.metrics.confidence;
+    if (conf >= protocol.constraints.minConfidence) {
+      return '✅ Confidence threshold met - ready to ship';
+    } else if (conf < 0.5) {
+      return '❌ Low confidence - consider abort or major pivot';
+    } else {
+      return '⚠️ Moderate confidence - address key risks before proceeding';
+    }
+  }
+}
+
+const tracker = new ConfidenceTracker();
+tracker.updateFactor('evidenceQuality', 0.8);
+tracker.updateFactor('testCoverage', 0.6);
+tracker.updateFactor('riskMitigation', 0.7);
+tracker.updateFactor('stakeholderAlignment', 0.9);
+
+console.log('Current confidence:', (protocol.metrics.confidence * 100).toFixed(1) + '%');
+console.log('Recommendation:', tracker.getRecommendation());`,
+      language: 'javascript'
+    },
+    {
+      type: 'markdown',
+      source: `## Ship/Abort Decision Matrix
+
+| Metric | Status | Recommendation |
+|--------|--------|----------------|
+| Confidence | -- | Based on threshold |
+| Iterations | -- | Based on limit |
+| Time | ⏰ | Check remaining |
+| Scope | -- | Based on drift |
+
+Update the table dynamically based on your protocol.metrics values.`
+    }
+  ]
+};
+
 // Export all presets
 export const NOTEBOOK_PRESETS: Record<string, NotebookPreset> = {
   tree_of_thought: TREE_OF_THOUGHT_PRESET,
   beam_search: BEAM_SEARCH_PRESET,
   mcts: MCTS_PRESET,
   graph_of_thought: GRAPH_OF_THOUGHT_PRESET,
-  orchestration_suggest: ORCHESTRATION_SUGGEST_PRESET
+  orchestration_suggest: ORCHESTRATION_SUGGEST_PRESET,
+  ooda_loop: OODA_LOOP_PRESET,
+  ulysses_protocol: ULYSSES_PROTOCOL_PRESET
 };
 
 export function getPresetForPattern(pattern: string): NotebookPreset | undefined {
