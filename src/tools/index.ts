@@ -708,12 +708,28 @@ export function executeClearThoughtOperation(
     }
 
     case 'orchestration_suggest': {
+      // Kick off a brief sequential_thinking step to seed orchestration with context
+      const initialThought = executeClearThoughtOperation(sessionState, 'sequential_thinking', {
+        prompt: `Plan approach for task: ${prompt}`,
+        parameters: {
+          thoughtNumber: 1,
+          totalThoughts: 3,
+          nextThoughtNeeded: true,
+          needsMoreThoughts: true,
+          pattern: 'chain'
+        }
+      });
+
       return {
         toolOperation: 'orchestration_suggest',
         task: prompt,
         suggestedTools: ['sequential_thinking', 'mental_model'],
-        reasoning: 'Based on the task complexity, a combination of sequential thinking and mental models would be effective',
-        workflow: []
+        reasoning: 'Initialized with a short sequential_thinking pass to decompose the task, then apply a mental model for framing.',
+        initialThought,
+        workflow: [
+          { step: 'sequential_thinking', purpose: 'quick task decomposition (1-3 thoughts)' },
+          { step: 'mental_model', purpose: 'apply appropriate model to frame solution' }
+        ]
       };
     }
     

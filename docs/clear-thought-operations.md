@@ -33,7 +33,7 @@ This server exposes a single tool `clear_thought` with many operations. Each cal
 - custom_framework: Define custom stages/rules/metrics. Params: stages, rules, metrics.
 - code_execution: Restricted; Python only when enabled. Params: language, code.
 - tree_of_thought | beam_search | mcts | graph_of_thought: Pattern-specific structures. Params are pattern-specific.
-- orchestration_suggest: Suggests tool combinations. Params: none defined.
+- orchestration_suggest: Suggests tool combinations and performs a brief `sequential_thinking` seed step to decompose the task (1–3 thoughts). Params: none defined.
 
 ## Pattern selection in sequential_thinking
 
