@@ -20,7 +20,8 @@
         "build": "npx @smithery/cli build",
         "dev": "npx @smithery/cli dev",
         "typecheck": "tsc --noEmit",
-        "check": "npx @biomejs/biome check --write --unsafe"
+        "check": "npx @biomejs/biome check --write --unsafe",
+        "test": "vitest"
     },
     "repository": {
         "type": "git",

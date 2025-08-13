@@ -24,6 +24,8 @@ import {
 
 // Import unified store
 import { UnifiedStore, type ClearThoughtData } from './stores/UnifiedStore.js';
+import { PDRKnowledgeGraph, DeploymentMode } from './PDRKnowledgeGraph.js';
+import { PDRSession } from '../types/reasoning-patterns/pdr.js';
 
 /**
  * Comprehensive session statistics
@@ -61,6 +63,12 @@ export class SessionState {
   
   /** Unified data store */
   private readonly unifiedStore: UnifiedStore;
+  
+  /** PDR Knowledge Graphs for sessions */
+  private pdrGraphs: Map<string, PDRKnowledgeGraph> = new Map();
+  
+  /** PDR Sessions */
+  private pdrSessions: Map<string, PDRSession> = new Map();
   
   /** Expose config via getter */
   getConfig(): ServerConfig { return this.config; }
@@ -377,6 +385,67 @@ export class SessionState {
     this.touch();
     const items = this.unifiedStore.getByType("visual");
     return items.filter(item => item.data.diagramId === diagramId).map(item => item.data);
+  }
+  
+  // ============================================================================
+  // PDR Knowledge Graph Support
+  // ============================================================================
+  
+  /**
+   * Get or create a PDR knowledge graph for a session
+   */
+  getPDRGraph(graphId?: string, mode?: DeploymentMode): PDRKnowledgeGraph {
+    this.touch();
+    const id = graphId || this.sessionId;
+    
+    if (!this.pdrGraphs.has(id)) {
+      this.pdrGraphs.set(id, new PDRKnowledgeGraph(id, mode || 'standard'));
+    }
+    
+    return this.pdrGraphs.get(id)!;
+  }
+  
+  /**
+   * Set a PDR knowledge graph
+   */
+  setPDRGraph(graphId: string, graph: PDRKnowledgeGraph): void {
+    this.touch();
+    this.pdrGraphs.set(graphId, graph);
+  }
+  
+  /**
+   * Get or create a PDR session
+   */
+  getPDRSession(sessionId?: string): PDRSession | undefined {
+    this.touch();
+    const id = sessionId || this.sessionId;
+    return this.pdrSessions.get(id);
+  }
+  
+  /**
+   * Set a PDR session
+   */
+  setPDRSession(sessionId: string, session: PDRSession): void {
+    this.touch();
+    this.pdrSessions.set(sessionId, session);
+  }
+  
+  /**
+   * Serialize PDR graph for persistence
+   */
+  serializePDRGraph(graphId?: string): string | undefined {
+    const id = graphId || this.sessionId;
+    const graph = this.pdrGraphs.get(id);
+    return graph ? graph.serialize() : undefined;
+  }
+  
+  /**
+   * Deserialize PDR graph from storage
+   */
+  deserializePDRGraph(data: string, graphId?: string): void {
+    const graph = PDRKnowledgeGraph.deserialize(data);
+    const id = graphId || this.sessionId;
+    this.pdrGraphs.set(id, graph);
   }
   
   // ============================================================================

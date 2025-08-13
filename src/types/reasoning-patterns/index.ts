@@ -20,6 +20,9 @@ export * from './beam-search.js';
 // Monte Carlo Tree Search
 export * from './mcts.js';
 
+// Progressive Deep Reasoning
+export * from './pdr.js';
+
 // Re-export commonly used types for convenience
 export type {
   BaseReasoningNode,

@@ -342,9 +342,9 @@ export interface DialecticalSession {
 }
 ```
 
-### Progressive Deep Research (PDR)
+### Progressive Deep Reasoning (PDR)
 
-Progressive Deep Research orchestrates breadth-first discovery followed by selective deepening across multiple passes. Each pass can assign a different reasoning approach per subject (sequential/tree/beam/mcts/graph), enabling adaptive exploration with budgets and stop conditions.
+Progressive Deep Reasoning orchestrates a breadth-first reasoning pass followed by selective deepening across multiple passes. Each pass can assign a different reasoning approach per subject (sequential/tree/beam/mcts/graph), enabling adaptive exploration with budgets and stop conditions.
 
 #### Key Features:
 - Breadth→depth multi-pass workflow (scan → cluster → select → deepen → synthesize)

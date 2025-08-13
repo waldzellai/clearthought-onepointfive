@@ -47,7 +47,11 @@ Note: Compatible with various modern web frameworks and architectures.
 - Program Slicing
 - Advanced debugging patterns
 
-### Sequential Thinking
+### Sequential Thinking with Ephemeral Notebooks
+- **NEW**: Automatic notebook creation for advanced reasoning patterns
+- Interactive JavaScript execution in secure sandbox
+- Pattern-specific presets (Tree of Thought, Beam Search, MCTS, Graph of Thought)
+- Export to srcbook markdown format
 - Structured thought process
 - Revision and branching support
 - Progress tracking
