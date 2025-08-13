@@ -698,11 +698,11 @@ export interface SessionExport {
   /** Type of thinking session */
   sessionType: 'sequential' | 'mental-model' | 'debugging' | 'collaborative' |
                'decision' | 'metacognitive' | 'scientific' | 'socratic' |
-               'creative' | 'systems' | 'visual';
+               'creative' | 'systems' | 'visual' | 'argument';
   /** Session data (varies by type) */
   data: ThoughtData | MentalModelData | DebuggingSession | CollaborativeSession |
         DecisionData | MetacognitiveData | ScientificInquiryData | SocraticData |
-        CreativeData | SystemsData | VisualData;
+        CreativeData | SystemsData | VisualData | ArgumentData;
   /** Session metadata */
   metadata?: {
     /** User who created the session */

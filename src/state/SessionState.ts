@@ -389,19 +389,14 @@ export class SessionState {
    */
   addArgumentation(argument: ArgumentData | SocraticData): void {
     this.touch();
-    // For now, we'll store these in the creative store as a placeholder
-    // In a real implementation, you might want a dedicated ArgumentStore
-    const session: CreativeData = {
-      prompt: argument.claim,
-      ideas: argument.premises,
-      techniques: ['socratic-method'],
-      connections: [],
-      insights: [argument.conclusion],
-      sessionId: argument.sessionId,
-      iteration: argument.iteration,
-      nextIdeaNeeded: argument.nextArgumentNeeded
-    };
-    this.addCreativeSession(session);
+    const isSocratic = (argument as SocraticData).question !== undefined || (argument as SocraticData).stage !== undefined;
+    if (isSocratic) {
+      const id = `socratic-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      this.unifiedStore.add(id, { type: 'socratic', data: argument as SocraticData });
+    } else {
+      const id = `argument-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      this.unifiedStore.add(id, { type: 'argument', data: argument as ArgumentData });
+    }
   }
   
   // ============================================================================
@@ -460,6 +455,14 @@ export class SessionState {
     if (stats.visual > 0) {
       toolsUsed.add('visual-reasoning');
       totalOperations += stats.visual;
+    }
+    if ((stats as any).argument > 0) {
+      toolsUsed.add('argumentation');
+      totalOperations += (stats as any).argument;
+    }
+    if ((stats as any).socratic > 0) {
+      toolsUsed.add('socratic-method');
+      totalOperations += (stats as any).socratic;
     }
     
     return {
@@ -593,6 +596,24 @@ export class SessionState {
             });
           });
           break;
+        case 'argument':
+          (this.unifiedStore.getByType('argument') as any[]).forEach(item => {
+            exports.push({
+              ...baseExport,
+              sessionType: 'argument',
+              data: item.data
+            });
+          });
+          break;
+        case 'socratic':
+          (this.unifiedStore.getByType('socratic') as any[]).forEach(item => {
+            exports.push({
+              ...baseExport,
+              sessionType: 'socratic',
+              data: item.data
+            });
+          });
+          break;
       }
       
       return exports.length === 1 ? exports[0] : exports;
@@ -681,6 +702,20 @@ export class SessionState {
         data: item.data
       });
     });
+    (this.unifiedStore.getByType('argument') as any[]).forEach(item => {
+      allExports.push({
+        ...baseExport,
+        sessionType: 'argument',
+        data: item.data
+      });
+    });
+    (this.unifiedStore.getByType('socratic') as any[]).forEach(item => {
+      allExports.push({
+        ...baseExport,
+        sessionType: 'socratic',
+        data: item.data
+      });
+    });
     
     return allExports;
   }
@@ -734,6 +769,12 @@ export class SessionState {
           
         case 'visual':
           this.addVisualOperation(item.data as VisualData);
+          break;
+        case 'argument':
+          this.addArgumentation(item.data as ArgumentData);
+          break;
+        case 'socratic':
+          this.addArgumentation(item.data as SocraticData);
           break;
       }
     });
