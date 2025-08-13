@@ -199,9 +199,9 @@ export function executeClearThoughtOperation(
       const allThoughts = sessionState.getThoughts();
       const recentThoughts = allThoughts.slice(-3);
 
-      // If a non-chain pattern is selected, execute the corresponding pattern operation
+      // If a non-chain pattern is selected, optionally execute the corresponding pattern operation
       let patternResult: Record<string, unknown> | undefined;
-      if (chosenPattern !== 'chain') {
+      if (chosenPattern !== 'chain' && !(parameters as any).__disablePatternDispatch) {
         const opMap: Record<string, string> = {
           tree: 'tree_of_thought',
           beam: 'beam_search',
@@ -688,48 +688,88 @@ export function executeClearThoughtOperation(
 
     // Reasoning pattern operations
     case 'tree_of_thought': {
-      return {
-        toolOperation: 'tree_of_thought',
-        problem: prompt,
-        branches: parameters.branches || [],
-        evaluations: parameters.evaluations || [],
-        selectedPath: parameters.selectedPath || null,
-        depth: parameters.depth || 3,
-        breadth: parameters.breadth || 3
-      };
+      // Alias to sequential_thinking with tree pattern
+      return executeClearThoughtOperation(sessionState, 'sequential_thinking', {
+        prompt,
+        parameters: {
+          pattern: 'tree',
+          patternParams: {
+            depth: (parameters as any).depth || 3,
+            breadth: (parameters as any).breadth || 3,
+            branches: (parameters as any).branches || [],
+            evaluations: (parameters as any).evaluations || [],
+            selectedPath: (parameters as any).selectedPath || null
+          },
+          thoughtNumber: (parameters as any).thoughtNumber || 1,
+          totalThoughts: (parameters as any).totalThoughts || 3,
+          nextThoughtNeeded: (parameters as any).nextThoughtNeeded ?? true,
+          needsMoreThoughts: (parameters as any).needsMoreThoughts ?? true,
+          __disablePatternDispatch: true
+        } as Record<string, unknown>
+      });
     }
 
     case 'beam_search': {
-      return {
-        toolOperation: 'beam_search',
-        problem: prompt,
-        beamWidth: parameters.beamWidth || 3,
-        candidates: parameters.candidates || [],
-        scores: parameters.scores || [],
-        iterations: parameters.iterations || 5
-      };
+      // Alias to sequential_thinking with beam pattern
+      return executeClearThoughtOperation(sessionState, 'sequential_thinking', {
+        prompt,
+        parameters: {
+          pattern: 'beam',
+          patternParams: {
+            beamWidth: (parameters as any).beamWidth || 3,
+            candidates: (parameters as any).candidates || [],
+            scores: (parameters as any).scores || [],
+            iterations: (parameters as any).iterations || 5
+          },
+          thoughtNumber: (parameters as any).thoughtNumber || 1,
+          totalThoughts: (parameters as any).totalThoughts || 3,
+          nextThoughtNeeded: (parameters as any).nextThoughtNeeded ?? true,
+          needsMoreThoughts: (parameters as any).needsMoreThoughts ?? true,
+          __disablePatternDispatch: true
+        } as Record<string, unknown>
+      });
     }
 
     case 'mcts': {
-      return {
-        toolOperation: 'mcts',
-        problem: prompt,
-        simulations: parameters.simulations || 100,
-        explorationConstant: parameters.explorationConstant || 1.414,
-        tree: parameters.tree || { root: { visits: 0, value: 0, children: [] } },
-        bestAction: parameters.bestAction || null
-      };
+      // Alias to sequential_thinking with mcts pattern
+      return executeClearThoughtOperation(sessionState, 'sequential_thinking', {
+        prompt,
+        parameters: {
+          pattern: 'mcts',
+          patternParams: {
+            simulations: (parameters as any).simulations || 100,
+            explorationConstant: (parameters as any).explorationConstant || 1.414,
+            tree: (parameters as any).tree || { root: { visits: 0, value: 0, children: [] } },
+            bestAction: (parameters as any).bestAction || null
+          },
+          thoughtNumber: (parameters as any).thoughtNumber || 1,
+          totalThoughts: (parameters as any).totalThoughts || 3,
+          nextThoughtNeeded: (parameters as any).nextThoughtNeeded ?? true,
+          needsMoreThoughts: (parameters as any).needsMoreThoughts ?? true,
+          __disablePatternDispatch: true
+        } as Record<string, unknown>
+      });
     }
 
     case 'graph_of_thought': {
-      return {
-        toolOperation: 'graph_of_thought',
-        problem: prompt,
-        nodes: parameters.nodes || [],
-        edges: parameters.edges || [],
-        paths: parameters.paths || [],
-        optimalPath: parameters.optimalPath || null
-      };
+      // Alias to sequential_thinking with graph pattern
+      return executeClearThoughtOperation(sessionState, 'sequential_thinking', {
+        prompt,
+        parameters: {
+          pattern: 'graph',
+          patternParams: {
+            nodes: (parameters as any).nodes || [],
+            edges: (parameters as any).edges || [],
+            paths: (parameters as any).paths || [],
+            optimalPath: (parameters as any).optimalPath || null
+          },
+          thoughtNumber: (parameters as any).thoughtNumber || 1,
+          totalThoughts: (parameters as any).totalThoughts || 3,
+          nextThoughtNeeded: (parameters as any).nextThoughtNeeded ?? true,
+          needsMoreThoughts: (parameters as any).needsMoreThoughts ?? true,
+          __disablePatternDispatch: true
+        } as Record<string, unknown>
+      });
     }
 
     case 'orchestration_suggest': {
