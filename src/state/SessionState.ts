@@ -24,6 +24,10 @@ import {
 
 // Import unified store
 import { UnifiedStore, type ClearThoughtData } from './stores/UnifiedStore.js';
+import { PDRKnowledgeGraph, DeploymentMode } from './PDRKnowledgeGraph.js';
+import { PDRSession } from '../types/reasoning-patterns/pdr.js';
+import { OODASession } from '../types/reasoning-patterns/ooda-loop.js';
+import { UlyssesSession } from '../types/reasoning-patterns/ulysses-protocol.js';
 
 /**
  * Comprehensive session statistics
@@ -61,6 +65,28 @@ export class SessionState {
   
   /** Unified data store */
   private readonly unifiedStore: UnifiedStore;
+  
+  /** PDR Knowledge Graphs for sessions */
+  private pdrGraphs: Map<string, PDRKnowledgeGraph> = new Map();
+  
+  /** PDR Sessions */
+  private pdrSessions: Map<string, PDRSession> = new Map();
+  
+  /** OODA Loop Sessions */
+  private oodaSessions: Map<string, OODASession> = new Map();
+  
+  /** Ulysses Protocol Sessions */
+  private ulyssesSessions: Map<string, UlyssesSession> = new Map();
+  
+  /** Metagame KPI tracking */
+  private metagameKPIs: Map<string, {
+    key: string;
+    label: string;
+    value: number;
+    target?: number;
+    direction: 'up' | 'down';
+    history: Array<{ timestamp: string; value: number }>;
+  }> = new Map();
   
   /** Expose config via getter */
   getConfig(): ServerConfig { return this.config; }
@@ -377,6 +403,67 @@ export class SessionState {
     this.touch();
     const items = this.unifiedStore.getByType("visual");
     return items.filter(item => item.data.diagramId === diagramId).map(item => item.data);
+  }
+  
+  // ============================================================================
+  // PDR Knowledge Graph Support
+  // ============================================================================
+  
+  /**
+   * Get or create a PDR knowledge graph for a session
+   */
+  getPDRGraph(graphId?: string, mode?: DeploymentMode): PDRKnowledgeGraph {
+    this.touch();
+    const id = graphId || this.sessionId;
+    
+    if (!this.pdrGraphs.has(id)) {
+      this.pdrGraphs.set(id, new PDRKnowledgeGraph(id, mode || 'standard'));
+    }
+    
+    return this.pdrGraphs.get(id)!;
+  }
+  
+  /**
+   * Set a PDR knowledge graph
+   */
+  setPDRGraph(graphId: string, graph: PDRKnowledgeGraph): void {
+    this.touch();
+    this.pdrGraphs.set(graphId, graph);
+  }
+  
+  /**
+   * Get or create a PDR session
+   */
+  getPDRSession(sessionId?: string): PDRSession | undefined {
+    this.touch();
+    const id = sessionId || this.sessionId;
+    return this.pdrSessions.get(id);
+  }
+  
+  /**
+   * Set a PDR session
+   */
+  setPDRSession(sessionId: string, session: PDRSession): void {
+    this.touch();
+    this.pdrSessions.set(sessionId, session);
+  }
+  
+  /**
+   * Serialize PDR graph for persistence
+   */
+  serializePDRGraph(graphId?: string): string | undefined {
+    const id = graphId || this.sessionId;
+    const graph = this.pdrGraphs.get(id);
+    return graph ? graph.serialize() : undefined;
+  }
+  
+  /**
+   * Deserialize PDR graph from storage
+   */
+  deserializePDRGraph(data: string, graphId?: string): void {
+    const graph = PDRKnowledgeGraph.deserialize(data);
+    const id = graphId || this.sessionId;
+    this.pdrGraphs.set(id, graph);
   }
   
   // ============================================================================
@@ -798,5 +885,85 @@ export class SessionState {
    */
   isActive(): boolean {
     return !!this.timeoutTimer;
+  }
+  
+  // ============= Metagame Session Management =============
+  
+  /**
+   * Create or get an OODA Loop session
+   */
+  getOODASession(sessionId: string): OODASession | undefined {
+    return this.oodaSessions.get(sessionId);
+  }
+  
+  setOODASession(sessionId: string, session: OODASession): void {
+    this.oodaSessions.set(sessionId, session);
+    this.resetTimeout();
+  }
+  
+  /**
+   * Create or get a Ulysses Protocol session
+   */
+  getUlyssesSession(sessionId: string): UlyssesSession | undefined {
+    return this.ulyssesSessions.get(sessionId);
+  }
+  
+  setUlyssesSession(sessionId: string, session: UlyssesSession): void {
+    this.ulyssesSessions.set(sessionId, session);
+    this.resetTimeout();
+  }
+  
+  /**
+   * Track KPI metrics for metagames
+   */
+  updateKPI(
+    key: string,
+    value: number,
+    label?: string,
+    target?: number,
+    direction?: 'up' | 'down'
+  ): void {
+    const existing = this.metagameKPIs.get(key);
+    const timestamp = new Date().toISOString();
+    
+    if (existing) {
+      existing.value = value;
+      existing.history.push({ timestamp, value });
+      // Keep only last 100 history entries
+      if (existing.history.length > 100) {
+        existing.history = existing.history.slice(-100);
+      }
+    } else {
+      this.metagameKPIs.set(key, {
+        key,
+        label: label || key,
+        value,
+        target,
+        direction: direction || 'up',
+        history: [{ timestamp, value }]
+      });
+    }
+    
+    this.resetTimeout();
+  }
+  
+  /**
+   * Get all KPIs or a specific one
+   */
+  getKPIs(key?: string) {
+    if (key) {
+      return this.metagameKPIs.get(key);
+    }
+    return Array.from(this.metagameKPIs.values());
+  }
+  
+  /**
+   * Clear metagame sessions
+   */
+  clearMetagameSessions(): void {
+    this.oodaSessions.clear();
+    this.ulyssesSessions.clear();
+    this.metagameKPIs.clear();
+    this.resetTimeout();
   }
 }

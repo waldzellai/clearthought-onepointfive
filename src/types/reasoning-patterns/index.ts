@@ -20,6 +20,20 @@ export * from './beam-search.js';
 // Monte Carlo Tree Search
 export * from './mcts.js';
 
+// Progressive Deep Reasoning
+export * from './pdr.js';
+
+// Metagame patterns - import specific exports to avoid conflicts
+export { 
+  OODASession,
+  OODAPhase,
+  OODANode,
+  OODAHypothesis,
+  OODAMetrics
+} from './ooda-loop.js';
+
+export * from './ulysses-protocol.js';
+
 // Re-export commonly used types for convenience
 export type {
   BaseReasoningNode,

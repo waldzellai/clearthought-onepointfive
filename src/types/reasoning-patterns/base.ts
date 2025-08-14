@@ -57,7 +57,9 @@ export type ReasoningPatternType =
   | 'beam'
   | 'mcts'
   | 'recursive'
-  | 'dialectical';
+  | 'dialectical'
+  | 'ooda'
+  | 'ulysses';
 
 /**
  * Common operations that all patterns support

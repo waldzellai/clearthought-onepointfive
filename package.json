@@ -1,12 +1,12 @@
 {
     "name": "@waldzellai/clear-thought-onepointfive",
-    "version": "0.0.5",
+    "version": "0.1.5",
     "description": "Intermediate update to Waldzell's Clear Thought MCP server",
     "license": "MIT",
     "author": "Waldzell AI",
-    "homepage": "https://github.com/waldzellai/waldzell-mcp/tree/main/packages/server-clear-thought",
+    "homepage": "https://github.com/waldzellai/clear-thought-onepointfive.git",
     "bugs": {
-        "url": "https://github.com/waldzellai/waldzell-mcp/issues"
+        "url": "https://github.com/waldzellai/clear-thought-onepointfive/issues"
     },
     "type": "module",
     "files": [
@@ -17,10 +17,13 @@
         "LICENSE"
     ],
     "scripts": {
-        "build": "npx @smithery/cli build",
+        "build:stdio": "tsc cli/stdio-server.ts --outDir dist --module esnext --target es2020 --moduleResolution node --esModuleInterop true",
+        "build:http": "npx @smithery/cli build",
+        "build": "npm run build:stdio && npm run build:http",
         "dev": "npx @smithery/cli dev",
         "typecheck": "tsc --noEmit",
-        "check": "npx @biomejs/biome check --write --unsafe"
+        "check": "npx @biomejs/biome check --write --unsafe",
+        "test": "vitest"
     },
     "repository": {
         "type": "git",
@@ -29,6 +32,7 @@
     "dependencies": {
         "@modelcontextprotocol/sdk": "^1.17.0",
         "@smithery/sdk": "^1.5.5",
+        "marked": "^15.0.12",
         "zod": "^3.23.8"
     },
     "devDependencies": {

@@ -1,13 +1,19 @@
 import type { SessionState } from '../state/SessionState.js';
 import { z } from 'zod';
-import { ResearchResult, AnalogicalReasoningData, CausalAnalysisResult, SummaryStats, HypothesisTestResult, BayesianUpdateResult, MonteCarloResult, SimulationResult, OptimizationResult, EthicalAssessment, CodeExecutionResult } from '../types/index.js';
+import { ResearchResult, AnalogicalReasoningData, CausalAnalysisResult, SummaryStats, HypothesisTestResult, BayesianUpdateResult, MonteCarloResult, SimulationResult, OptimizationResult, EthicalAssessment } from '../types/index.js';
 import { executePython } from '../utils/execution.js';
+import { EphemeralNotebookStore } from '../notebook/EphemeralNotebook.js';
+import { getPresetForPattern } from '../notebook/presets.js';
+import { enhanceResponseWithNotebook } from './notebookEnhancement.js';
+
+// Initialize notebook store
+const notebookStore = new EphemeralNotebookStore();
 
 /**
  * Registers the unified Clear Thought tool with the MCP server
  * 
  * This single tool provides access to all reasoning operations through
- * an operation parameter, following the websetsManager pattern.
+ * an operation parameter, following the Toolhost pattern.
  *
  * @param server - The MCP server instance
  * @param sessionState - The session state manager
@@ -32,6 +38,8 @@ export const ClearThoughtParamsSchema = z.object({
     'session_info',
     'session_export',
     'session_import',
+    // Deep reasoning operations
+    'pdr_reasoning',
     // New modules
     'research',
     'analogical_reasoning',
@@ -48,7 +56,15 @@ export const ClearThoughtParamsSchema = z.object({
     'beam_search',
     'mcts',
     'graph_of_thought',
-    'orchestration_suggest'
+    'orchestration_suggest',
+    // Metagame operations
+    'ooda_loop',
+    'ulysses_protocol',
+    // Notebook operations
+    'notebook_create',
+    'notebook_add_cell',
+    'notebook_run_cell',
+    'notebook_export'
   ]).describe('What type of reasoning operation to perform'),
   // Common parameters
   prompt: z.string().describe('The problem, question, or challenge to work on'),
@@ -75,7 +91,7 @@ export async function handleClearThoughtTool(
     const code = String(params.code || '');
     const cfg = sessionState.getConfig();
     if (lang !== 'python' || !cfg.allowCodeExecution) {
-      const preview = executeClearThoughtOperation(sessionState, args.operation, { prompt: args.prompt, parameters: args.parameters });
+      const preview = await executeClearThoughtOperation(sessionState, args.operation, { prompt: args.prompt, parameters: args.parameters });
       return { content: [{ type: 'text', text: JSON.stringify(preview, null, 2) }] };
     }
     const result = await executePython(code, cfg.pythonCommand, cfg.executionTimeoutMs);
@@ -94,11 +110,54 @@ export async function handleClearThoughtTool(
   ]);
 
   const shouldSeed = !seedExclusions.has(args.operation);
-  const result = executeClearThoughtOperation(sessionState, args.operation, { prompt: args.prompt, parameters: args.parameters });
+  
+  // Handle async operations
+  if (args.operation === 'notebook_run_cell') {
+    const params = (args.parameters || {}) as any;
+    try {
+      const execution = await notebookStore.executeCell(
+        params.notebookId || '',
+        params.cellId || '',
+        params.timeoutMs || 5000
+      );
+      return {
+        content: [{
+          type: 'text',
+          text: JSON.stringify({
+            toolOperation: 'notebook_run_cell',
+            notebookId: params.notebookId,
+            cellId: params.cellId,
+            execution: {
+              id: execution.id,
+              status: execution.status,
+              outputs: execution.outputs,
+              error: execution.error,
+              duration: execution.completedAt ? execution.completedAt - execution.startedAt : undefined
+            }
+          }, null, 2)
+        }]
+      };
+    } catch (error: any) {
+      return {
+        content: [{
+          type: 'text',
+          text: JSON.stringify({
+            toolOperation: 'notebook_run_cell',
+            notebookId: params.notebookId,
+            cellId: params.cellId,
+            error: error.message,
+            success: false
+          }, null, 2)
+        }]
+      };
+    }
+  }
+  
+  const result = await executeClearThoughtOperation(sessionState, args.operation, { prompt: args.prompt, parameters: args.parameters });
   const enriched = shouldSeed
     ? {
         ...result,
-        initialThought: executeClearThoughtOperation(sessionState, 'sequential_thinking', {
+        initialThought: await executeClearThoughtOperation(sessionState, 'sequential_thinking', {
           prompt: `Plan approach for: ${args.prompt}`,
           parameters: {
             thoughtNumber: 1,
@@ -110,9 +169,14 @@ export async function handleClearThoughtTool(
         })
       }
     : result;
-  return {
+  
+  // Enhance response with notebook resources if applicable
+  const baseResponse = {
     content: [{ type: 'text', text: JSON.stringify(enriched, null, 2) }]
   };
+  
+  const enhancedResponse = enhanceResponseWithNotebook(baseResponse, args.operation, args.prompt);
+  return enhancedResponse;
 }
 
 // Backwards-compatible registration helper (kept for compatibility; unused by low-level Server)
@@ -135,11 +199,11 @@ export function registerTools(server: { tool: Function }, sessionState: SessionS
  * @param operation - The operation to perform
  * @param args - Operation arguments
  */
-export function executeClearThoughtOperation(
+export async function executeClearThoughtOperation(
   sessionState: SessionState,
   operation: string,
   args: { prompt: string; parameters?: Record<string, unknown> }
-): Record<string, unknown> {
+): Promise<Record<string, unknown>> {
   const { prompt, parameters = {} } = args;
   
   // Optional reasoning pattern selection for sequential_thinking
@@ -157,7 +221,6 @@ export function executeClearThoughtOperation(
     if (specifiedPattern && specifiedPattern !== 'auto') return specifiedPattern;
     // Heuristic selection from prompt/params
     const ptext = `${prompt}`.toLowerCase();
-    const keys = Object.keys(parameters as Record<string, unknown>);
     if ('depth' in patternParams || 'breadth' in patternParams || ptext.includes('branch') || ptext.includes('options')) {
       return 'tree';
     }
@@ -210,7 +273,7 @@ export function executeClearThoughtOperation(
         };
         const mappedOp = opMap[chosenPattern];
         if (mappedOp) {
-          patternResult = executeClearThoughtOperation(sessionState, mappedOp, { prompt, parameters: patternParams });
+          patternResult = await executeClearThoughtOperation(sessionState, mappedOp, { prompt, parameters: patternParams });
         }
       }
       
@@ -521,6 +584,21 @@ export function executeClearThoughtOperation(
     }
 
     // -------------------- New modules --------------------
+    case 'pdr_reasoning': {
+      // PDR uses sequential thinking with progressive refinement pattern
+      return await executeClearThoughtOperation(sessionState, 'sequential_thinking', {
+        prompt,
+        parameters: {
+          ...parameters,
+          pattern: 'chain',
+          patternParams: {
+            depth: 3,
+            breadth: 2
+          }
+        }
+      });
+    }
+    
     case 'research': {
       const result: ResearchResult = {
         query: prompt,
@@ -688,8 +766,21 @@ export function executeClearThoughtOperation(
 
     // Reasoning pattern operations
     case 'tree_of_thought': {
+      // Create notebook with preset if not exists
+      const sessionId = sessionState.sessionId;
+      let notebook = notebookStore.getNotebookBySession(sessionId);
+      if (!notebook && getParam('createNotebook', true)) {
+        notebook = notebookStore.createNotebook(sessionId);
+        const preset = getPresetForPattern('tree_of_thought');
+        if (preset) {
+          for (const cell of preset.cells) {
+            notebookStore.addCell(notebook.id, cell.type, cell.source, cell.language);
+          }
+        }
+      }
+      
       // Alias to sequential_thinking with tree pattern
-      return executeClearThoughtOperation(sessionState, 'sequential_thinking', {
+      return await executeClearThoughtOperation(sessionState, 'sequential_thinking', {
         prompt,
         parameters: {
           pattern: 'tree',
@@ -704,14 +795,28 @@ export function executeClearThoughtOperation(
           totalThoughts: (parameters as any).totalThoughts || 3,
           nextThoughtNeeded: (parameters as any).nextThoughtNeeded ?? true,
           needsMoreThoughts: (parameters as any).needsMoreThoughts ?? true,
-          __disablePatternDispatch: true
+          __disablePatternDispatch: true,
+          notebookId: notebook?.id
         } as Record<string, unknown>
       });
     }
 
     case 'beam_search': {
+      // Create notebook with preset if not exists
+      const sessionId = sessionState.sessionId;
+      let notebook = notebookStore.getNotebookBySession(sessionId);
+      if (!notebook && getParam('createNotebook', true)) {
+        notebook = notebookStore.createNotebook(sessionId);
+        const preset = getPresetForPattern('beam_search');
+        if (preset) {
+          for (const cell of preset.cells) {
+            notebookStore.addCell(notebook.id, cell.type, cell.source, cell.language);
+          }
+        }
+      }
+      
       // Alias to sequential_thinking with beam pattern
-      return executeClearThoughtOperation(sessionState, 'sequential_thinking', {
+      return await executeClearThoughtOperation(sessionState, 'sequential_thinking', {
         prompt,
         parameters: {
           pattern: 'beam',
@@ -725,14 +830,28 @@ export function executeClearThoughtOperation(
           totalThoughts: (parameters as any).totalThoughts || 3,
           nextThoughtNeeded: (parameters as any).nextThoughtNeeded ?? true,
           needsMoreThoughts: (parameters as any).needsMoreThoughts ?? true,
-          __disablePatternDispatch: true
+          __disablePatternDispatch: true,
+          notebookId: notebook?.id
         } as Record<string, unknown>
       });
     }
 
     case 'mcts': {
+      // Create notebook with preset if not exists
+      const sessionId = sessionState.sessionId;
+      let notebook = notebookStore.getNotebookBySession(sessionId);
+      if (!notebook && getParam('createNotebook', true)) {
+        notebook = notebookStore.createNotebook(sessionId);
+        const preset = getPresetForPattern('mcts');
+        if (preset) {
+          for (const cell of preset.cells) {
+            notebookStore.addCell(notebook.id, cell.type, cell.source, cell.language);
+          }
+        }
+      }
+      
       // Alias to sequential_thinking with mcts pattern
-      return executeClearThoughtOperation(sessionState, 'sequential_thinking', {
+      return await executeClearThoughtOperation(sessionState, 'sequential_thinking', {
         prompt,
         parameters: {
           pattern: 'mcts',
@@ -746,14 +865,28 @@ export function executeClearThoughtOperation(
           totalThoughts: (parameters as any).totalThoughts || 3,
           nextThoughtNeeded: (parameters as any).nextThoughtNeeded ?? true,
           needsMoreThoughts: (parameters as any).needsMoreThoughts ?? true,
-          __disablePatternDispatch: true
+          __disablePatternDispatch: true,
+          notebookId: notebook?.id
         } as Record<string, unknown>
       });
     }
 
     case 'graph_of_thought': {
+      // Create notebook with preset if not exists
+      const sessionId = sessionState.sessionId;
+      let notebook = notebookStore.getNotebookBySession(sessionId);
+      if (!notebook && getParam('createNotebook', true)) {
+        notebook = notebookStore.createNotebook(sessionId);
+        const preset = getPresetForPattern('graph_of_thought');
+        if (preset) {
+          for (const cell of preset.cells) {
+            notebookStore.addCell(notebook.id, cell.type, cell.source, cell.language);
+          }
+        }
+      }
+      
       // Alias to sequential_thinking with graph pattern
-      return executeClearThoughtOperation(sessionState, 'sequential_thinking', {
+      return await executeClearThoughtOperation(sessionState, 'sequential_thinking', {
         prompt,
         parameters: {
           pattern: 'graph',
@@ -767,14 +900,28 @@ export function executeClearThoughtOperation(
           totalThoughts: (parameters as any).totalThoughts || 3,
           nextThoughtNeeded: (parameters as any).nextThoughtNeeded ?? true,
           needsMoreThoughts: (parameters as any).needsMoreThoughts ?? true,
-          __disablePatternDispatch: true
+          __disablePatternDispatch: true,
+          notebookId: notebook?.id
         } as Record<string, unknown>
       });
     }
 
     case 'orchestration_suggest': {
+      // Create notebook with preset if not exists
+      const sessionId = sessionState.sessionId;
+      let notebook = notebookStore.getNotebookBySession(sessionId);
+      if (!notebook && getParam('createNotebook', true)) {
+        notebook = notebookStore.createNotebook(sessionId);
+        const preset = getPresetForPattern('orchestration_suggest');
+        if (preset) {
+          for (const cell of preset.cells) {
+            notebookStore.addCell(notebook.id, cell.type, cell.source, cell.language);
+          }
+        }
+      }
+      
       // Kick off a brief sequential_thinking step to seed orchestration with context
-      const initialThought = executeClearThoughtOperation(sessionState, 'sequential_thinking', {
+      const initialThought = await executeClearThoughtOperation(sessionState, 'sequential_thinking', {
         prompt: `Plan approach for task: ${prompt}`,
         parameters: {
           thoughtNumber: 1,
@@ -794,7 +941,292 @@ export function executeClearThoughtOperation(
         workflow: [
           { step: 'sequential_thinking', purpose: 'quick task decomposition (1-3 thoughts)' },
           { step: 'mental_model', purpose: 'apply appropriate model to frame solution' }
-        ]
+        ],
+        notebookId: notebook?.id
+      };
+    }
+    
+    // Notebook operations
+    case 'notebook_create': {
+      const sessionId = sessionState.sessionId;
+      const notebook = notebookStore.createNotebook(sessionId);
+      
+      // Add preset if pattern specified
+      const pattern = getParam('pattern', '') as string;
+      if (pattern) {
+        const preset = getPresetForPattern(pattern);
+        if (preset) {
+          for (const cell of preset.cells) {
+            notebookStore.addCell(notebook.id, cell.type, cell.source, cell.language);
+          }
+        }
+      }
+      
+      return {
+        toolOperation: 'notebook_create',
+        notebookId: notebook.id,
+        sessionId: notebook.sessionId,
+        createdAt: new Date(notebook.createdAt).toISOString(),
+        pattern: pattern || 'blank'
+      };
+    }
+    
+    case 'notebook_add_cell': {
+      const notebookId = getParam('notebookId', '') as string;
+      const cellType = getParam('cellType', 'code') as 'markdown' | 'code';
+      const source = getParam('source', '') as string;
+      const language = getParam('language', 'javascript') as 'javascript' | 'typescript';
+      const index = getParam('index', undefined) as number | undefined;
+      
+      const cell = notebookStore.addCell(notebookId, cellType, source, language, index);
+      
+      return {
+        toolOperation: 'notebook_add_cell',
+        notebookId,
+        cell: cell ? {
+          id: cell.id,
+          type: cell.type,
+          source: cell.source,
+          language: cell.language,
+          status: cell.status
+        } : null,
+        success: cell !== null
+      };
+    }
+    
+    case 'notebook_run_cell': {
+      // This is handled in handleClearThoughtTool due to async requirements
+      return {
+        toolOperation: 'notebook_run_cell',
+        message: 'This operation is handled asynchronously in handleClearThoughtTool'
+      };
+    }
+    
+    case 'notebook_export': {
+      const notebookId = getParam('notebookId', '') as string;
+      const format = getParam('format', 'srcmd') as 'srcmd' | 'json';
+      
+      if (format === 'srcmd') {
+        const srcmd = notebookStore.exportToSrcMd(notebookId);
+        return {
+          toolOperation: 'notebook_export',
+          notebookId,
+          format: 'srcmd',
+          content: srcmd,
+          success: srcmd !== null
+        };
+      } else {
+        const json = notebookStore.exportToJson(notebookId);
+        return {
+          toolOperation: 'notebook_export',
+          notebookId,
+          format: 'json',
+          content: json,
+          success: json !== null
+        };
+      }
+    }
+    
+    // =============== Metagame Operations ===============
+    
+    case 'ooda_loop': {
+      const { 
+        createOODASession, 
+        advancePhase, 
+        createOODANode, 
+        suggestNextActions, 
+        evaluateEvidenceQuality,
+        exportToMarkdown 
+      } = await import('../types/reasoning-patterns/ooda-loop.js');
+      
+      // Get or create session
+      const oodaSessionId = getParam('sessionId', `ooda-${Date.now()}`) as string;
+      let oodaSession = sessionState.getOODASession(oodaSessionId);
+      
+      if (!oodaSession) {
+        oodaSession = createOODASession({
+          maxLoopTimeMs: getParam('maxLoopTimeMs', 15 * 60 * 1000) as number,
+          autoAdvance: getParam('autoAdvance', true) as boolean,
+          minEvidence: getParam('minEvidence', 2) as number
+        });
+        sessionState.setOODASession(oodaSessionId, oodaSession);
+      }
+      
+      // Process the current phase
+      const evidence = getParam('evidence', []) as string[];
+      
+      // Create node for current phase
+      const node = createOODANode(prompt, oodaSession.currentPhase, evidence);
+      
+      // Add hypotheses if provided
+      const hypotheses = getParam('hypotheses', []) as Array<{
+        statement: string;
+        confidence: number;
+      }>;
+      
+      for (const hyp of hypotheses) {
+        const hypId = `hyp-${Date.now()}-${Math.random()}`;
+        oodaSession.hypotheses.set(hypId, {
+          id: hypId,
+          statement: hyp.statement,
+          confidence: hyp.confidence,
+          status: 'proposed',
+          carriedForward: false
+        });
+      }
+      
+      // Calculate metrics
+      node.phaseTimeMs = Date.now() - new Date(oodaSession.loopStartTime || oodaSession.createdAt).getTime();
+      oodaSession.metrics.evidenceQuality = evaluateEvidenceQuality(node);
+      
+      // Add node to session
+      oodaSession.nodes.push(node);
+      oodaSession.iteration++;
+      
+      // Track KPIs
+      sessionState.updateKPI('ooda_loop_time', oodaSession.metrics.avgLoopTimeMs, 'Avg Loop Time (ms)', 5 * 60 * 1000, 'down');
+      sessionState.updateKPI('ooda_learning_rate', oodaSession.metrics.learningRate, 'Learning Rate', 0.7, 'up');
+      sessionState.updateKPI('ooda_evidence_quality', oodaSession.metrics.evidenceQuality, 'Evidence Quality', 0.8, 'up');
+      
+      // Auto-advance if configured
+      if (oodaSession.config.autoAdvance && evidence.length >= oodaSession.config.minEvidence) {
+        oodaSession = advancePhase(oodaSession);
+      }
+      
+      // Get suggestions
+      const suggestions = suggestNextActions(oodaSession);
+      
+      // Save session
+      sessionState.setOODASession(oodaSessionId, oodaSession);
+      
+      return {
+        toolOperation: 'ooda_loop',
+        sessionId: oodaSessionId,
+        currentPhase: oodaSession.currentPhase,
+        loopNumber: oodaSession.loopNumber,
+        metrics: oodaSession.metrics,
+        suggestions,
+        hypotheses: Array.from(oodaSession.hypotheses.values()),
+        export: getParam('includeExport', false) ? exportToMarkdown(oodaSession) : undefined,
+        sessionContext: {
+          sessionId: sessionState.sessionId,
+          kpis: sessionState.getKPIs()
+        }
+      };
+    }
+    
+    case 'ulysses_protocol': {
+      const {
+        createUlyssesSession,
+        advancePhase,
+        createUlyssesNode,
+        checkConstraints,
+        suggestNextActions,
+        makeFinalDecision,
+        exportToMarkdown
+      } = await import('../types/reasoning-patterns/ulysses-protocol.js');
+      
+      // Get or create session
+      const ulyssesSessionId = getParam('sessionId', `ulysses-${Date.now()}`) as string;
+      let ulyssesSession = sessionState.getUlyssesSession(ulyssesSessionId);
+      
+      if (!ulyssesSession) {
+        ulyssesSession = createUlyssesSession({
+          constraints: {
+            timeboxMs: getParam('timeboxMs', 4 * 60 * 60 * 1000) as number,
+            maxIterations: getParam('maxIterations', 3) as number,
+            minConfidence: getParam('minConfidence', 0.8) as number,
+            maxScopeDrift: getParam('maxScopeDrift', 1) as number
+          },
+          policy: {
+            autoEscalate: getParam('autoEscalate', true) as boolean,
+            notifyWhen: getParam('notifyWhen', ['gateFail', 'timeboxNear']) as any,
+            allowOverride: getParam('allowOverride', false) as boolean
+          }
+        });
+        sessionState.setUlyssesSession(ulyssesSessionId, ulyssesSession);
+      }
+      
+      // Process the current phase
+      const confidence = getParam('confidence', 0.5) as number;
+      const evidence = getParam('evidence', []) as string[];
+      const iteration = ulyssesSession.currentPhase === 'implementation' 
+        ? ulyssesSession.implementationIteration 
+        : undefined;
+      
+      // Create node
+      const node = createUlyssesNode(prompt, ulyssesSession.currentPhase, confidence, iteration);
+      node.evidence = evidence;
+      node.timeSpentMs = Date.now() - new Date(ulyssesSession.startTime).getTime();
+      
+      // Check for scope changes
+      const scopeChange = getParam('scopeChange', null) as any;
+      if (scopeChange) {
+        node.scopeChange = scopeChange;
+      }
+      
+      // Add node to session
+      ulyssesSession.nodes.push(node);
+      ulyssesSession.iteration++;
+      
+      // Increment implementation iteration if in that phase
+      if (ulyssesSession.currentPhase === 'implementation') {
+        ulyssesSession.implementationIteration++;
+        ulyssesSession.metrics.iterations = ulyssesSession.implementationIteration;
+      }
+      
+      // Check constraints and escalate if needed
+      const constraintCheck = checkConstraints(ulyssesSession);
+      if (constraintCheck.escalation) {
+        node.escalated = constraintCheck.escalation;
+      }
+      
+      // Track KPIs
+      sessionState.updateKPI('ulysses_confidence', ulyssesSession.metrics.confidence, 'Confidence', 0.8, 'up');
+      sessionState.updateKPI('ulysses_iterations', ulyssesSession.metrics.iterations, 'Iterations', 3, 'down');
+      sessionState.updateKPI('ulysses_scope_drift', ulyssesSession.metrics.scopeDrift, 'Scope Drift', 1, 'down');
+      sessionState.updateKPI('ulysses_time_remaining', ulyssesSession.metrics.timeRemainingMs, 'Time Remaining (ms)', 0, 'up');
+      
+      // Try to advance phase if requested
+      const attemptAdvance = getParam('attemptAdvance', false) as boolean;
+      let phaseAdvanced = false;
+      if (attemptAdvance) {
+        const result = advancePhase(ulyssesSession, evidence);
+        phaseAdvanced = result.success;
+        if (result.success && result.newPhase) {
+          ulyssesSession.currentPhase = result.newPhase;
+        }
+      }
+      
+      // Make final decision if in ship_or_abort phase
+      if (ulyssesSession.currentPhase === 'ship_or_abort' && getParam('makeFinalDecision', false)) {
+        const rationale = getParam('decisionRationale', 'Based on current metrics and constraints') as string;
+        ulyssesSession.finalDecision = makeFinalDecision(ulyssesSession, rationale);
+      }
+      
+      // Get suggestions
+      const suggestions = suggestNextActions(ulyssesSession);
+      
+      // Save session
+      sessionState.setUlyssesSession(ulyssesSessionId, ulyssesSession);
+      
+      return {
+        toolOperation: 'ulysses_protocol',
+        sessionId: ulyssesSessionId,
+        currentPhase: ulyssesSession.currentPhase,
+        gates: ulyssesSession.gates,
+        metrics: ulyssesSession.metrics,
+        constraints: ulyssesSession.constraints,
+        constraintViolations: constraintCheck.violations,
+        escalation: constraintCheck.escalation,
+        suggestions,
+        phaseAdvanced,
+        finalDecision: ulyssesSession.finalDecision,
+        export: getParam('includeExport', false) ? exportToMarkdown(ulyssesSession) : undefined,
+        sessionContext: {
+          sessionId: sessionState.sessionId,
+          kpis: sessionState.getKPIs()
+        }
       };
     }
     
@@ -808,11 +1240,12 @@ export function executeClearThoughtOperation(
           'scientific_method', 'collaborative_reasoning', 'decision_framework',
           'socratic_method', 'structured_argumentation', 'systems_thinking',
           'session_info', 'session_export', 'session_import',
-          'research', 'analogical_reasoning', 'causal_analysis',
+          'pdr_reasoning', 'research', 'analogical_reasoning', 'causal_analysis',
           'statistical_reasoning', 'simulation', 'optimization',
           'ethical_analysis', 'visual_dashboard', 'custom_framework',
           'code_execution', 'tree_of_thought', 'beam_search',
-          'mcts', 'graph_of_thought', 'orchestration_suggest'
+          'mcts', 'graph_of_thought', 'orchestration_suggest',
+          'notebook_create', 'notebook_add_cell', 'notebook_run_cell', 'notebook_export'
         ]
       };
   }
