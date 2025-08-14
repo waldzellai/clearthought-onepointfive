@@ -23,8 +23,15 @@ export * from './mcts.js';
 // Progressive Deep Reasoning
 export * from './pdr.js';
 
-// Metagame patterns
-export * from './ooda-loop.js';
+// Metagame patterns - import specific exports to avoid conflicts
+export { 
+  OODASession,
+  OODAPhase,
+  OODANode,
+  OODAHypothesis,
+  OODAMetrics
+} from './ooda-loop.js';
+
 export * from './ulysses-protocol.js';
 
 // Re-export commonly used types for convenience

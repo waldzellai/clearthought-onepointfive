@@ -1,9 +1,10 @@
 import type { SessionState } from '../state/SessionState.js';
 import { z } from 'zod';
-import { ResearchResult, AnalogicalReasoningData, CausalAnalysisResult, SummaryStats, HypothesisTestResult, BayesianUpdateResult, MonteCarloResult, SimulationResult, OptimizationResult, EthicalAssessment, CodeExecutionResult } from '../types/index.js';
+import { ResearchResult, AnalogicalReasoningData, CausalAnalysisResult, SummaryStats, HypothesisTestResult, BayesianUpdateResult, MonteCarloResult, SimulationResult, OptimizationResult, EthicalAssessment } from '../types/index.js';
 import { executePython } from '../utils/execution.js';
 import { EphemeralNotebookStore } from '../notebook/EphemeralNotebook.js';
 import { getPresetForPattern } from '../notebook/presets.js';
+import { enhanceResponseWithNotebook } from './notebookEnhancement.js';
 
 // Initialize notebook store
 const notebookStore = new EphemeralNotebookStore();
@@ -37,6 +38,8 @@ export const ClearThoughtParamsSchema = z.object({
     'session_info',
     'session_export',
     'session_import',
+    // Deep reasoning operations
+    'pdr_reasoning',
     // New modules
     'research',
     'analogical_reasoning',
@@ -166,9 +169,14 @@ export async function handleClearThoughtTool(
         })
       }
     : result;
-  return {
+  
+  // Enhance response with notebook resources if applicable
+  const baseResponse = {
     content: [{ type: 'text', text: JSON.stringify(enriched, null, 2) }]
   };
+  
+  const enhancedResponse = enhanceResponseWithNotebook(baseResponse, args.operation, args.prompt);
+  return enhancedResponse;
 }
 
 // Backwards-compatible registration helper (kept for compatibility; unused by low-level Server)
@@ -213,7 +221,6 @@ export async function executeClearThoughtOperation(
     if (specifiedPattern && specifiedPattern !== 'auto') return specifiedPattern;
     // Heuristic selection from prompt/params
     const ptext = `${prompt}`.toLowerCase();
-    const keys = Object.keys(parameters as Record<string, unknown>);
     if ('depth' in patternParams || 'breadth' in patternParams || ptext.includes('branch') || ptext.includes('options')) {
       return 'tree';
     }
@@ -577,6 +584,21 @@ export async function executeClearThoughtOperation(
     }
 
     // -------------------- New modules --------------------
+    case 'pdr_reasoning': {
+      // PDR uses sequential thinking with progressive refinement pattern
+      return await executeClearThoughtOperation(sessionState, 'sequential_thinking', {
+        prompt,
+        parameters: {
+          ...parameters,
+          pattern: 'chain',
+          patternParams: {
+            depth: 3,
+            breadth: 2
+          }
+        }
+      });
+    }
+    
     case 'research': {
       const result: ResearchResult = {
         query: prompt,
@@ -1031,7 +1053,6 @@ export async function executeClearThoughtOperation(
       }
       
       // Process the current phase
-      const action = getParam('action', 'observe') as string;
       const evidence = getParam('evidence', []) as string[];
       
       // Create node for current phase
@@ -1219,7 +1240,7 @@ export async function executeClearThoughtOperation(
           'scientific_method', 'collaborative_reasoning', 'decision_framework',
           'socratic_method', 'structured_argumentation', 'systems_thinking',
           'session_info', 'session_export', 'session_import',
-          'research', 'analogical_reasoning', 'causal_analysis',
+          'pdr_reasoning', 'research', 'analogical_reasoning', 'causal_analysis',
           'statistical_reasoning', 'simulation', 'optimization',
           'ethical_analysis', 'visual_dashboard', 'custom_framework',
           'code_execution', 'tree_of_thought', 'beam_search',

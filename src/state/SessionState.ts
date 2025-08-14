@@ -898,7 +898,7 @@ export class SessionState {
   
   setOODASession(sessionId: string, session: OODASession): void {
     this.oodaSessions.set(sessionId, session);
-    this.updateAccess();
+    this.resetTimeout();
   }
   
   /**
@@ -910,7 +910,7 @@ export class SessionState {
   
   setUlyssesSession(sessionId: string, session: UlyssesSession): void {
     this.ulyssesSessions.set(sessionId, session);
-    this.updateAccess();
+    this.resetTimeout();
   }
   
   /**
@@ -944,7 +944,7 @@ export class SessionState {
       });
     }
     
-    this.updateAccess();
+    this.resetTimeout();
   }
   
   /**
@@ -964,6 +964,6 @@ export class SessionState {
     this.oodaSessions.clear();
     this.ulyssesSessions.clear();
     this.metagameKPIs.clear();
-    this.updateAccess();
+    this.resetTimeout();
   }
 }

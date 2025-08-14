@@ -6,7 +6,8 @@ import path from 'path';
 import { ServerConfigSchema } from './config.js';
 import { ClearThoughtParamsSchema, handleClearThoughtTool } from './tools/index.js';
 import { zodToJsonSchema } from 'zod-to-json-schema';
-import { ListToolsRequestSchema, CallToolRequestSchema, ListResourcesRequestSchema, ReadResourceRequestSchema, ErrorCode, McpError } from '@modelcontextprotocol/sdk/types.js';
+import { ListToolsRequestSchema, CallToolRequestSchema, ListResourcesRequestSchema, ReadResourceRequestSchema, ListResourceTemplatesRequestSchema, ErrorCode, McpError } from '@modelcontextprotocol/sdk/types.js';
+import { parseSrcbook, srcbookToResource, type SrcbookResource } from './utils/srcbookParser.js';
 
 /**
  * Creates a Clear Thought MCP server instance for a specific session
@@ -63,6 +64,35 @@ export default function createClearThoughtServer({
     return result;
   });
 
+  // Discover available notebooks
+  const notebooksDir = path.resolve(process.cwd(), '../srcbook-examples');
+  const notebooks: SrcbookResource[] = [];
+  const notebookContents: Map<string, string> = new Map();
+  
+  try {
+    if (fs.existsSync(notebooksDir)) {
+      const files = fs.readdirSync(notebooksDir);
+      for (const file of files) {
+        if (file.endsWith('.src.md')) {
+          const filePath = path.join(notebooksDir, file);
+          const contents = fs.readFileSync(filePath, 'utf-8');
+          const notebookName = file.replace('.src.md', '');
+          
+          try {
+            const parsed = parseSrcbook(contents, file);
+            const resource = srcbookToResource(parsed, notebookName);
+            notebooks.push(resource);
+            notebookContents.set(notebookName, contents);
+          } catch (e) {
+            console.error(`Failed to parse notebook ${file}:`, e);
+          }
+        }
+      }
+    }
+  } catch (e) {
+    console.error('Failed to discover notebooks:', e);
+  }
+
   // Expose operation documentation as a resource for transparency
   const operationsGuideUri = 'guide://clear-thought-operations';
   // Prefer external markdown file if present; fall back to embedded guide
@@ -81,19 +111,130 @@ export default function createClearThoughtServer({
         name: 'Clear Thought Operations',
         description: 'Documentation for all clear_thought operations and parameters',
         mimeType: 'text/markdown'
+      },
+      ...notebooks,
+      // Add a guide for notebook interaction
+      {
+        uri: 'guide://notebook-interaction',
+        name: 'Notebook Interaction Guide',
+        description: 'Instructions for working with Srcbook notebooks in MCP',
+        mimeType: 'text/markdown',
+        annotations: {
+          audience: ['assistant'],
+          priority: 0.9
+        }
+      }
+    ]
+  }));
+
+  // Add resource templates for dynamic notebook access
+  server.setRequestHandler(ListResourceTemplatesRequestSchema, async () => ({
+    resourceTemplates: [
+      {
+        uriTemplate: 'notebook:///{name}',
+        name: 'Srcbook Notebooks',
+        title: '📓 Interactive Notebooks',
+        description: 'Access Srcbook notebooks by name for interactive TypeScript/JavaScript execution',
+        mimeType: 'text/markdown'
+      },
+      {
+        uriTemplate: 'notebook:///{name}#cell-{index}',
+        name: 'Notebook Cells',
+        title: '📝 Specific Notebook Cell',
+        description: 'Access a specific cell within a Srcbook notebook',
+        mimeType: 'text/plain'
       }
     ]
   }));
 
   server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
-    if (request.params.uri !== operationsGuideUri) {
-      throw new McpError(ErrorCode.InvalidParams, `Resource not found: ${request.params.uri}`);
+    const { uri } = request.params;
+    
+    // Handle operations guide
+    if (uri === operationsGuideUri) {
+      return {
+        contents: [
+          { type: 'text', text: operationsGuideMarkdown }
+        ]
+      };
     }
-    return {
-      contents: [
-        { type: 'text', text: operationsGuideMarkdown }
-      ]
-    };
+    
+    // Handle notebook interaction guide
+    if (uri === 'guide://notebook-interaction') {
+      const interactionGuide = `# Notebook Interaction Guide
+
+## Working with Srcbook Notebooks in MCP
+
+Srcbook notebooks (.src.md files) are interactive documents that combine:
+- **Markdown cells** for documentation and explanations
+- **Code cells** with JavaScript/TypeScript that can be executed
+- **Package.json** for dependencies
+- **tsconfig.json** for TypeScript configuration (when applicable)
+
+## How to Execute Code Cells
+
+When you encounter a code cell in a notebook resource:
+
+1. **Identify code cells** - Look for:
+   - Sections starting with \`###### filename.js\` or \`###### filename.ts\`
+   - Standalone code blocks marked as javascript/typescript
+
+2. **Execute the code** using the appropriate tool:
+   - Use \`mcp__ide__executeCode\` for TypeScript/JavaScript execution
+   - Pass the extracted source code from the cell
+
+3. **Process cells sequentially** for educational notebooks to maintain the learning flow
+
+## Example Interaction Pattern
+
+\`\`\`typescript
+// When you see a code cell like this:
+###### example.ts
+console.log("Hello from notebook!");
+
+// Extract and execute:
+mcp__ide__executeCode({ 
+  code: 'console.log("Hello from notebook!");' 
+})
+\`\`\`
+
+## Available Notebooks
+
+The following notebooks are available as resources:
+${notebooks.map(n => `- **${n.name}** (${n.uri}): ${n.description}`).join('\n')}
+
+## Tips for AI Assistants
+
+- Read notebooks sequentially for the best learning experience
+- Execute code cells to demonstrate concepts interactively
+- Use the annotations in each resource to understand capabilities
+- Reference specific cells using URI fragments like \`notebook:///name#cell-3\`
+`;
+      
+      return {
+        contents: [
+          { type: 'text', text: interactionGuide }
+        ]
+      };
+    }
+    
+    // Handle notebook resources
+    if (uri.startsWith('notebook:///')) {
+      const notebookName = uri.replace('notebook:///', '').split('#')[0];
+      const content = notebookContents.get(notebookName);
+      
+      if (!content) {
+        throw new McpError(ErrorCode.InvalidParams, `Notebook not found: ${uri}`);
+      }
+      
+      return {
+        contents: [
+          { type: 'text', text: content }
+        ]
+      };
+    }
+    
+    throw new McpError(ErrorCode.InvalidParams, `Resource not found: ${uri}`);
   });
 
   // Return the low-level Server instance
