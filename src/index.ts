@@ -72,20 +72,21 @@ export default function createClearThoughtServer({
 	server.setRequestHandler(CallToolRequestSchema, async (request) => {
 		const { name, arguments: toolArgs } = request.params;
 
-		if (name !== "clear_thought") {
-			throw new McpError(ErrorCode.InvalidParams, `Tool ${name} not found`);
+		// Handle clear_thought tool
+		if (name === "clear_thought") {
+			const parse = await ClearThoughtParamsSchema.safeParseAsync(toolArgs ?? {});
+			if (!parse.success) {
+				throw new McpError(
+					ErrorCode.InvalidParams,
+					`Invalid arguments for clear_thought: ${parse.error.message}`,
+				);
+			}
+
+			const result = await handleClearThoughtTool(sessionState, parse.data);
+			return result;
 		}
 
-		const parse = await ClearThoughtParamsSchema.safeParseAsync(toolArgs ?? {});
-		if (!parse.success) {
-			throw new McpError(
-				ErrorCode.InvalidParams,
-				`Invalid arguments for tool ${name}: ${parse.error.message}`,
-			);
-		}
-
-		const result = await handleClearThoughtTool(sessionState, parse.data);
-		return result;
+		throw new McpError(ErrorCode.InvalidParams, `Tool ${name} not found`);
 	});
 
 	// Discover available notebooks
@@ -231,6 +232,16 @@ export default function createClearThoughtServer({
 				annotations: {
 					audience: ["assistant"],
 					priority: 0.8,
+				},
+			},
+			{
+				uri: "examples://visual-dashboard",
+				name: "Visual Dashboard Examples",
+				description: "Interactive dashboard creation with MCP UI patterns",
+				mimeType: "text/markdown",
+				annotations: {
+					audience: ["assistant"],
+					priority: 0.9,
 				},
 			},
 		],

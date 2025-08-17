@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { createUIResource } from "@mcp-ui/server";
 import { EphemeralNotebookStore } from "../notebook/EphemeralNotebook.js";
 import { getPresetForPattern } from "../notebook/presets.js";
 import type { SessionState } from "../state/SessionState.js";
@@ -25,6 +26,224 @@ import { enhanceResponseWithNotebook } from "./notebookEnhancement.js";
 
 // Initialize notebook store
 const notebookStore = new EphemeralNotebookStore();
+
+/**
+ * Helper function to generate dashboard HTML content
+ */
+function generateDashboardHTML(options: {
+	title: string;
+	visualizationType: string;
+	data: any;
+	panels: any[];
+	layout: string;
+	interactive: boolean;
+}): string {
+	const { title, visualizationType, data, panels, layout, interactive } = options;
+	
+	// Generate HTML with embedded Chart.js or D3.js visualization
+	const chartScript = visualizationType === "chart" ? `
+		<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+		<script>
+			const ctx = document.getElementById('mainChart').getContext('2d');
+			const chart = new Chart(ctx, {
+				type: '${data.chartType || "bar"}',
+				data: ${JSON.stringify(data.chartData || {
+					labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
+					datasets: [{
+						label: 'Dataset',
+						data: [12, 19, 3, 5, 2],
+						backgroundColor: 'rgba(75, 192, 192, 0.2)',
+						borderColor: 'rgba(75, 192, 192, 1)',
+						borderWidth: 1
+					}]
+				})},
+				options: {
+					responsive: true,
+					maintainAspectRatio: false,
+					plugins: {
+						legend: { display: true },
+						tooltip: { enabled: ${interactive} }
+					}
+				}
+			});
+		</script>
+	` : "";
+	
+	const panelsHTML = panels.map((panel, index) => `
+		<div class="panel" style="
+			padding: 15px;
+			margin: 10px;
+			border: 1px solid #ddd;
+			border-radius: 8px;
+			background: white;
+			box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+		">
+			<h3>${panel.title || `Panel ${index + 1}`}</h3>
+			<div class="panel-content">
+				${panel.content || `<p>Panel content for ${panel.type || 'metric'}</p>`}
+				${panel.value ? `<div class="metric-value" style="font-size: 2em; font-weight: bold; color: #2196F3;">${panel.value}</div>` : ''}
+			</div>
+		</div>
+	`).join('');
+	
+	return `
+		<!DOCTYPE html>
+		<html>
+		<head>
+			<meta charset="UTF-8">
+			<title>${title}</title>
+			<style>
+				body {
+					font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+					margin: 0;
+					padding: 20px;
+					background: #f5f5f5;
+				}
+				.dashboard {
+					max-width: 1200px;
+					margin: 0 auto;
+				}
+				.header {
+					background: white;
+					padding: 20px;
+					border-radius: 8px;
+					margin-bottom: 20px;
+					box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+				}
+				.panels-container {
+					display: ${layout === 'grid' ? 'grid' : 'flex'};
+					grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+					gap: 20px;
+					flex-wrap: ${layout === 'flex' ? 'wrap' : 'nowrap'};
+				}
+				.chart-container {
+					background: white;
+					padding: 20px;
+					border-radius: 8px;
+					box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+					height: 400px;
+					margin-bottom: 20px;
+				}
+				canvas {
+					width: 100% !important;
+					height: 100% !important;
+				}
+			</style>
+		</head>
+		<body>
+			<div class="dashboard">
+				<div class="header">
+					<h1>${title}</h1>
+					<p>Interactive Dashboard - ${new Date().toLocaleString()}</p>
+				</div>
+				${visualizationType === 'chart' ? `
+					<div class="chart-container">
+						<canvas id="mainChart"></canvas>
+					</div>
+				` : ''}
+				<div class="panels-container">
+					${panelsHTML}
+				</div>
+			</div>
+			${chartScript}
+			${interactive ? `
+				<script>
+					// Enable interactive features
+					window.parent.postMessage({
+						type: 'ui-lifecycle-iframe-ready',
+						payload: { ready: true }
+					}, '*');
+					
+					// Handle clicks on panels
+					document.querySelectorAll('.panel').forEach((panel, index) => {
+						panel.style.cursor = 'pointer';
+						panel.addEventListener('click', () => {
+							window.parent.postMessage({
+								type: 'notify',
+								payload: { 
+									message: 'Panel ' + (index + 1) + ' clicked'
+								}
+							}, '*');
+						});
+					});
+				</script>
+			` : ''}
+		</body>
+		</html>
+	`;
+}
+
+/**
+ * Helper function to generate remote DOM script for dynamic content
+ */
+function generateRemoteDomScript(options: {
+	visualizationType: string;
+	data: any;
+	panels: any[];
+	interactive: boolean;
+}): string {
+	const { visualizationType, data, panels, interactive } = options;
+	
+	return `
+		// Create dashboard container
+		const container = document.createElement('ui-container');
+		container.style.padding = '20px';
+		
+		// Add title
+		const title = document.createElement('ui-text');
+		title.textContent = 'Dynamic Dashboard';
+		title.style.fontSize = '24px';
+		title.style.fontWeight = 'bold';
+		title.style.marginBottom = '20px';
+		container.appendChild(title);
+		
+		// Add panels
+		${panels.map((panel, index) => `
+			const panel${index} = document.createElement('ui-panel');
+			panel${index}.style.padding = '15px';
+			panel${index}.style.margin = '10px';
+			panel${index}.style.border = '1px solid #ddd';
+			panel${index}.style.borderRadius = '8px';
+			
+			const panelTitle${index} = document.createElement('ui-text');
+			panelTitle${index}.textContent = '${panel.title || `Panel ${index + 1}`}';
+			panelTitle${index}.style.fontWeight = 'bold';
+			panel${index}.appendChild(panelTitle${index});
+			
+			${panel.value ? `
+				const panelValue${index} = document.createElement('ui-text');
+				panelValue${index}.textContent = '${panel.value}';
+				panelValue${index}.style.fontSize = '2em';
+				panelValue${index}.style.color = '#2196F3';
+				panel${index}.appendChild(panelValue${index});
+			` : ''}
+			
+			${interactive ? `
+				panel${index}.style.cursor = 'pointer';
+				panel${index}.onclick = () => {
+					window.parent.postMessage({
+						type: 'tool',
+						payload: {
+							toolName: 'handlePanelClick',
+							params: { panelId: ${index} }
+						}
+					}, '*');
+				};
+			` : ''}
+			
+			container.appendChild(panel${index});
+		`).join('\n')}
+		
+		// Append to root
+		root.appendChild(container);
+		
+		// Send ready signal
+		window.parent.postMessage({
+			type: 'ui-lifecycle-iframe-ready',
+			payload: { ready: true }
+		}, '*');
+	`;
+}
 
 /**
  * Registers the unified Clear Thought tool with the MCP server
@@ -127,144 +346,169 @@ export async function handleClearThoughtTool(
 	content: Array<{ type: "text"; text: string }>;
 	isError?: boolean;
 }> {
-	// Special handling for code execution to allow real run
-	if (args.operation === "code_execution") {
-		const params = (args.parameters || {}) as any;
-		const lang = (params.language as string) || "python";
-		const code = String(params.code || "");
-		const cfg = sessionState.getConfig();
-		if (lang !== "python" || !cfg.allowCodeExecution) {
-			const preview = await executeClearThoughtOperation(
-				sessionState,
-				args.operation,
-				{ prompt: args.prompt, parameters: args.parameters },
+	const startTime = Date.now();
+	
+	try {
+		// Special handling for code execution to allow real run
+		if (args.operation === "code_execution") {
+			const params = (args.parameters || {}) as any;
+			const lang = (params.language as string) || "python";
+			const code = String(params.code || "");
+			const cfg = sessionState.getConfig();
+			if (lang !== "python" || !cfg.allowCodeExecution) {
+				const preview = await executeClearThoughtOperation(
+					sessionState,
+					args.operation,
+					{ prompt: args.prompt, parameters: args.parameters },
+				);
+				
+				return {
+					content: [{ type: "text" as const, text: JSON.stringify(preview, null, 2) }],
+				};
+			}
+			const result = await executePython(
+				code,
+				cfg.pythonCommand,
+				cfg.executionTimeoutMs,
 			);
+			
+			const executionResult: any = { toolOperation: "code_execution", ...result };
+			
 			return {
-				content: [{ type: "text", text: JSON.stringify(preview, null, 2) }],
+				content: [
+					{
+						type: "text",
+						text: JSON.stringify(executionResult, null, 2),
+					},
+				],
 			};
 		}
-		const result = await executePython(
-			code,
-			cfg.pythonCommand,
-			cfg.executionTimeoutMs,
+
+		// Auto-seed most operations with a brief sequential_thinking step
+		const seedExclusions = new Set([
+			"sequential_thinking",
+			"code_execution",
+			"session_info",
+			"session_export",
+			"session_import",
+		]);
+
+		const shouldSeed = !seedExclusions.has(args.operation);
+
+		// Handle async operations
+		if (args.operation === "notebook_run_cell") {
+			const params = (args.parameters || {}) as any;
+			try {
+				const execution = await notebookStore.executeCell(
+					params.notebookId || "",
+					params.cellId || "",
+					params.timeoutMs || 5000,
+				);
+				
+				
+				const notebookResult: any = {
+					toolOperation: "notebook_run_cell",
+					notebookId: params.notebookId,
+					cellId: params.cellId,
+					execution: {
+						id: execution.id,
+						status: execution.status,
+						outputs: execution.outputs,
+						error: execution.error,
+						duration: execution.completedAt
+							? execution.completedAt - execution.startedAt
+							: undefined,
+					},
+				};
+				
+				
+				return {
+					content: [
+						{
+							type: "text" as const,
+							text: JSON.stringify(notebookResult, null, 2),
+						},
+					],
+				};
+			} catch (error: any) {
+				
+				const errorResult: any = {
+					toolOperation: "notebook_run_cell",
+					notebookId: params.notebookId,
+					cellId: params.cellId,
+					error: error.message,
+					success: false,
+				};
+				
+				
+				return {
+					content: [
+						{
+							type: "text" as const,
+							text: JSON.stringify(errorResult, null, 2),
+						},
+					],
+				};
+			}
+		}
+
+		// Execute the main operation
+		const result = await executeClearThoughtOperation(
+			sessionState,
+			args.operation,
+			{ prompt: args.prompt, parameters: args.parameters },
 		);
+		
+		const enriched = shouldSeed
+			? {
+					...result,
+					initialThought: await executeClearThoughtOperation(
+						sessionState,
+						"sequential_thinking",
+						{
+							prompt: `Plan approach for: ${args.prompt}`,
+							parameters: {
+								thoughtNumber: 1,
+								totalThoughts: 3,
+								nextThoughtNeeded: true,
+								needsMoreThoughts: true,
+								pattern: "chain",
+							},
+						},
+					),
+				}
+			: result;
+
+
+		// Enhance response with notebook resources if applicable
+		const baseResponse = {
+			content: [{ type: "text" as const, text: JSON.stringify(enriched, null, 2) }],
+		};
+
+		const enhancedResponse = enhanceResponseWithNotebook(
+			baseResponse,
+			args.operation,
+			args.prompt,
+		);
+		return enhancedResponse;
+		
+	} catch (error: any) {
+		const errorResponse = {
+			toolOperation: args.operation,
+			error: error.message,
+			success: false
+		};
+		
 		return {
 			content: [
 				{
-					type: "text",
-					text: JSON.stringify(
-						{ toolOperation: "code_execution", ...result },
-						null,
-						2,
-					),
+					type: "text" as const,
+					text: JSON.stringify(errorResponse, null, 2),
 				},
 			],
+			isError: true,
 		};
 	}
-
-	// Auto-seed most operations with a brief sequential_thinking step
-	const seedExclusions = new Set([
-		"sequential_thinking",
-		"code_execution",
-		"session_info",
-		"session_export",
-		"session_import",
-	]);
-
-	const shouldSeed = !seedExclusions.has(args.operation);
-
-	// Handle async operations
-	if (args.operation === "notebook_run_cell") {
-		const params = (args.parameters || {}) as any;
-		try {
-			const execution = await notebookStore.executeCell(
-				params.notebookId || "",
-				params.cellId || "",
-				params.timeoutMs || 5000,
-			);
-			return {
-				content: [
-					{
-						type: "text",
-						text: JSON.stringify(
-							{
-								toolOperation: "notebook_run_cell",
-								notebookId: params.notebookId,
-								cellId: params.cellId,
-								execution: {
-									id: execution.id,
-									status: execution.status,
-									outputs: execution.outputs,
-									error: execution.error,
-									duration: execution.completedAt
-										? execution.completedAt - execution.startedAt
-										: undefined,
-								},
-							},
-							null,
-							2,
-						),
-					},
-				],
-			};
-		} catch (error: any) {
-			return {
-				content: [
-					{
-						type: "text",
-						text: JSON.stringify(
-							{
-								toolOperation: "notebook_run_cell",
-								notebookId: params.notebookId,
-								cellId: params.cellId,
-								error: error.message,
-								success: false,
-							},
-							null,
-							2,
-						),
-					},
-				],
-			};
-		}
-	}
-
-	const result = await executeClearThoughtOperation(
-		sessionState,
-		args.operation,
-		{ prompt: args.prompt, parameters: args.parameters },
-	);
-	const enriched = shouldSeed
-		? {
-				...result,
-				initialThought: await executeClearThoughtOperation(
-					sessionState,
-					"sequential_thinking",
-					{
-						prompt: `Plan approach for: ${args.prompt}`,
-						parameters: {
-							thoughtNumber: 1,
-							totalThoughts: 3,
-							nextThoughtNeeded: true,
-							needsMoreThoughts: true,
-							pattern: "chain",
-						},
-					},
-				),
-			}
-		: result;
-
-	// Enhance response with notebook resources if applicable
-	const baseResponse = {
-		content: [{ type: "text", text: JSON.stringify(enriched, null, 2) }],
-	};
-
-	const enhancedResponse = enhanceResponseWithNotebook(
-		baseResponse,
-		args.operation,
-		args.prompt,
-	);
-	return enhancedResponse;
 }
 
 // Backwards-compatible registration helper (kept for compatibility; unused by low-level Server)
@@ -1829,14 +2073,116 @@ export async function executeClearThoughtOperation(
 		}
 
 		case "visual_dashboard": {
+			/**
+			 * Visual Dashboard Operation
+			 * 
+			 * Creates interactive visual dashboards using MCP UI patterns.
+			 * Supports HTML, external URLs, and remote DOM components.
+			 * 
+			 * Expected in prompt: Description of what to visualize
+			 * 
+			 * Expected in parameters:
+			 * - visualizationType: 'chart' | 'graph' | 'metrics' | 'custom'
+			 * - data: Object containing the data to visualize
+			 * - panels: Array of dashboard panels with their configurations
+			 * - layout: 'grid' | 'flex' | 'tabs' | 'stack'
+			 * - interactive: boolean - Enable interactive features
+			 * - uiType: 'rawHtml' | 'externalUrl' | 'remoteDom'
+			 * - refreshRate: number - Auto-refresh interval in milliseconds
+			 */
+			
+			const visualizationType = getParam("visualizationType", "chart");
+			const data = parameters.data || {};
+			const panels = (parameters.panels as Array<any>) || [];
+			const layout = getParam("layout", "grid");
+			const interactive = getParam("interactive", true);
+			const uiType = getParam("uiType", "rawHtml");
+			const refreshRate = getParam("refreshRate", 0);
+			
+			// Generate content based on type
+			let uiResource;
+			
+			try {
+				if (uiType === "rawHtml") {
+					// Generate inline HTML with charts/graphs
+					const htmlContent = generateDashboardHTML({
+						title: prompt,
+						visualizationType,
+						data,
+						panels,
+						layout,
+						interactive,
+					});
+					
+					uiResource = createUIResource({
+						uri: `ui://dashboard/${Date.now()}`,
+						content: {
+							type: "rawHtml",
+							htmlString: htmlContent,
+						},
+						encoding: "blob", // Use blob encoding like graphing-calculator
+					});
+				} else if (uiType === "externalUrl") {
+					// Use external visualization service
+					const externalUrl = String(parameters.externalUrl || "https://example.com/dashboard");
+					
+					uiResource = createUIResource({
+						uri: `ui://dashboard/${Date.now()}`,
+						content: {
+							type: "externalUrl",
+							iframeUrl: externalUrl,
+						},
+						encoding: "text",
+					});
+				} else if (uiType === "remoteDom") {
+					// Generate remote DOM script for dynamic content
+					const remoteDomScript = generateRemoteDomScript({
+						visualizationType,
+						data,
+						panels,
+						interactive,
+					});
+					
+					uiResource = createUIResource({
+						uri: `ui://dashboard/${Date.now()}`,
+						content: {
+							type: "remoteDom",
+							script: remoteDomScript,
+							framework: "react",
+						},
+						encoding: "blob",
+					});
+				} else {
+					// Fallback to simple HTML
+					uiResource = createUIResource({
+						uri: `ui://dashboard/${Date.now()}`,
+						content: {
+							type: "rawHtml",
+							htmlString: "<h1>Dashboard</h1><p>No visualization type specified</p>",
+						},
+						encoding: "text",
+					});
+				}
+			} catch (error) {
+				// Error handling with error UI resource
+				uiResource = createUIResource({
+					uri: `ui://dashboard-error/${Date.now()}`,
+					content: {
+						type: "rawHtml",
+						htmlString: `
+							<div style="padding: 20px; font-family: system-ui;">
+								<h2 style="color: #dc3545;">Dashboard Creation Error</h2>
+								<p>${error instanceof Error ? error.message : "Unknown error occurred"}</p>
+							</div>
+						`,
+					},
+					encoding: "text",
+				});
+			}
+			
+			// Return format matching graphing-calculator pattern
 			return {
-				toolOperation: "visual_dashboard",
-				dashboard: {
-					title: prompt,
-					panels: parameters.panels || [],
-					layout: parameters.layout || "grid",
-					refreshRate: parameters.refreshRate || 5000,
-				},
+				content: [uiResource],
 			};
 		}
 

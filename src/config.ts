@@ -100,6 +100,7 @@ export const defaultConfig: ServerConfig = {
 	executionTimeoutMs: 10000,
 };
 
+
 /**
  * Validates and parses configuration
  * @param config - Raw configuration object
