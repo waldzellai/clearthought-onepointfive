@@ -54,3 +54,24 @@ exa-mcp-server-websets/
 exa-mcp-server-websets
 .claude-flow/
 .swarm/
+
+# Refactoring artifacts
+.refactoring-game/
+.feature-implementation-game/
+.hive-mind/
+refactoring-*.md
+REFACTORING_SUMMARY.md
+analysis-operations-summary.md
+notebook-*.md
+notebooks-benefits.md
+tools-issues-*.md
+
+# Build artifacts
+dist/resources/
+*.d.ts.map
+*.js.map
+
+# Test artifacts
+vitest.config.ts.timestamp-*
+test-results/
+.vitest/
