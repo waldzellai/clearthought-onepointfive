@@ -4,6 +4,10 @@
 
 A Model Context Protocol (MCP) server that provides a unified reasoning tool with multiple operations, including systematic thinking, mental models, debugging approaches, and interactive notebook capabilities for enhanced problem-solving. This server exposes a single `clear_thought` tool with a comprehensive suite of operations to facilitate complex reasoning tasks, plus interactive Srcbook notebook resources.
 
+## 🚀 New: Modular Architecture
+
+The codebase has been completely refactored from a monolithic 2867-line file into a clean, modular architecture with 38 separate operations organized by category. Each operation is now self-contained, making the codebase more maintainable, testable, and extensible.
+
 ## Operations
 
 The `clear_thought` tool provides the following operations. For detailed information on parameters, please refer to the operations guide resource at `guide://clear-thought-operations`.
@@ -222,6 +226,34 @@ docker run -it waldzellai/clear-thought-onepointfive
 - `npm run typecheck` - TypeScript type checking
 - `npm run check` - Biome linting and formatting
 - `npm run test` - Run tests with Vitest
+
+### Architecture
+
+The codebase follows a modular architecture:
+
+```
+src/tools/
+├── operations/           # All operations organized by category
+│   ├── core/            # Core thinking operations (7)
+│   ├── session/         # Session management (3)
+│   ├── collaborative/   # Collaborative reasoning (5)
+│   ├── analysis/        # Analysis operations (7)
+│   ├── patterns/        # Reasoning patterns (5)
+│   ├── ui/              # UI operations (2)
+│   ├── notebook/        # Notebook operations (4)
+│   ├── metagame/        # Advanced frameworks (2)
+│   └── special/         # Special operations (3)
+├── helpers/             # Helper utilities
+│   └── ui-generation.ts # UI generation helpers
+└── index.ts             # Main orchestrator
+```
+
+Each operation:
+- Extends `BaseOperation` class
+- Implements the `Operation` interface
+- Is self-contained (~100-150 lines)
+- Auto-registers on import
+- Has consistent error handling
 
 ## Contributing
 
