@@ -1,65 +1,66 @@
 {
-    "name": "@waldzellai/clear-thought-onepointfive",
-    "version": "0.1.5",
-    "description": "Intermediate update to Waldzell's Clear Thought MCP server",
-    "license": "MIT",
-    "author": "Waldzell AI",
-    "homepage": "https://github.com/waldzellai/clear-thought-onepointfive.git",
-    "bugs": {
-        "url": "https://github.com/waldzellai/clear-thought-onepointfive/issues"
-    },
-    "type": "module",
-    "files": [
-        "dist",
-        "src",
-        "smithery.yaml",
-        "README.md",
-        "LICENSE"
-    ],
-    "scripts": {
-        "build:stdio": "tsc cli/stdio-server.ts --outDir dist --module esnext --target es2020 --moduleResolution node --esModuleInterop true",
-        "build:http": "npx @smithery/cli build",
-        "build": "npm run build:stdio && npm run build:http",
-        "dev": "npx @smithery/cli dev",
-        "typecheck": "tsc --noEmit",
-        "check": "npx @biomejs/biome check --write --unsafe",
-        "test": "vitest"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/waldzellai/waldzell-mcp.git"
-    },
-    "dependencies": {
-        "@modelcontextprotocol/sdk": "^1.17.0",
-        "@smithery/sdk": "^1.5.5",
-        "marked": "^15.0.12",
-        "zod": "^3.23.8"
-    },
-    "devDependencies": {
-        "@smithery/cli": "^1.2.4",
-        "@types/node": "^22",
-        "typescript": "^5.3.3"
-    },
-    "keywords": [
-        "mcp",
-        "modelcontextprotocol",
-        "reasoning",
-        "sd",
-        "complex-systems",
-        "tree-of-thought",
-        "mcts",
-        "graph-of-thought",
-        "beam-search",
-        "chain-of-thought",
-        "sequential-thinking",
-        "mental-models",
-        "james-clear",
-        "cognitive-tools",
-        "model-enhancement",
-        "sequentialthinking"
-    ],
-    "engines": {
-        "node": ">=18"
-    },
-    "module": "src/index.ts"
+	"name": "@waldzellai/clear-thought-onepointfive",
+	"version": "0.1.5",
+	"description": "Intermediate update to Waldzell's Clear Thought MCP server",
+	"license": "MIT",
+	"author": "Waldzell AI",
+	"homepage": "https://github.com/waldzellai/clear-thought-onepointfive.git",
+	"bugs": {
+		"url": "https://github.com/waldzellai/clear-thought-onepointfive/issues"
+	},
+	"type": "module",
+	"files": [
+		"dist",
+		"src",
+		"smithery.yaml",
+		"README.md",
+		"LICENSE"
+	],
+	"scripts": {
+		"build:stdio": "tsc cli/stdio-server.ts --outDir dist --module esnext --target es2020 --moduleResolution node --esModuleInterop true",
+		"build:http": "npx @smithery/cli build",
+		"copy-resources": "mkdir -p dist/resources && cp -r src/resources/* dist/resources/",
+		"build": "npm run build:stdio && npm run build:http && npm run copy-resources",
+		"dev": "npx @smithery/cli dev",
+		"typecheck": "tsc --noEmit",
+		"check": "npx @biomejs/biome check --write --unsafe",
+		"test": "vitest"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/waldzellai/waldzell-mcp.git"
+	},
+	"dependencies": {
+		"@modelcontextprotocol/sdk": "^1.17.0",
+		"@smithery/sdk": "^1.5.5",
+		"marked": "^15.0.12",
+		"zod": "^3.23.8"
+	},
+	"devDependencies": {
+		"@smithery/cli": "^1.2.4",
+		"@types/node": "^22",
+		"typescript": "^5.3.3"
+	},
+	"keywords": [
+		"mcp",
+		"modelcontextprotocol",
+		"reasoning",
+		"sd",
+		"complex-systems",
+		"tree-of-thought",
+		"mcts",
+		"graph-of-thought",
+		"beam-search",
+		"chain-of-thought",
+		"sequential-thinking",
+		"mental-models",
+		"james-clear",
+		"cognitive-tools",
+		"model-enhancement",
+		"sequentialthinking"
+	],
+	"engines": {
+		"node": ">=18"
+	},
+	"module": "src/index.ts"
 }

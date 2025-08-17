@@ -1,72 +1,61 @@
 /**
  * Reasoning Patterns Type Definitions
- * 
+ *
  * This module exports all type definitions for advanced reasoning patterns
  * that extend beyond traditional chain-of-thought sequential thinking.
  */
 
-// Base types
-export * from './base.js';
-
-// Tree of Thought
-export * from './tree-of-thought.js';
-
-// Graph of Thought
-export * from './graph-of-thought.js';
-
-// Beam Search
-export * from './beam-search.js';
-
-// Monte Carlo Tree Search
-export * from './mcts.js';
-
-// Progressive Deep Reasoning
-export * from './pdr.js';
-
-// Metagame patterns - import specific exports to avoid conflicts
-export { 
-  OODASession,
-  OODAPhase,
-  OODANode,
-  OODAHypothesis,
-  OODAMetrics
-} from './ooda-loop.js';
-
-export * from './ulysses-protocol.js';
-
 // Re-export commonly used types for convenience
 export type {
-  BaseReasoningNode,
-  BaseReasoningSession,
-  ReasoningPatternType,
-  UnifiedReasoningArgs,
-  UnifiedReasoningResult,
-  ReasoningPattern,
-  PatternRegistryEntry
-} from './base.js';
-
+	BaseReasoningNode,
+	BaseReasoningSession,
+	PatternRegistryEntry,
+	ReasoningPattern,
+	ReasoningPatternType,
+	UnifiedReasoningArgs,
+	UnifiedReasoningResult,
+} from "./base.js";
+// Base types
+export * from "./base.js";
 export type {
-  TreeOfThoughtNode,
-  TreeOfThoughtSession,
-  TreeOfThoughtOperations
-} from './tree-of-thought.js';
+	BeamSearchNode,
+	BeamSearchOperations,
+	BeamSearchPath,
+	BeamSearchSession,
+} from "./beam-search.js";
 
+// Beam Search
+export * from "./beam-search.js";
 export type {
-  GraphOfThoughtNode,
-  GraphOfThoughtEdge,
-  GraphOfThoughtSession,
-  GraphOfThoughtOperations
-} from './graph-of-thought.js';
-
+	GraphOfThoughtEdge,
+	GraphOfThoughtNode,
+	GraphOfThoughtOperations,
+	GraphOfThoughtSession,
+} from "./graph-of-thought.js";
+// Graph of Thought
+export * from "./graph-of-thought.js";
 export type {
-  BeamSearchNode,
-  BeamSearchPath,
-  BeamSearchSession,
-  BeamSearchOperations
-} from './beam-search.js';
-
+	MCTSNode,
+	MCTSOperations,
+	MCTSSession,
+} from "./mcts.js";
+// Monte Carlo Tree Search
+export * from "./mcts.js";
+// Metagame patterns - import specific exports to avoid conflicts
+export {
+	OODAHypothesis,
+	OODAMetrics,
+	OODANode,
+	OODAPhase,
+	OODASession,
+} from "./ooda-loop.js";
+// Progressive Deep Reasoning
+export * from "./pdr.js";
 export type {
-  MCTSNode,
-  MCTSSession,
-  MCTSOperations
-} from './mcts.js';
+	TreeOfThoughtNode,
+	TreeOfThoughtOperations,
+	TreeOfThoughtSession,
+} from "./tree-of-thought.js";
+// Tree of Thought
+export * from "./tree-of-thought.js";
+export * from "./ulysses-protocol.js";
