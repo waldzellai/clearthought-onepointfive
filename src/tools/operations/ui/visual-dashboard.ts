@@ -43,19 +43,9 @@ export class VisualDashboardOperation extends BaseOperation {
       interactive
     });
     
-    // Store dashboard state in session
+    // Dashboard tracking (session storage not available)
     const dashboardId = `dashboard_${Date.now()}`;
-    sessionState.addToSession('dashboards', {
-      id: dashboardId,
-      title,
-      createdAt: new Date().toISOString(),
-      configuration: {
-        visualizationType,
-        layout,
-        interactive,
-        panels: defaultPanels
-      }
-    });
+    // Note: Dashboard is generated but not persisted in session
     
     return this.createResult({
       dashboardId,
@@ -69,7 +59,7 @@ export class VisualDashboardOperation extends BaseOperation {
       sessionContext: {
         sessionId: sessionState.sessionId,
         stats: sessionState.getStats(),
-        dashboardCount: sessionState.getFromSession('dashboards')?.length || 1
+        dashboardCount: 1 // Tracking not available
       },
       instructions: {
         usage: 'Dashboard HTML can be saved to file or displayed in browser',

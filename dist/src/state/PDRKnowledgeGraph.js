@@ -3,16 +3,16 @@
  * In-memory graph with hierarchical + network structure
  */
 export class PDRKnowledgeGraph {
-    constructor(sessionId, mode = 'standard') {
+    constructor(sessionId, mode = "standard") {
         this.sessionId = sessionId;
         this.mode = mode;
         this.nodes = new Map();
         this.edges = new Map();
         this.edgesBySource = new Map();
         this.hierarchy = {
-            root: '',
+            root: "",
             levels: new Map(),
-            parentChild: new Map()
+            parentChild: new Map(),
         };
         this.clusters = new Map();
         this.metrics = {
@@ -21,7 +21,7 @@ export class PDRKnowledgeGraph {
             avgDegree: 0,
             maxDepth: 0,
             clusterCount: 0,
-            gaps: []
+            gaps: [],
         };
     }
     get limits() {
@@ -39,8 +39,8 @@ export class PDRKnowledgeGraph {
         const id = `node-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
         const node = {
             id,
-            content: data.content || '',
-            type: data.type || 'subject',
+            content: data.content || "",
+            type: data.type || "subject",
             depth: data.depth || 0,
             parentId: data.parentId,
             childrenIds: new Set(data.childrenIds || []),
@@ -49,16 +49,16 @@ export class PDRKnowledgeGraph {
             scores: {
                 confidence: data.scores?.confidence || 0.5,
                 centrality: 0,
-                passScores: new Map()
+                passScores: new Map(),
             },
             metadata: {
-                createdInPass: data.metadata?.createdInPass || 'initial',
+                createdInPass: data.metadata?.createdInPass || "initial",
                 lastModified: new Date().toISOString(),
                 tags: new Set(data.metadata?.tags || []),
                 patternUsed: data.metadata?.patternUsed,
-                selected: false
+                selected: false,
             },
-            artifacts: data.artifacts
+            artifacts: data.artifacts,
         };
         this.nodes.set(id, node);
         // Update hierarchy
@@ -68,13 +68,13 @@ export class PDRKnowledgeGraph {
             if (!this.hierarchy.parentChild.has(node.parentId)) {
                 this.hierarchy.parentChild.set(node.parentId, []);
             }
-            this.hierarchy.parentChild.get(node.parentId).push(id);
+            this.hierarchy.parentChild.get(node.parentId)?.push(id);
         }
         // Update depth levels
         if (!this.hierarchy.levels.has(node.depth)) {
             this.hierarchy.levels.set(node.depth, new Set());
         }
-        this.hierarchy.levels.get(node.depth).add(id);
+        this.hierarchy.levels.get(node.depth)?.add(id);
         // Set root if first node
         if (this.nodes.size === 1) {
             this.hierarchy.root = id;
@@ -91,28 +91,28 @@ export class PDRKnowledgeGraph {
         }
         // Validate nodes exist
         if (!data.sourceId || !data.targetId) {
-            throw new Error('Source and target IDs are required');
+            throw new Error("Source and target IDs are required");
         }
         if (!this.nodes.has(data.sourceId) || !this.nodes.has(data.targetId)) {
-            throw new Error('Source or target node does not exist');
+            throw new Error("Source or target node does not exist");
         }
         // Validate weight
         if (data.weight !== undefined && (data.weight < 0 || data.weight > 1)) {
-            throw new Error('Edge weight must be between 0 and 1');
+            throw new Error("Edge weight must be between 0 and 1");
         }
         const id = `edge-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
         const edge = {
             id,
             sourceId: data.sourceId,
             targetId: data.targetId,
-            type: data.type || 'relates-to',
+            type: data.type || "relates-to",
             weight: data.weight || 0.5,
             metadata: {
-                createdInPass: data.metadata?.createdInPass || 'initial',
+                createdInPass: data.metadata?.createdInPass || "initial",
                 confidence: data.metadata?.confidence || 0.5,
                 justification: data.metadata?.justification,
-                bidirectional: data.metadata?.bidirectional || false
-            }
+                bidirectional: data.metadata?.bidirectional || false,
+            },
         };
         // Store edge
         this.edges.set(id, edge);
@@ -120,14 +120,14 @@ export class PDRKnowledgeGraph {
         if (!this.edgesBySource.has(edge.sourceId)) {
             this.edgesBySource.set(edge.sourceId, new Set());
         }
-        this.edgesBySource.get(edge.sourceId).add(id);
+        this.edgesBySource.get(edge.sourceId)?.add(id);
         // Update node references
-        this.nodes.get(edge.sourceId).outgoingEdges.add(id);
-        this.nodes.get(edge.targetId).incomingEdges.add(id);
+        this.nodes.get(edge.sourceId)?.outgoingEdges.add(id);
+        this.nodes.get(edge.targetId)?.incomingEdges.add(id);
         // Handle bidirectional edges
         if (edge.metadata.bidirectional) {
-            this.nodes.get(edge.targetId).outgoingEdges.add(id);
-            this.nodes.get(edge.sourceId).incomingEdges.add(id);
+            this.nodes.get(edge.targetId)?.outgoingEdges.add(id);
+            this.nodes.get(edge.sourceId)?.incomingEdges.add(id);
         }
         // Update metrics
         this.metrics.edgeCount = this.edges.size;
@@ -140,7 +140,7 @@ export class PDRKnowledgeGraph {
             return;
         }
         let totalDegree = 0;
-        this.nodes.forEach(node => {
+        this.nodes.forEach((node) => {
             totalDegree += node.incomingEdges.size + node.outgoingEdges.size;
         });
         this.metrics.avgDegree = totalDegree / this.nodes.size;
@@ -163,7 +163,7 @@ export class PDRKnowledgeGraph {
         if (!node)
             return [];
         return Array.from(node.outgoingEdges)
-            .map(edgeId => this.edges.get(edgeId))
+            .map((edgeId) => this.edges.get(edgeId))
             .filter((edge) => edge !== undefined);
     }
     getIncomingEdges(nodeId) {
@@ -171,18 +171,18 @@ export class PDRKnowledgeGraph {
         if (!node)
             return [];
         return Array.from(node.incomingEdges)
-            .map(edgeId => this.edges.get(edgeId))
+            .map((edgeId) => this.edges.get(edgeId))
             .filter((edge) => edge !== undefined);
     }
     getEdgesByType(type) {
-        return Array.from(this.edges.values()).filter(edge => edge.type === type);
+        return Array.from(this.edges.values()).filter((edge) => edge.type === type);
     }
     hasNode(nodeId) {
         return this.nodes.has(nodeId);
     }
     hasEdgeBetween(nodeId1, nodeId2) {
         const edges1 = this.getOutgoingEdges(nodeId1);
-        return edges1.some(edge => edge.targetId === nodeId2);
+        return edges1.some((edge) => edge.targetId === nodeId2);
     }
     // Modification methods
     updateNode(nodeId, updates) {
@@ -212,7 +212,7 @@ export class PDRKnowledgeGraph {
         }
     }
     getSelectedNodes() {
-        return Array.from(this.nodes.values()).filter(node => node.metadata.selected);
+        return Array.from(this.nodes.values()).filter((node) => node.metadata.selected);
     }
     // Cluster management
     setClusters(clusters) {
@@ -256,31 +256,43 @@ export class PDRKnowledgeGraph {
         return JSON.stringify({
             sessionId: this.sessionId,
             mode: this.mode,
-            nodes: Array.from(this.nodes.entries()).map(([id, node]) => [id, {
+            nodes: Array.from(this.nodes.entries()).map(([id, node]) => [
+                id,
+                {
                     ...node,
                     childrenIds: Array.from(node.childrenIds),
                     incomingEdges: Array.from(node.incomingEdges),
                     outgoingEdges: Array.from(node.outgoingEdges),
                     metadata: {
                         ...node.metadata,
-                        tags: Array.from(node.metadata.tags)
+                        tags: Array.from(node.metadata.tags),
                     },
                     scores: {
                         ...node.scores,
-                        passScores: Array.from(node.scores.passScores.entries())
-                    }
-                }]),
+                        passScores: Array.from(node.scores.passScores.entries()),
+                    },
+                },
+            ]),
             edges: Array.from(this.edges.entries()),
-            edgesBySource: Array.from(this.edgesBySource.entries()).map(([k, v]) => [k, Array.from(v)]),
+            edgesBySource: Array.from(this.edgesBySource.entries()).map(([k, v]) => [
+                k,
+                Array.from(v),
+            ]),
             hierarchy: {
                 ...this.hierarchy,
-                levels: Array.from(this.hierarchy.levels.entries()).map(([k, v]) => [k, Array.from(v)])
+                levels: Array.from(this.hierarchy.levels.entries()).map(([k, v]) => [
+                    k,
+                    Array.from(v),
+                ]),
             },
-            clusters: Array.from(this.clusters.entries()).map(([id, cluster]) => [id, {
+            clusters: Array.from(this.clusters.entries()).map(([id, cluster]) => [
+                id,
+                {
                     ...cluster,
-                    nodeIds: Array.from(cluster.nodeIds)
-                }]),
-            metrics: this.metrics
+                    nodeIds: Array.from(cluster.nodeIds),
+                },
+            ]),
+            metrics: this.metrics,
         });
     }
     static deserialize(data) {
@@ -295,12 +307,12 @@ export class PDRKnowledgeGraph {
                 outgoingEdges: new Set(nodeData.outgoingEdges),
                 metadata: {
                     ...nodeData.metadata,
-                    tags: new Set(nodeData.metadata.tags)
+                    tags: new Set(nodeData.metadata.tags),
                 },
                 scores: {
                     ...nodeData.scores,
-                    passScores: new Map(nodeData.scores.passScores)
-                }
+                    passScores: new Map(nodeData.scores.passScores),
+                },
             };
             graph.nodes.set(id, node);
         });
@@ -315,13 +327,16 @@ export class PDRKnowledgeGraph {
         // Restore hierarchy
         graph.hierarchy = {
             ...parsed.hierarchy,
-            levels: new Map(parsed.hierarchy.levels.map(([k, v]) => [k, new Set(v)]))
+            levels: new Map(parsed.hierarchy.levels.map(([k, v]) => [
+                k,
+                new Set(v),
+            ])),
         };
         // Restore clusters
         parsed.clusters.forEach(([id, clusterData]) => {
             graph.clusters.set(id, {
                 ...clusterData,
-                nodeIds: new Set(clusterData.nodeIds)
+                nodeIds: new Set(clusterData.nodeIds),
             });
         });
         graph.metrics = parsed.metrics;
@@ -343,9 +358,9 @@ export class PDRKnowledgeGraph {
         // Remove all edges connected to this node
         const edgesToRemove = [
             ...this.getIncomingEdges(nodeId),
-            ...this.getOutgoingEdges(nodeId)
+            ...this.getOutgoingEdges(nodeId),
         ];
-        edgesToRemove.forEach(edge => this.removeEdge(edge.id));
+        edgesToRemove.forEach((edge) => this.removeEdge(edge.id));
         // Remove from parent's children
         if (node.parentId) {
             const parent = this.nodes.get(node.parentId);
@@ -367,25 +382,25 @@ PDRKnowledgeGraph.LIMITS = {
         nodes: 500,
         edges: 2500,
         depth: 8,
-        targetMemoryMB: 10
+        targetMemoryMB: 10,
     },
     standard: {
         nodes: 5000,
         edges: 25000,
         depth: 10,
-        targetMemoryMB: 50
+        targetMemoryMB: 50,
     },
     extended: {
         nodes: 20000,
         edges: 100000,
         depth: 12,
-        targetMemoryMB: 200
+        targetMemoryMB: 200,
     },
     cloud: {
         nodes: 50000,
         edges: 250000,
         depth: 15,
         targetMemoryMB: 500,
-        requiresFlag: '--max-old-space-size=2048'
-    }
+        requiresFlag: "--max-old-space-size=2048",
+    },
 };

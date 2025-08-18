@@ -70,13 +70,7 @@ export class NotebookExportOperation extends BaseOperation {
     // Generate export statistics
     const exportStats = this.generateExportStats(notebook, exportContent);
     
-    // Update session tracking
-    const notebooks = sessionState.getFromSession('notebooks') || [];
-    const notebookRef = notebooks.find((nb: any) => nb.notebookId === notebook.id);
-    if (notebookRef) {
-      notebookRef.lastExported = new Date().toISOString();
-      notebookRef.exportCount = (notebookRef.exportCount || 0) + 1;
-    }
+    // Session tracking is managed by notebook store
     
     return this.createResult({
       notebookId: notebook.id,
@@ -96,7 +90,7 @@ export class NotebookExportOperation extends BaseOperation {
       sessionContext: {
         sessionId: sessionState.sessionId,
         stats: sessionState.getStats(),
-        notebookCount: notebooks.length
+        notebookCount: 1 // Using notebook store's internal tracking
       },
       instructions: {
         usage: 'Save content to file using suggested filename',

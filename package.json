@@ -1,7 +1,7 @@
 {
 	"name": "@waldzellai/clear-thought-onepointfive",
-	"version": "0.1.5",
-	"description": "Intermediate update to Waldzell's Clear Thought MCP server",
+	"version": "0.2.1",
+	"description": "Clear Thought MCP server with modular architecture - 38 reasoning operations for systematic thinking",
 	"license": "MIT",
 	"author": "Waldzell AI",
 	"homepage": "https://github.com/waldzellai/clear-thought-onepointfive.git",
@@ -9,13 +9,24 @@
 		"url": "https://github.com/waldzellai/clear-thought-onepointfive/issues"
 	},
 	"type": "module",
+	"module": "./src/index.ts",
 	"files": [
-		"dist",
-		"src",
-		"smithery.yaml",
+		"dist/**/*",
 		"README.md",
-		"LICENSE"
+		"LICENSE",
+		"package.json"
 	],
+	"main": "dist/src/index.js",
+	"types": "dist/src/index.d.ts",
+	"exports": {
+		".": {
+			"import": "./dist/src/index.js",
+			"types": "./dist/src/index.d.ts"
+		}
+	},
+	"bin": {
+		"clear-thought": "./dist/cli/stdio-server.js"
+	},
 	"scripts": {
 		"build:stdio": "tsc cli/stdio-server.ts --outDir dist --module esnext --target es2020 --moduleResolution node --esModuleInterop true",
 		"build:http": "npx @smithery/cli build",
@@ -24,16 +35,20 @@
 		"dev": "npx @smithery/cli dev",
 		"typecheck": "tsc --noEmit",
 		"check": "npx @biomejs/biome check --write --unsafe",
-		"test": "vitest"
+		"test": "vitest",
+		"prepublishOnly": "npm run build && npm run typecheck",
+		"version": "npm run check && git add -A",
+		"postversion": "git push && git push --tags"
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/waldzellai/waldzell-mcp.git"
+		"url": "git+https://github.com/waldzellai/clear-thought-onepointfive.git"
 	},
 	"dependencies": {
 		"@mcp-ui/server": "^5.2.0",
 		"@modelcontextprotocol/sdk": "^1.17.0",
 		"@smithery/sdk": "^1.5.5",
+		"@types/marked": "^5.0.2",
 		"marked": "^15.0.12",
 		"zod": "^3.23.8"
 	},
@@ -63,5 +78,8 @@
 	"engines": {
 		"node": ">=18"
 	},
-	"module": "src/index.ts"
+	"publishConfig": {
+		"access": "public",
+		"registry": "https://registry.npmjs.org/"
+	}
 }

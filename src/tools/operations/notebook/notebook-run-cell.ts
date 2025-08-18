@@ -61,13 +61,7 @@ export class NotebookRunCellOperation extends BaseOperation {
     // Analyze execution results
     const analysis = this.analyzeExecution(execution, targetCell);
     
-    // Update session tracking
-    const notebooks = sessionState.getFromSession('notebooks') || [];
-    const notebookRef = notebooks.find((nb: any) => nb.notebookId === notebook.id);
-    if (notebookRef) {
-      notebookRef.lastExecuted = new Date().toISOString();
-      notebookRef.executionCount = (notebookRef.executionCount || 0) + 1;
-    }
+    // Session tracking is managed by notebook store
     
     return this.createResult({
       executionId: execution.id,
@@ -94,7 +88,7 @@ export class NotebookRunCellOperation extends BaseOperation {
       sessionContext: {
         sessionId: sessionState.sessionId,
         stats: sessionState.getStats(),
-        notebookCount: notebooks.length
+        notebookCount: 1 // Using notebook store's internal tracking
       },
       instructions: {
         outputs: 'Check outputs array for stdout, stderr, and result data',

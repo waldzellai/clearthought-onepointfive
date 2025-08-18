@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { createUIResource } from "@mcp-ui/server";
 import { EphemeralNotebookStore } from "../notebook/EphemeralNotebook.js";
 import { getPresetForPattern } from "../notebook/presets.js";
 import type { SessionState } from "../state/SessionState.js";
@@ -1967,7 +1966,12 @@ export async function executeClearThoughtOperation(
 			 * The model should analyze the prompt through the lens of the specified ethical framework.
 			 */
 			
-			const framework = getParam("framework", "utilitarian") as EthicalAssessment["framework"];
+			// Handle "multiple" framework by defaulting to utilitarian for base analysis
+			let framework = getParam("framework", "utilitarian") as string;
+			const multiFramework = framework === "multiple";
+			if (multiFramework) {
+				framework = "utilitarian"; // Default to utilitarian for base analysis
+			}
 			let findings = (parameters.findings as string[]) || [];
 			let risks = (parameters.risks as string[]) || [];
 			let mitigations = (parameters.mitigations as string[]) || [];
@@ -2000,7 +2004,7 @@ export async function executeClearThoughtOperation(
 					}
 				};
 				
-				const keywords = frameworkKeywords[framework];
+				const keywords = frameworkKeywords[framework] || frameworkKeywords.utilitarian; // Fallback to utilitarian if framework not found
 				
 				// Extract findings (positive indicators)
 				for (const keyword of keywords.positive) {
@@ -2062,7 +2066,7 @@ export async function executeClearThoughtOperation(
 			}
 			
 			const ethicalResult: EthicalAssessment = {
-				framework,
+				framework: framework as EthicalAssessment["framework"],
 				findings,
 				risks,
 				mitigations,
@@ -2114,26 +2118,28 @@ export async function executeClearThoughtOperation(
 						interactive,
 					});
 					
-					uiResource = createUIResource({
+					// Note: createUIResource is not available in current setup
+					uiResource = {
 						uri: `ui://dashboard/${Date.now()}`,
 						content: {
 							type: "rawHtml",
 							htmlString: htmlContent,
 						},
 						encoding: "blob", // Use blob encoding like graphing-calculator
-					});
+					};
 				} else if (uiType === "externalUrl") {
 					// Use external visualization service
 					const externalUrl = String(parameters.externalUrl || "https://example.com/dashboard");
 					
-					uiResource = createUIResource({
+					// Note: createUIResource is not available in current setup
+					uiResource = {
 						uri: `ui://dashboard/${Date.now()}`,
 						content: {
 							type: "externalUrl",
 							iframeUrl: externalUrl,
 						},
 						encoding: "text",
-					});
+					};
 				} else if (uiType === "remoteDom") {
 					// Generate remote DOM script for dynamic content
 					const remoteDomScript = generateRemoteDomScript({
@@ -2143,7 +2149,8 @@ export async function executeClearThoughtOperation(
 						interactive,
 					});
 					
-					uiResource = createUIResource({
+					// Note: createUIResource is not available in current setup
+					uiResource = {
 						uri: `ui://dashboard/${Date.now()}`,
 						content: {
 							type: "remoteDom",
@@ -2151,21 +2158,23 @@ export async function executeClearThoughtOperation(
 							framework: "react",
 						},
 						encoding: "blob",
-					});
+					};
 				} else {
 					// Fallback to simple HTML
-					uiResource = createUIResource({
+					// Note: createUIResource is not available in current setup
+					uiResource = {
 						uri: `ui://dashboard/${Date.now()}`,
 						content: {
 							type: "rawHtml",
 							htmlString: "<h1>Dashboard</h1><p>No visualization type specified</p>",
 						},
 						encoding: "text",
-					});
+					};
 				}
 			} catch (error) {
 				// Error handling with error UI resource
-				uiResource = createUIResource({
+				// Note: createUIResource is not available in current setup
+				uiResource = {
 					uri: `ui://dashboard-error/${Date.now()}`,
 					content: {
 						type: "rawHtml",
@@ -2177,7 +2186,7 @@ export async function executeClearThoughtOperation(
 						`,
 					},
 					encoding: "text",
-				});
+				};
 			}
 			
 			// Return format matching graphing-calculator pattern

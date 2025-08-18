@@ -35,14 +35,9 @@ export class CustomFrameworkOperation extends BaseOperation {
     // Create framework documentation
     const documentation = this.generateFrameworkDocumentation(framework);
     
-    // Store framework in session
-    const frameworkId = `framework_${Date.now()}`;
-    sessionState.addToSession('customFrameworks', {
-      id: frameworkId,
-      framework,
-      createdAt: new Date().toISOString(),
-      appliedTo: prompt
-    });
+    // Framework tracking (session storage not available)
+    const frameworkId = `framework_${Date.now()}`;  
+    // Note: Framework is generated but not persisted in session
     
     return this.createResult({
       frameworkId,
@@ -52,7 +47,7 @@ export class CustomFrameworkOperation extends BaseOperation {
       sessionContext: {
         sessionId: sessionState.sessionId,
         stats: sessionState.getStats(),
-        frameworkCount: sessionState.getFromSession('customFrameworks')?.length || 1
+        frameworkCount: 1 // Tracking not available
       },
       instructions: {
         usage: 'Apply this framework systematically to analyze complex problems',

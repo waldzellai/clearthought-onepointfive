@@ -11,12 +11,12 @@ export function createOODASession(config) {
     const now = new Date().toISOString();
     return {
         sessionId: `ooda-${Date.now()}`,
-        patternType: 'ooda',
+        patternType: "ooda",
         iteration: 0,
         nextStepNeeded: true,
         createdAt: now,
         updatedAt: now,
-        currentPhase: 'observe',
+        currentPhase: "observe",
         loopNumber: 1,
         nodes: [],
         hypotheses: new Map(),
@@ -26,43 +26,50 @@ export function createOODASession(config) {
             decisionLatencyMs: 0,
             completedLoops: 0,
             hypothesisAccuracy: 0,
-            evidenceQuality: 0
+            evidenceQuality: 0,
         },
         loopStartTime: now,
         phaseChecklist: new Map([
-            ['observe', ['data_collected', 'anomalies_noted', 'patterns_identified']],
-            ['orient', ['context_analyzed', 'biases_acknowledged', 'framework_applied']],
-            ['decide', ['options_evaluated', 'risks_assessed', 'decision_documented']],
-            ['act', ['action_executed', 'results_captured', 'feedback_collected']]
+            ["observe", ["data_collected", "anomalies_noted", "patterns_identified"]],
+            [
+                "orient",
+                ["context_analyzed", "biases_acknowledged", "framework_applied"],
+            ],
+            [
+                "decide",
+                ["options_evaluated", "risks_assessed", "decision_documented"],
+            ],
+            ["act", ["action_executed", "results_captured", "feedback_collected"]],
         ]),
         config: {
             maxLoopTimeMs: 15 * 60 * 1000, // 15 minutes default
             autoAdvance: true,
             minEvidence: 2,
             carryForwardHypotheses: true,
-            ...config
-        }
+            ...config,
+        },
     };
 }
 /**
  * Advances to the next phase in the OODA loop
  */
 export function advancePhase(session) {
-    const phaseOrder = ['observe', 'orient', 'decide', 'act'];
+    const phaseOrder = ["observe", "orient", "decide", "act"];
     const currentIndex = phaseOrder.indexOf(session.currentPhase);
     const nextIndex = (currentIndex + 1) % phaseOrder.length;
     const updated = { ...session };
     updated.currentPhase = phaseOrder[nextIndex];
     updated.updatedAt = new Date().toISOString();
     // If completing a loop, update metrics
-    if (session.currentPhase === 'act') {
+    if (session.currentPhase === "act") {
         updated.loopNumber++;
         updated.metrics.completedLoops++;
         // Calculate loop time
         if (session.loopStartTime) {
             const loopTime = Date.now() - new Date(session.loopStartTime).getTime();
             updated.metrics.avgLoopTimeMs =
-                (updated.metrics.avgLoopTimeMs * (updated.metrics.completedLoops - 1) + loopTime) /
+                (updated.metrics.avgLoopTimeMs * (updated.metrics.completedLoops - 1) +
+                    loopTime) /
                     updated.metrics.completedLoops;
         }
         updated.loopStartTime = new Date().toISOString();
@@ -81,15 +88,14 @@ export function createOODANode(content, phase, evidence) {
         timestamp: new Date().toISOString(),
         phase,
         evidence,
-        phaseTimeMs: 0
+        phaseTimeMs: 0,
     };
 }
 /**
  * Calculates the learning rate based on hypothesis validation
  */
 export function calculateLearningRate(session) {
-    const validated = Array.from(session.hypotheses.values())
-        .filter(h => h.status === 'validated').length;
+    const validated = Array.from(session.hypotheses.values()).filter((h) => h.status === "validated").length;
     const total = session.hypotheses.size;
     if (total === 0)
         return 0;
@@ -106,29 +112,29 @@ export function calculateLearningRate(session) {
 export function getPhaseChecklist(phase) {
     const checklists = {
         observe: [
-            'Collect raw data from environment',
-            'Note anomalies and changes',
-            'Identify emerging patterns',
-            'Document observations without interpretation'
+            "Collect raw data from environment",
+            "Note anomalies and changes",
+            "Identify emerging patterns",
+            "Document observations without interpretation",
         ],
         orient: [
-            'Analyze observations in context',
-            'Apply mental models and frameworks',
-            'Identify and challenge biases',
-            'Synthesize information into understanding'
+            "Analyze observations in context",
+            "Apply mental models and frameworks",
+            "Identify and challenge biases",
+            "Synthesize information into understanding",
         ],
         decide: [
-            'Generate decision options',
-            'Evaluate risks and benefits',
-            'Consider second-order effects',
-            'Document decision rationale'
+            "Generate decision options",
+            "Evaluate risks and benefits",
+            "Consider second-order effects",
+            "Document decision rationale",
         ],
         act: [
-            'Execute chosen action',
-            'Monitor immediate results',
-            'Collect feedback data',
-            'Prepare for next observation cycle'
-        ]
+            "Execute chosen action",
+            "Monitor immediate results",
+            "Collect feedback data",
+            "Prepare for next observation cycle",
+        ],
     };
     return checklists[phase] || [];
 }
@@ -146,19 +152,21 @@ export function evaluateEvidenceQuality(node) {
     quality += Math.min(avgLength / 100, 0.3); // Up to 30% for detail
     // Phase-specific quality checks
     switch (node.phase) {
-        case 'observe':
+        case "observe":
             // Observations should be specific and measurable
-            quality += node.evidence.some(e => /\d+/.test(e)) ? 0.2 : 0;
+            quality += node.evidence.some((e) => /\d+/.test(e)) ? 0.2 : 0;
             break;
-        case 'orient':
+        case "orient":
             // Orientation should reference frameworks or models
-            quality += node.evidence.some(e => /framework|model|theory/i.test(e)) ? 0.2 : 0;
+            quality += node.evidence.some((e) => /framework|model|theory/i.test(e))
+                ? 0.2
+                : 0;
             break;
-        case 'decide':
+        case "decide":
             // Decisions should have clear rationale
             quality += node.decision ? 0.2 : 0;
             break;
-        case 'act':
+        case "act":
             // Actions should have measurable outcomes
             quality += node.action?.outcome ? 0.2 : 0;
             break;
@@ -173,36 +181,36 @@ export function suggestNextActions(session) {
     const currentPhase = session.currentPhase;
     // Phase-specific suggestions
     switch (currentPhase) {
-        case 'observe':
-            suggestions.push('Gather additional data points');
-            suggestions.push('Document unexpected observations');
-            suggestions.push('Check for environmental changes');
+        case "observe":
+            suggestions.push("Gather additional data points");
+            suggestions.push("Document unexpected observations");
+            suggestions.push("Check for environmental changes");
             break;
-        case 'orient':
-            suggestions.push('Apply alternative mental models');
-            suggestions.push('Challenge current assumptions');
-            suggestions.push('Synthesize observations into patterns');
+        case "orient":
+            suggestions.push("Apply alternative mental models");
+            suggestions.push("Challenge current assumptions");
+            suggestions.push("Synthesize observations into patterns");
             break;
-        case 'decide':
-            suggestions.push('Generate additional options');
-            suggestions.push('Perform risk assessment');
-            suggestions.push('Consider timing implications');
+        case "decide":
+            suggestions.push("Generate additional options");
+            suggestions.push("Perform risk assessment");
+            suggestions.push("Consider timing implications");
             break;
-        case 'act':
-            suggestions.push('Execute with minimal delay');
-            suggestions.push('Set up feedback mechanisms');
-            suggestions.push('Prepare contingency responses');
+        case "act":
+            suggestions.push("Execute with minimal delay");
+            suggestions.push("Set up feedback mechanisms");
+            suggestions.push("Prepare contingency responses");
             break;
     }
     // General suggestions based on metrics
     if (session.metrics.avgLoopTimeMs > session.config.maxLoopTimeMs) {
-        suggestions.push('⚠️ Accelerate decision cycle - exceeding time limit');
+        suggestions.push("⚠️ Accelerate decision cycle - exceeding time limit");
     }
     if (session.metrics.hypothesisAccuracy < 0.5 && session.loopNumber > 3) {
-        suggestions.push('📊 Review and revise hypothesis generation approach');
+        suggestions.push("📊 Review and revise hypothesis generation approach");
     }
     if (session.metrics.evidenceQuality < 0.6) {
-        suggestions.push('🔍 Improve evidence collection and documentation');
+        suggestions.push("🔍 Improve evidence collection and documentation");
     }
     return suggestions;
 }
@@ -211,41 +219,41 @@ export function suggestNextActions(session) {
  */
 export function exportToMarkdown(session) {
     const lines = [
-        '# OODA Loop Session',
-        '',
+        "# OODA Loop Session",
+        "",
         `**Session ID:** ${session.sessionId}`,
         `**Current Loop:** ${session.loopNumber}`,
         `**Current Phase:** ${session.currentPhase}`,
-        '',
-        '## Metrics',
+        "",
+        "## Metrics",
         `- Average Loop Time: ${Math.round(session.metrics.avgLoopTimeMs / 1000)}s`,
         `- Learning Rate: ${(session.metrics.learningRate * 100).toFixed(1)}%`,
         `- Hypothesis Accuracy: ${(session.metrics.hypothesisAccuracy * 100).toFixed(1)}%`,
         `- Evidence Quality: ${(session.metrics.evidenceQuality * 100).toFixed(1)}%`,
-        '',
-        '## Loop History'
+        "",
+        "## Loop History",
     ];
     // Group nodes by loop
     let currentLoop = 1;
     lines.push(`\n### Loop ${currentLoop}`);
     for (const node of session.nodes) {
-        if (node.phase === 'observe' && session.nodes.indexOf(node) > 0) {
+        if (node.phase === "observe" && session.nodes.indexOf(node) > 0) {
             currentLoop++;
             lines.push(`\n### Loop ${currentLoop}`);
         }
         lines.push(`\n#### ${node.phase.toUpperCase()}`);
         lines.push(node.content);
         if (node.evidence && node.evidence.length > 0) {
-            lines.push('\n**Evidence:**');
-            node.evidence.forEach(e => lines.push(`- ${e}`));
+            lines.push("\n**Evidence:**");
+            node.evidence.forEach((e) => lines.push(`- ${e}`));
         }
         if (node.decision) {
-            lines.push('\n**Decision:**');
+            lines.push("\n**Decision:**");
             lines.push(`Selected: ${node.decision.selected}`);
             lines.push(`Rationale: ${node.decision.rationale}`);
         }
         if (node.action) {
-            lines.push('\n**Action:**');
+            lines.push("\n**Action:**");
             lines.push(node.action.description);
             if (node.action.outcome) {
                 lines.push(`Outcome: ${node.action.outcome}`);
@@ -254,16 +262,16 @@ export function exportToMarkdown(session) {
     }
     // Add active hypotheses
     if (session.hypotheses.size > 0) {
-        lines.push('\n## Active Hypotheses');
-        for (const [id, hypothesis] of session.hypotheses) {
+        lines.push("\n## Active Hypotheses");
+        for (const [_id, hypothesis] of session.hypotheses) {
             lines.push(`\n### ${hypothesis.statement}`);
             lines.push(`- Status: ${hypothesis.status}`);
             lines.push(`- Confidence: ${(hypothesis.confidence * 100).toFixed(0)}%`);
             if (hypothesis.evidence && hypothesis.evidence.length > 0) {
-                lines.push('- Evidence:');
-                hypothesis.evidence.forEach(e => lines.push(`  - ${e}`));
+                lines.push("- Evidence:");
+                hypothesis.evidence.forEach((e) => lines.push(`  - ${e}`));
             }
         }
     }
-    return lines.join('\n');
+    return lines.join("\n");
 }

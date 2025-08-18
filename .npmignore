@@ -1,12 +1,16 @@
-# Source files
+# Source TypeScript files (keep dist/ only)
 src/
 *.ts
 !dist/**/*.d.ts
-
-# Configuration
 tsconfig.json
+
+# Configuration files
 .gitignore
 .npmignore
+biome.json
+vitest.config.ts
+.env
+.env.*
 
 # Development files
 .vscode/
@@ -14,28 +18,38 @@ tsconfig.json
 .claude/
 claude_code_mcp_config.json
 mcp_config_claude_code.json
+.smithery/
 
 # Testing
 tests/
+test/
 coverage/
 .nyc_output/
 *.test.*
 *.spec.*
+.vitest/
+test-results/
 
 # Documentation development
 specs/
 trees/
+docs/
+*.md
+!README.md
+!LICENSE
 
 # Build tools
 Dockerfile
 smithery.yaml
 flake.nix
 flake.lock
+cli/
 
 # Backup files
 *.bak
 *.bak2
 index-old-bloated.ts
+src/tools/index-refactored.ts
 
 # Logs
 *.log
@@ -51,7 +65,29 @@ Thumbs.db
 *.tmp
 *.temp
 .cache/
-systemprompt-mcp-reddit/
 
+# Game and refactoring artifacts
+.refactoring-game/
+.feature-implementation-game/
+.hive-mind/
+.claude-flow/
+.swarm/
+refactoring-*.md
+REFACTORING_SUMMARY.md
+analysis-operations-summary.md
+notebook-*.md
+notebooks-benefits.md
+tools-issues-*.md
+
+# External projects
+systemprompt-mcp-reddit/
 exa-mcp-server-websets/
 Effect-TS/
+
+# Git
+.git/
+.github/
+
+# Build artifacts not needed
+*.d.ts.map
+*.js.map

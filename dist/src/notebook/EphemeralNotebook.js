@@ -4,15 +4,15 @@
  * Provides in-memory notebook functionality for reasoning patterns
  * with JavaScript execution and srcmd export capabilities.
  */
-import { randomUUID } from 'crypto';
-import vm from 'vm';
+import { randomUUID } from "node:crypto";
+import vm from "node:vm";
 const DEFAULT_CONFIG = {
     enableTypescript: false,
     defaultTimeoutMs: 5000,
     maxCells: 200,
     maxExecutions: 200,
     maxOutputBytesPerExec: 262144, // 256KB
-    idleTtlMs: 30 * 60 * 1000 // 30 minutes
+    idleTtlMs: 30 * 60 * 1000, // 30 minutes
 };
 export class EphemeralNotebookStore {
     constructor(config = {}) {
@@ -43,7 +43,7 @@ export class EphemeralNotebookStore {
             createdAt: Date.now(),
             lastAccessedAt: Date.now(),
             cells: [],
-            executions: new Map()
+            executions: new Map(),
         };
         this.notebooks.set(notebook.id, notebook);
         return notebook;
@@ -75,9 +75,9 @@ export class EphemeralNotebookStore {
             id: randomUUID(),
             type,
             source,
-            language: type === 'code' ? (language || 'javascript') : undefined,
-            status: type === 'code' ? 'idle' : undefined,
-            outputs: type === 'code' ? [] : undefined
+            language: type === "code" ? language || "javascript" : undefined,
+            status: type === "code" ? "idle" : undefined,
+            outputs: type === "code" ? [] : undefined,
         };
         if (index !== undefined && index >= 0 && index <= notebook.cells.length) {
             notebook.cells.splice(index, 0, cell);
@@ -91,13 +91,13 @@ export class EphemeralNotebookStore {
         const notebook = this.getNotebook(notebookId);
         if (!notebook)
             return null;
-        const cellIndex = notebook.cells.findIndex(c => c.id === cellId);
+        const cellIndex = notebook.cells.findIndex((c) => c.id === cellId);
         if (cellIndex === -1)
             return null;
         notebook.cells[cellIndex] = {
             ...notebook.cells[cellIndex],
             ...updates,
-            id: cellId // Preserve ID
+            id: cellId, // Preserve ID
         };
         return notebook.cells[cellIndex];
     }
@@ -105,7 +105,7 @@ export class EphemeralNotebookStore {
         const notebook = this.getNotebook(notebookId);
         if (!notebook)
             return false;
-        const cellIndex = notebook.cells.findIndex(c => c.id === cellId);
+        const cellIndex = notebook.cells.findIndex((c) => c.id === cellId);
         if (cellIndex === -1)
             return false;
         notebook.cells.splice(cellIndex, 1);
@@ -114,11 +114,11 @@ export class EphemeralNotebookStore {
     async executeCell(notebookId, cellId, timeoutMs) {
         const notebook = this.getNotebook(notebookId);
         if (!notebook) {
-            throw new Error('Notebook not found');
+            throw new Error("Notebook not found");
         }
-        const cell = notebook.cells.find(c => c.id === cellId);
-        if (!cell || cell.type !== 'code') {
-            throw new Error('Cell not found or not a code cell');
+        const cell = notebook.cells.find((c) => c.id === cellId);
+        if (!cell || cell.type !== "code") {
+            throw new Error("Cell not found or not a code cell");
         }
         if (notebook.executions.size >= this.config.maxExecutions) {
             throw new Error(`Maximum number of executions (${this.config.maxExecutions}) reached`);
@@ -126,30 +126,32 @@ export class EphemeralNotebookStore {
         const execution = {
             id: randomUUID(),
             cellId,
-            status: 'running',
+            status: "running",
             startedAt: Date.now(),
-            outputs: []
+            outputs: [],
         };
         notebook.executions.set(execution.id, execution);
-        cell.status = 'running';
+        cell.status = "running";
         cell.outputs = [];
         try {
             const result = await this.runInSandbox(cell.source, timeoutMs || this.config.defaultTimeoutMs);
             execution.outputs = result.outputs;
-            execution.status = 'complete';
+            execution.status = "complete";
             execution.completedAt = Date.now();
-            cell.status = 'idle';
+            cell.status = "idle";
             cell.outputs = result.outputs;
         }
         catch (error) {
-            execution.status = 'failed';
+            execution.status = "failed";
             execution.completedAt = Date.now();
             execution.error = error.message;
-            cell.status = 'failed';
-            cell.outputs = [{
-                    type: 'stderr',
-                    data: error.message
-                }];
+            cell.status = "failed";
+            cell.outputs = [
+                {
+                    type: "stderr",
+                    data: error.message,
+                },
+            ];
         }
         return execution;
     }
@@ -160,19 +162,27 @@ export class EphemeralNotebookStore {
         const sandbox = {
             console: {
                 log: (...args) => {
-                    const text = args.map(arg => typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)).join(' ');
+                    const text = args
+                        .map((arg) => typeof arg === "object"
+                        ? JSON.stringify(arg, null, 2)
+                        : String(arg))
+                        .join(" ");
                     if (outputSize + text.length <= maxSize) {
-                        outputs.push({ type: 'stdout', data: text });
+                        outputs.push({ type: "stdout", data: text });
                         outputSize += text.length;
                     }
                 },
                 error: (...args) => {
-                    const text = args.map(arg => typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)).join(' ');
+                    const text = args
+                        .map((arg) => typeof arg === "object"
+                        ? JSON.stringify(arg, null, 2)
+                        : String(arg))
+                        .join(" ");
                     if (outputSize + text.length <= maxSize) {
-                        outputs.push({ type: 'stderr', data: text });
+                        outputs.push({ type: "stderr", data: text });
                         outputSize += text.length;
                     }
-                }
+                },
             },
             // Limited set of safe globals
             Math,
@@ -188,7 +198,7 @@ export class EphemeralNotebookStore {
             Promise,
             setTimeout: undefined, // Disable for security
             setInterval: undefined,
-            setImmediate: undefined
+            setImmediate: undefined,
         };
         return new Promise((resolve, reject) => {
             const timer = setTimeout(() => {
@@ -199,14 +209,14 @@ export class EphemeralNotebookStore {
                 const context = vm.createContext(sandbox);
                 const result = script.runInContext(context, {
                     timeout: timeoutMs,
-                    displayErrors: true
+                    displayErrors: true,
                 });
                 if (result !== undefined) {
-                    const resultStr = typeof result === 'object'
+                    const resultStr = typeof result === "object"
                         ? JSON.stringify(result, null, 2)
                         : String(result);
                     if (outputSize + resultStr.length <= maxSize) {
-                        outputs.push({ type: 'result', data: resultStr });
+                        outputs.push({ type: "result", data: resultStr });
                     }
                 }
                 clearTimeout(timer);
@@ -222,29 +232,29 @@ export class EphemeralNotebookStore {
         const notebook = this.getNotebook(notebookId);
         if (!notebook)
             return null;
-        let srcmd = '';
+        let srcmd = "";
         for (const cell of notebook.cells) {
-            if (cell.type === 'markdown') {
-                srcmd += cell.source + '\n\n';
+            if (cell.type === "markdown") {
+                srcmd += `${cell.source}\n\n`;
             }
-            else if (cell.type === 'code') {
-                srcmd += `\`\`\`${cell.language || 'javascript'}\n`;
-                srcmd += cell.source + '\n';
-                srcmd += '```\n';
+            else if (cell.type === "code") {
+                srcmd += `\`\`\`${cell.language || "javascript"}\n`;
+                srcmd += `${cell.source}\n`;
+                srcmd += "```\n";
                 if (cell.outputs && cell.outputs.length > 0) {
-                    srcmd += '\n**Output:**\n```\n';
+                    srcmd += "\n**Output:**\n```\n";
                     for (const output of cell.outputs) {
-                        if (output.type === 'stdout') {
-                            srcmd += output.data + '\n';
+                        if (output.type === "stdout") {
+                            srcmd += `${output.data}\n`;
                         }
-                        else if (output.type === 'stderr') {
+                        else if (output.type === "stderr") {
                             srcmd += `Error: ${output.data}\n`;
                         }
-                        else if (output.type === 'result') {
+                        else if (output.type === "result") {
                             srcmd += `Result: ${output.data}\n`;
                         }
                     }
-                    srcmd += '```\n\n';
+                    srcmd += "```\n\n";
                 }
             }
         }
@@ -260,8 +270,8 @@ export class EphemeralNotebookStore {
             createdAt: new Date(notebook.createdAt).toISOString(),
             cells: notebook.cells,
             executions: Array.from(notebook.executions.entries()).map(([_id, exec]) => ({
-                ...exec
-            }))
+                ...exec,
+            })),
         };
     }
     deleteNotebook(notebookId) {

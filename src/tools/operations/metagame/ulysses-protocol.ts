@@ -140,8 +140,8 @@ export class UlyssesProtocolOperation extends BaseOperation {
           return this.createResult({
             error: `Cannot advance phase: ${advancement.reason}`,
             currentPhase: session.currentPhase,
-            gateStatus: session.gates.find(g => g.phase === session.currentPhase)?.status,
-            requiredEvidence: session.gates.find(g => g.phase === session.currentPhase)?.exitCriteria
+            gateStatus: session?.gates.find(g => g.phase === session?.currentPhase)?.status,
+            requiredEvidence: session?.gates.find(g => g.phase === session?.currentPhase)?.exitCriteria
           });
         }
         break;

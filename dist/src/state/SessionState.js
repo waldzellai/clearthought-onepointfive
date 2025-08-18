@@ -4,17 +4,21 @@
  * This class manages all thinking session data and provides centralized
  * access to different types of thinking tools and their data.
  */
+import { PDRKnowledgeGraph } from "./PDRKnowledgeGraph.js";
 // Import unified store
-import { UnifiedStore } from './stores/UnifiedStore.js';
-import { PDRKnowledgeGraph } from './PDRKnowledgeGraph.js';
+import { UnifiedStore } from "./stores/UnifiedStore.js";
 /**
  * Main session state class
  */
 export class SessionState {
     /** Expose config via getter */
-    getConfig() { return this.config; }
+    getConfig() {
+        return this.config;
+    }
     /** Expose unified store via getter (read-only reference) */
-    getStore() { return this.unifiedStore; }
+    getStore() {
+        return this.unifiedStore;
+    }
     /**
      * Create a new session state
      * @param sessionId - Unique identifier for this session
@@ -36,7 +40,12 @@ export class SessionState {
         this.createdAt = new Date();
         this.lastAccessedAt = new Date();
         // Initialize unified store
-        this.unifiedStore = new UnifiedStore(config.persistenceEnabled ? { persistenceDir: config.persistenceDir, knowledgeGraphFile: config.knowledgeGraphFile } : undefined);
+        this.unifiedStore = new UnifiedStore(config.persistenceEnabled
+            ? {
+                persistenceDir: config.persistenceDir,
+                knowledgeGraphFile: config.knowledgeGraphFile,
+            }
+            : undefined);
         // Start timeout timer
         this.resetTimeout();
     }
@@ -69,11 +78,12 @@ export class SessionState {
     addThought(thought) {
         this.touch();
         // Check thought limit
-        if (this.unifiedStore.getByType('thought').length >= this.config.maxThoughtsPerSession) {
+        if (this.unifiedStore.getByType("thought").length >=
+            this.config.maxThoughtsPerSession) {
             return false;
         }
         const id = `thought-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        this.unifiedStore.add(id, { type: 'thought', data: thought });
+        this.unifiedStore.add(id, { type: "thought", data: thought });
         return true;
     }
     /**
@@ -81,13 +91,14 @@ export class SessionState {
      */
     getThoughts() {
         this.touch();
-        return this.unifiedStore.getByType('thought').map(item => item.data);
+        return this.unifiedStore.getByType("thought").map((item) => item.data);
     }
     /**
      * Get remaining thought capacity
      */
     getRemainingThoughts() {
-        return Math.max(0, this.config.maxThoughtsPerSession - this.unifiedStore.getByType('thought').length);
+        return Math.max(0, this.config.maxThoughtsPerSession -
+            this.unifiedStore.getByType("thought").length);
     }
     // ============================================================================
     // Mental Model Management
@@ -98,14 +109,14 @@ export class SessionState {
     addMentalModel(model) {
         this.touch();
         const id = `model-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        this.unifiedStore.add(id, { type: 'mental_model', data: model });
+        this.unifiedStore.add(id, { type: "mental_model", data: model });
     }
     /**
      * Get all mental model applications
      */
     getMentalModels() {
         this.touch();
-        return this.unifiedStore.getByType('mental_model').map(item => item.data);
+        return this.unifiedStore.getByType("mental_model").map((item) => item.data);
     }
     // ============================================================================
     // Debugging Management
@@ -116,14 +127,14 @@ export class SessionState {
     addDebuggingSession(session) {
         this.touch();
         const id = `debug-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        this.unifiedStore.add(id, { type: 'debugging', data: session });
+        this.unifiedStore.add(id, { type: "debugging", data: session });
     }
     /**
      * Get all debugging sessions
      */
     getDebuggingSessions() {
         this.touch();
-        return this.unifiedStore.getByType('debugging').map(item => item.data);
+        return this.unifiedStore.getByType("debugging").map((item) => item.data);
     }
     // ============================================================================
     // Collaborative Reasoning Management
@@ -134,22 +145,24 @@ export class SessionState {
     addCollaborativeSession(session) {
         this.touch();
         const id = `collab-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        this.unifiedStore.add(id, { type: 'collaborative', data: session });
+        this.unifiedStore.add(id, { type: "collaborative", data: session });
     }
     /**
      * Get all collaborative sessions
      */
     getCollaborativeSessions() {
         this.touch();
-        return this.unifiedStore.getByType('collaborative').map(item => item.data);
+        return this.unifiedStore
+            .getByType("collaborative")
+            .map((item) => item.data);
     }
     /**
      * Get a specific collaborative session by ID
      */
     getCollaborativeSession(sessionId) {
         this.touch();
-        const items = this.unifiedStore.getByType('collaborative');
-        return items.find(item => item.data.sessionId === sessionId)?.data;
+        const items = this.unifiedStore.getByType("collaborative");
+        return items.find((item) => item.data.sessionId === sessionId)?.data;
     }
     // ============================================================================
     // Decision Framework Management
@@ -160,22 +173,22 @@ export class SessionState {
     addDecision(decision) {
         this.touch();
         const id = `decision-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        this.unifiedStore.add(id, { type: 'decision', data: decision });
+        this.unifiedStore.add(id, { type: "decision", data: decision });
     }
     /**
      * Get all decision sessions
      */
     getDecisions() {
         this.touch();
-        return this.unifiedStore.getByType('decision').map(item => item.data);
+        return this.unifiedStore.getByType("decision").map((item) => item.data);
     }
     /**
      * Get a specific decision by ID
      */
     getDecision(decisionId) {
         this.touch();
-        const items = this.unifiedStore.getByType('decision');
-        return items.find(item => item.data.decisionId === decisionId)?.data;
+        const items = this.unifiedStore.getByType("decision");
+        return items.find((item) => item.data.decisionId === decisionId)?.data;
     }
     // ============================================================================
     // Metacognitive Monitoring Management
@@ -193,7 +206,9 @@ export class SessionState {
      */
     getMetacognitiveSessions() {
         this.touch();
-        return this.unifiedStore.getByType("metacognitive").map(item => item.data);
+        return this.unifiedStore
+            .getByType("metacognitive")
+            .map((item) => item.data);
     }
     /**
      * Get a specific metacognitive session by ID
@@ -201,7 +216,7 @@ export class SessionState {
     getMetacognitiveSession(monitoringId) {
         this.touch();
         const items = this.unifiedStore.getByType("metacognitive");
-        return items.find(item => item.data.monitoringId === monitoringId)?.data;
+        return items.find((item) => item.data.monitoringId === monitoringId)?.data;
     }
     // ============================================================================
     // Scientific Method Management
@@ -219,7 +234,7 @@ export class SessionState {
      */
     getScientificInquiries() {
         this.touch();
-        return this.unifiedStore.getByType("scientific").map(item => item.data);
+        return this.unifiedStore.getByType("scientific").map((item) => item.data);
     }
     /**
      * Get a specific scientific inquiry by ID
@@ -227,7 +242,7 @@ export class SessionState {
     getScientificInquiry(inquiryId) {
         this.touch();
         const items = this.unifiedStore.getByType("scientific");
-        return items.find(item => item.data.inquiryId === inquiryId)?.data;
+        return items.find((item) => item.data.inquiryId === inquiryId)?.data;
     }
     // ============================================================================
     // Creative Thinking Management
@@ -245,7 +260,7 @@ export class SessionState {
      */
     getCreativeSessions() {
         this.touch();
-        return this.unifiedStore.getByType("creative").map(item => item.data);
+        return this.unifiedStore.getByType("creative").map((item) => item.data);
     }
     // ============================================================================
     // Systems Thinking Management
@@ -263,7 +278,7 @@ export class SessionState {
      */
     getSystemsAnalyses() {
         this.touch();
-        return this.unifiedStore.getByType("systems").map(item => item.data);
+        return this.unifiedStore.getByType("systems").map((item) => item.data);
     }
     // ============================================================================
     // Visual Reasoning Management
@@ -281,7 +296,7 @@ export class SessionState {
      */
     getVisualOperations() {
         this.touch();
-        return this.unifiedStore.getByType("visual").map(item => item.data);
+        return this.unifiedStore.getByType("visual").map((item) => item.data);
     }
     /**
      * Get visual operations for a specific diagram
@@ -289,7 +304,9 @@ export class SessionState {
     getVisualDiagram(diagramId) {
         this.touch();
         const items = this.unifiedStore.getByType("visual");
-        return items.filter(item => item.data.diagramId === diagramId).map(item => item.data);
+        return items
+            .filter((item) => item.data.diagramId === diagramId)
+            .map((item) => item.data);
     }
     // ============================================================================
     // PDR Knowledge Graph Support
@@ -301,7 +318,7 @@ export class SessionState {
         this.touch();
         const id = graphId || this.sessionId;
         if (!this.pdrGraphs.has(id)) {
-            this.pdrGraphs.set(id, new PDRKnowledgeGraph(id, mode || 'standard'));
+            this.pdrGraphs.set(id, new PDRKnowledgeGraph(id, mode || "standard"));
         }
         return this.pdrGraphs.get(id);
     }
@@ -352,14 +369,21 @@ export class SessionState {
      */
     addArgumentation(argument) {
         this.touch();
-        const isSocratic = argument.question !== undefined || argument.stage !== undefined;
+        const isSocratic = argument.question !== undefined ||
+            argument.stage !== undefined;
         if (isSocratic) {
             const id = `socratic-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-            this.unifiedStore.add(id, { type: 'socratic', data: argument });
+            this.unifiedStore.add(id, {
+                type: "socratic",
+                data: argument,
+            });
         }
         else {
             const id = `argument-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-            this.unifiedStore.add(id, { type: 'argument', data: argument });
+            this.unifiedStore.add(id, {
+                type: "argument",
+                data: argument,
+            });
         }
     }
     // ============================================================================
@@ -376,51 +400,51 @@ export class SessionState {
         const stats = this.unifiedStore.getStats();
         // Check which tools have been used
         if (stats.thought > 0) {
-            toolsUsed.add('sequential-thinking');
+            toolsUsed.add("sequential-thinking");
             totalOperations += stats.thought;
         }
         if (stats.mental_model > 0) {
-            toolsUsed.add('mental-models');
+            toolsUsed.add("mental-models");
             totalOperations += stats.mental_model;
         }
         if (stats.debugging > 0) {
-            toolsUsed.add('debugging');
+            toolsUsed.add("debugging");
             totalOperations += stats.debugging;
         }
         if (stats.collaborative > 0) {
-            toolsUsed.add('collaborative-reasoning');
+            toolsUsed.add("collaborative-reasoning");
             totalOperations += stats.collaborative;
         }
         if (stats.decision > 0) {
-            toolsUsed.add('decision-framework');
+            toolsUsed.add("decision-framework");
             totalOperations += stats.decision;
         }
         if (stats.metacognitive > 0) {
-            toolsUsed.add('metacognitive-monitoring');
+            toolsUsed.add("metacognitive-monitoring");
             totalOperations += stats.metacognitive;
         }
         if (stats.scientific > 0) {
-            toolsUsed.add('scientific-method');
+            toolsUsed.add("scientific-method");
             totalOperations += stats.scientific;
         }
         if (stats.creative > 0) {
-            toolsUsed.add('creative-thinking');
+            toolsUsed.add("creative-thinking");
             totalOperations += stats.creative;
         }
         if (stats.systems > 0) {
-            toolsUsed.add('systems-thinking');
+            toolsUsed.add("systems-thinking");
             totalOperations += stats.systems;
         }
         if (stats.visual > 0) {
-            toolsUsed.add('visual-reasoning');
+            toolsUsed.add("visual-reasoning");
             totalOperations += stats.visual;
         }
         if (stats.argument > 0) {
-            toolsUsed.add('argumentation');
+            toolsUsed.add("argumentation");
             totalOperations += stats.argument;
         }
         if (stats.socratic > 0) {
-            toolsUsed.add('socratic-method');
+            toolsUsed.add("socratic-method");
             totalOperations += stats.socratic;
         }
         return {
@@ -432,7 +456,7 @@ export class SessionState {
             totalOperations,
             isActive: !!this.timeoutTimer,
             remainingThoughts: this.getRemainingThoughts(),
-            stores: stats
+            stores: stats,
         };
     }
     /**
@@ -443,119 +467,119 @@ export class SessionState {
     export(storeType) {
         this.touch();
         const baseExport = {
-            version: '1.0.0',
+            version: "1.0.0",
             timestamp: new Date().toISOString(),
-            sessionId: this.sessionId
+            sessionId: this.sessionId,
         };
         // Export specific store if requested
         if (storeType) {
             const exports = [];
             switch (storeType) {
-                case 'thoughts':
-                    this.unifiedStore.getByType('thought').forEach(item => {
+                case "thoughts":
+                    this.unifiedStore.getByType("thought").forEach((item) => {
                         exports.push({
                             ...baseExport,
-                            sessionType: 'sequential',
-                            data: item.data
+                            sessionType: "sequential",
+                            data: item.data,
                         });
                     });
                     break;
-                case 'mentalModels':
-                    this.unifiedStore.getByType('mental_model').forEach(item => {
+                case "mentalModels":
+                    this.unifiedStore.getByType("mental_model").forEach((item) => {
                         exports.push({
                             ...baseExport,
-                            sessionType: 'mental-model',
-                            data: item.data
+                            sessionType: "mental-model",
+                            data: item.data,
                         });
                     });
                     break;
-                case 'debugging':
-                    this.unifiedStore.getByType('debugging').forEach(item => {
+                case "debugging":
+                    this.unifiedStore.getByType("debugging").forEach((item) => {
                         exports.push({
                             ...baseExport,
-                            sessionType: 'debugging',
-                            data: item.data
+                            sessionType: "debugging",
+                            data: item.data,
                         });
                     });
                     break;
-                case 'collaborative':
-                    this.unifiedStore.getByType('collaborative').forEach(item => {
+                case "collaborative":
+                    this.unifiedStore.getByType("collaborative").forEach((item) => {
                         exports.push({
                             ...baseExport,
-                            sessionType: 'collaborative',
-                            data: item.data
+                            sessionType: "collaborative",
+                            data: item.data,
                         });
                     });
                     break;
-                case 'decisions':
-                    this.unifiedStore.getByType('decision').forEach(item => {
+                case "decisions":
+                    this.unifiedStore.getByType("decision").forEach((item) => {
                         exports.push({
                             ...baseExport,
-                            sessionType: 'decision',
-                            data: item.data
+                            sessionType: "decision",
+                            data: item.data,
                         });
                     });
                     break;
-                case 'metacognitive':
-                    this.unifiedStore.getByType('metacognitive').forEach(item => {
+                case "metacognitive":
+                    this.unifiedStore.getByType("metacognitive").forEach((item) => {
                         exports.push({
                             ...baseExport,
-                            sessionType: 'metacognitive',
-                            data: item.data
+                            sessionType: "metacognitive",
+                            data: item.data,
                         });
                     });
                     break;
-                case 'scientific':
-                    this.unifiedStore.getByType('scientific').forEach(item => {
+                case "scientific":
+                    this.unifiedStore.getByType("scientific").forEach((item) => {
                         exports.push({
                             ...baseExport,
-                            sessionType: 'scientific',
-                            data: item.data
+                            sessionType: "scientific",
+                            data: item.data,
                         });
                     });
                     break;
-                case 'creative':
-                    this.unifiedStore.getByType('creative').forEach(item => {
+                case "creative":
+                    this.unifiedStore.getByType("creative").forEach((item) => {
                         exports.push({
                             ...baseExport,
-                            sessionType: 'creative',
-                            data: item.data
+                            sessionType: "creative",
+                            data: item.data,
                         });
                     });
                     break;
-                case 'systems':
-                    this.unifiedStore.getByType('systems').forEach(item => {
+                case "systems":
+                    this.unifiedStore.getByType("systems").forEach((item) => {
                         exports.push({
                             ...baseExport,
-                            sessionType: 'systems',
-                            data: item.data
+                            sessionType: "systems",
+                            data: item.data,
                         });
                     });
                     break;
-                case 'visual':
-                    this.unifiedStore.getByType('visual').forEach(item => {
+                case "visual":
+                    this.unifiedStore.getByType("visual").forEach((item) => {
                         exports.push({
                             ...baseExport,
-                            sessionType: 'visual',
-                            data: item.data
+                            sessionType: "visual",
+                            data: item.data,
                         });
                     });
                     break;
-                case 'argument':
-                    this.unifiedStore.getByType('argument').forEach(item => {
+                case "argument":
+                    this.unifiedStore.getByType("argument").forEach((item) => {
                         exports.push({
                             ...baseExport,
-                            sessionType: 'argument',
-                            data: item.data
+                            sessionType: "argument",
+                            data: item.data,
                         });
                     });
                     break;
-                case 'socratic':
-                    this.unifiedStore.getByType('socratic').forEach(item => {
+                case "socratic":
+                    this.unifiedStore.getByType("socratic").forEach((item) => {
                         exports.push({
                             ...baseExport,
-                            sessionType: 'socratic',
-                            data: item.data
+                            sessionType: "socratic",
+                            data: item.data,
                         });
                     });
                     break;
@@ -565,88 +589,88 @@ export class SessionState {
         // Export all data
         const allExports = [];
         // Add exports from all stores
-        this.unifiedStore.getByType('thought').forEach(item => {
+        this.unifiedStore.getByType("thought").forEach((item) => {
             allExports.push({
                 ...baseExport,
-                sessionType: 'sequential',
-                data: item.data
+                sessionType: "sequential",
+                data: item.data,
             });
         });
-        this.unifiedStore.getByType('mental_model').forEach(item => {
+        this.unifiedStore.getByType("mental_model").forEach((item) => {
             allExports.push({
                 ...baseExport,
-                sessionType: 'mental-model',
-                data: item.data
+                sessionType: "mental-model",
+                data: item.data,
             });
         });
-        this.unifiedStore.getByType('debugging').forEach(item => {
+        this.unifiedStore.getByType("debugging").forEach((item) => {
             allExports.push({
                 ...baseExport,
-                sessionType: 'debugging',
-                data: item.data
+                sessionType: "debugging",
+                data: item.data,
             });
         });
-        this.unifiedStore.getByType('collaborative').forEach(item => {
+        this.unifiedStore.getByType("collaborative").forEach((item) => {
             allExports.push({
                 ...baseExport,
-                sessionType: 'collaborative',
-                data: item.data
+                sessionType: "collaborative",
+                data: item.data,
             });
         });
-        this.unifiedStore.getByType('decision').forEach(item => {
+        this.unifiedStore.getByType("decision").forEach((item) => {
             allExports.push({
                 ...baseExport,
-                sessionType: 'decision',
-                data: item.data
+                sessionType: "decision",
+                data: item.data,
             });
         });
-        this.unifiedStore.getByType('metacognitive').forEach(item => {
+        this.unifiedStore.getByType("metacognitive").forEach((item) => {
             allExports.push({
                 ...baseExport,
-                sessionType: 'metacognitive',
-                data: item.data
+                sessionType: "metacognitive",
+                data: item.data,
             });
         });
-        this.unifiedStore.getByType('scientific').forEach(item => {
+        this.unifiedStore.getByType("scientific").forEach((item) => {
             allExports.push({
                 ...baseExport,
-                sessionType: 'scientific',
-                data: item.data
+                sessionType: "scientific",
+                data: item.data,
             });
         });
-        this.unifiedStore.getByType('creative').forEach(item => {
+        this.unifiedStore.getByType("creative").forEach((item) => {
             allExports.push({
                 ...baseExport,
-                sessionType: 'creative',
-                data: item.data
+                sessionType: "creative",
+                data: item.data,
             });
         });
-        this.unifiedStore.getByType('systems').forEach(item => {
+        this.unifiedStore.getByType("systems").forEach((item) => {
             allExports.push({
                 ...baseExport,
-                sessionType: 'systems',
-                data: item.data
+                sessionType: "systems",
+                data: item.data,
             });
         });
-        this.unifiedStore.getByType('visual').forEach(item => {
+        this.unifiedStore.getByType("visual").forEach((item) => {
             allExports.push({
                 ...baseExport,
-                sessionType: 'visual',
-                data: item.data
+                sessionType: "visual",
+                data: item.data,
             });
         });
-        this.unifiedStore.getByType('argument').forEach(item => {
+        this.unifiedStore.getByType("argument").forEach((item) => {
             allExports.push({
                 ...baseExport,
-                sessionType: 'argument',
-                data: item.data
+                sessionType: "argument",
+                data: item.data,
             });
         });
-        this.unifiedStore.getByType('socratic').forEach(item => {
+        this.unifiedStore.getByType("socratic").forEach((item) => {
             allExports.push({
                 ...baseExport,
-                sessionType: 'socratic',
-                data: item.data
+                sessionType: "socratic",
+                data: item.data,
             });
         });
         return allExports;
@@ -658,42 +682,42 @@ export class SessionState {
     import(data) {
         this.touch();
         const imports = Array.isArray(data) ? data : [data];
-        imports.forEach(item => {
+        imports.forEach((item) => {
             switch (item.sessionType) {
-                case 'sequential':
+                case "sequential":
                     this.addThought(item.data);
                     break;
-                case 'mental-model':
+                case "mental-model":
                     this.addMentalModel(item.data);
                     break;
-                case 'debugging':
+                case "debugging":
                     this.addDebuggingSession(item.data);
                     break;
-                case 'collaborative':
+                case "collaborative":
                     this.addCollaborativeSession(item.data);
                     break;
-                case 'decision':
+                case "decision":
                     this.addDecision(item.data);
                     break;
-                case 'metacognitive':
+                case "metacognitive":
                     this.addMetacognitive(item.data);
                     break;
-                case 'scientific':
+                case "scientific":
                     this.addScientificInquiry(item.data);
                     break;
-                case 'creative':
+                case "creative":
                     this.addCreativeSession(item.data);
                     break;
-                case 'systems':
+                case "systems":
                     this.addSystemsAnalysis(item.data);
                     break;
-                case 'visual':
+                case "visual":
                     this.addVisualOperation(item.data);
                     break;
-                case 'argument':
+                case "argument":
                     this.addArgumentation(item.data);
                     break;
-                case 'socratic':
+                case "socratic":
                     this.addArgumentation(item.data);
                     break;
             }
@@ -757,8 +781,8 @@ export class SessionState {
                 label: label || key,
                 value,
                 target,
-                direction: direction || 'up',
-                history: [{ timestamp, value }]
+                direction: direction || "up",
+                history: [{ timestamp, value }],
             });
         }
         this.resetTimeout();

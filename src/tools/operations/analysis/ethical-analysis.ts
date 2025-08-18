@@ -14,14 +14,20 @@ export class EthicalAnalysisOperation extends BaseOperation {
   async execute(context: OperationContext): Promise<OperationResult> {
     const { sessionState, prompt, parameters } = context;
     
-    const framework = this.getParam(parameters, 'framework', 'utilitarian') as 'utilitarian' | 'rights' | 'fairness' | 'compliance';
+    // Handle "multiple" framework request
+    let framework = this.getParam(parameters, 'framework', 'utilitarian') as string;
+    const multiFramework = framework === 'multiple';
+    if (multiFramework) {
+      framework = 'utilitarian'; // Default to utilitarian for primary analysis
+    }
+    const primaryFramework = framework as 'utilitarian' | 'rights' | 'fairness' | 'compliance';
     const stakeholders = (parameters.stakeholders as string[]) || this.identifyStakeholders(prompt);
     const actions = (parameters.actions as string[]) || this.extractActions(prompt);
     const context_factors = (parameters.context as string[]) || this.extractContextFactors(prompt);
     
     let assessment: EthicalAssessment;
     
-    switch (framework) {
+    switch (primaryFramework) {
       case 'utilitarian':
         assessment = this.performUtilitarianAnalysis(prompt, stakeholders, actions);
         break;
@@ -38,14 +44,13 @@ export class EthicalAnalysisOperation extends BaseOperation {
         assessment = this.performUtilitarianAnalysis(prompt, stakeholders, actions);
     }
     
-    // Multi-framework analysis if requested
-    const multiFramework = this.getParam(parameters, 'multiFramework', false);
+    // Multi-framework analysis if requested (either through multiFramework param or framework="multiple")
     let comparativeAnalysis: Record<string, EthicalAssessment> = {};
     
     if (multiFramework) {
       const frameworks = ['utilitarian', 'rights', 'fairness', 'compliance'];
       for (const fw of frameworks) {
-        if (fw !== framework) {
+        if (fw !== primaryFramework) {
           switch (fw) {
             case 'utilitarian':
               comparativeAnalysis[fw] = this.performUtilitarianAnalysis(prompt, stakeholders, actions);
@@ -65,13 +70,13 @@ export class EthicalAnalysisOperation extends BaseOperation {
     }
     
     return this.createResult({
-      primaryFramework: framework,
+      primaryFramework,
       assessment,
       stakeholders,
       actions,
       contextFactors: context_factors,
       comparativeAnalysis: multiFramework ? comparativeAnalysis : undefined,
-      recommendations: this.generateEthicalRecommendations(assessment, framework),
+      recommendations: this.generateEthicalRecommendations(assessment, primaryFramework),
       decisionSupport: this.generateDecisionSupport(assessment, comparativeAnalysis),
       sessionContext: {
         sessionId: sessionState.sessionId,
