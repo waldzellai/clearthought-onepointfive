@@ -210,16 +210,16 @@ export class DecisionFrameworkOperation extends BaseOperation {
     let bestAlternative = evaluations[0];
     let bestScore = 0;
     
-    evaluations.forEach((eval: any) => {
+    evaluations.forEach((evaluation: any) => {
       let score = 0;
-      if (eval.score) score = eval.score;
-      else if (eval.roi) score = eval.roi / 50; // Normalize ROI
-      else if (eval.overallSupport) score = eval.overallSupport;
-      else if (eval.weightedTotal) score = eval.weightedTotal;
+      if (evaluation.score) score = evaluation.score;
+      else if (evaluation.roi) score = evaluation.roi / 50; // Normalize ROI
+      else if (evaluation.overallSupport) score = evaluation.overallSupport;
+      else if (evaluation.weightedTotal) score = evaluation.weightedTotal;
       
       if (score > bestScore) {
         bestScore = score;
-        bestAlternative = eval;
+        bestAlternative = evaluation;
       }
     });
     

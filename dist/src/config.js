@@ -1,7 +1,7 @@
 /**
  * Configuration schema and types for the Clear Thought MCP server
  */
-import { z } from 'zod';
+import { z } from "zod";
 /**
  * Configuration schema for the Clear Thought MCP server
  *
@@ -19,40 +19,58 @@ import { z } from 'zod';
  * @property executionTimeoutMs - Max milliseconds for a code execution
  */
 export const ServerConfigSchema = z.object({
-    debug: z.boolean().default(false).describe('Enable debug logging'),
+    debug: z.boolean().default(false).describe("Enable debug logging"),
     maxThoughtsPerSession: z
         .number()
         .min(1)
         .max(1000)
         .default(100)
-        .describe('Maximum number of thoughts allowed per session'),
+        .describe("Maximum number of thoughts allowed per session"),
     sessionTimeout: z
         .number()
         .min(60000)
         .default(3600000)
-        .describe('Session timeout in milliseconds'),
-    enableMetrics: z.boolean().default(false).describe('Enable metrics collection'),
+        .describe("Session timeout in milliseconds"),
+    enableMetrics: z
+        .boolean()
+        .default(false)
+        .describe("Enable metrics collection"),
     // Persistence & knowledge graph
-    persistenceEnabled: z.boolean().default(false).describe('Enable persistent storage across sessions'),
-    persistenceDir: z.string().default('.ct-data').describe('Directory to store persistent data'),
-    knowledgeGraphFile: z.string().default('knowledge-graph.json').describe('Knowledge graph storage file'),
+    persistenceEnabled: z
+        .boolean()
+        .default(false)
+        .describe("Enable persistent storage across sessions"),
+    persistenceDir: z
+        .string()
+        .default(".ct-data")
+        .describe("Directory to store persistent data"),
+    knowledgeGraphFile: z
+        .string()
+        .default("knowledge-graph.json")
+        .describe("Knowledge graph storage file"),
     // Research provider
     researchProvider: z
-        .enum(['none', 'exa', 'serpapi'])
-        .default('none')
-        .describe('External research provider to use'),
+        .enum(["none", "exa", "serpapi"])
+        .default("none")
+        .describe("External research provider to use"),
     researchApiKeyEnv: z
         .string()
-        .default('')
-        .describe('Env var name that contains the API key for the research provider'),
+        .default("")
+        .describe("Env var name that contains the API key for the research provider"),
     // Code execution
-    allowCodeExecution: z.boolean().default(false).describe('Allow code execution tools'),
-    pythonCommand: z.string().default('python3').describe('Python executable to use'),
+    allowCodeExecution: z
+        .boolean()
+        .default(false)
+        .describe("Allow code execution tools"),
+    pythonCommand: z
+        .string()
+        .default("python3")
+        .describe("Python executable to use"),
     executionTimeoutMs: z
         .number()
         .min(1000)
         .default(10000)
-        .describe('Maximum duration for code execution jobs in milliseconds')
+        .describe("Maximum duration for code execution jobs in milliseconds"),
 });
 /**
  * Default configuration values
@@ -63,13 +81,13 @@ export const defaultConfig = {
     sessionTimeout: 3600000, // 1 hour
     enableMetrics: false,
     persistenceEnabled: false,
-    persistenceDir: '.ct-data',
-    knowledgeGraphFile: 'knowledge-graph.json',
-    researchProvider: 'none',
-    researchApiKeyEnv: '',
+    persistenceDir: ".ct-data",
+    knowledgeGraphFile: "knowledge-graph.json",
+    researchProvider: "none",
+    researchApiKeyEnv: "",
     allowCodeExecution: false,
-    pythonCommand: 'python3',
-    executionTimeoutMs: 10000
+    pythonCommand: "python3",
+    executionTimeoutMs: 10000,
 };
 /**
  * Validates and parses configuration
@@ -90,6 +108,6 @@ export function safeParseConfig(config) {
     if (result.success) {
         return result.data;
     }
-    console.warn('Invalid configuration provided, using defaults:', result.error.issues);
+    console.warn("Invalid configuration provided, using defaults:", result.error.issues);
     return defaultConfig;
 }

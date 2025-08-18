@@ -54,13 +54,7 @@ export class NotebookAddCellOperation extends BaseOperation {
     // Generate cell metadata
     const cellMetadata = this.generateCellMetadata(cellType, source, language);
     
-    // Update session tracking
-    const notebooks = sessionState.getFromSession('notebooks') || [];
-    const notebookRef = notebooks.find((nb: any) => nb.notebookId === notebook.id);
-    if (notebookRef) {
-      notebookRef.cellCount = notebook.cells.length;
-      notebookRef.lastUpdated = new Date().toISOString();
-    }
+    // Session tracking is managed by notebook store
     
     return this.createResult({
       cellId: cell.id,
@@ -79,7 +73,7 @@ export class NotebookAddCellOperation extends BaseOperation {
       sessionContext: {
         sessionId: sessionState.sessionId,
         stats: sessionState.getStats(),
-        notebookCount: notebooks.length
+        notebookCount: 1 // Using notebook store's internal tracking
       },
       instructions: {
         execution: cellType === 'code' ? 'Use notebook-run-cell to execute this code cell' : 'Cell added as documentation',

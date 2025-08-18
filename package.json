@@ -1,6 +1,6 @@
 {
 	"name": "@waldzellai/clear-thought-onepointfive",
-	"version": "0.2.0",
+	"version": "0.2.1",
 	"description": "Clear Thought MCP server with modular architecture - 38 reasoning operations for systematic thinking",
 	"license": "MIT",
 	"author": "Waldzell AI",
@@ -9,6 +9,7 @@
 		"url": "https://github.com/waldzellai/clear-thought-onepointfive/issues"
 	},
 	"type": "module",
+	"module": "./src/index.ts",
 	"files": [
 		"dist/**/*",
 		"README.md",
@@ -47,6 +48,7 @@
 		"@mcp-ui/server": "^5.2.0",
 		"@modelcontextprotocol/sdk": "^1.17.0",
 		"@smithery/sdk": "^1.5.5",
+		"@types/marked": "^5.0.2",
 		"marked": "^15.0.12",
 		"zod": "^3.23.8"
 	},

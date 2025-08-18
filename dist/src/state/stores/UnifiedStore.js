@@ -4,8 +4,8 @@
  * Consolidates all individual stores into a single, unified data store
  * that manages all types of reasoning data through a single interface.
  */
-import fs from 'fs';
-import path from 'path';
+import fs from "node:fs";
+import path from "node:path";
 /**
  * Unified store that manages all Clear Thought data types
  */
@@ -15,8 +15,8 @@ export class UnifiedStore {
         this.knowledgeGraph = {
             nodes: [],
             edges: [],
-            version: '1',
-            updatedAt: new Date().toISOString()
+            version: "1",
+            updatedAt: new Date().toISOString(),
         };
         this.persistenceDir = options?.persistenceDir;
         this.knowledgeGraphFile = options?.knowledgeGraphFile;
@@ -40,8 +40,7 @@ export class UnifiedStore {
      * Get all items of a specific type
      */
     getByType(type) {
-        return Array.from(this.data.values())
-            .filter(item => item.type === type);
+        return Array.from(this.data.values()).filter((item) => item.type === type);
     }
     /**
      * Get all items
@@ -54,7 +53,12 @@ export class UnifiedStore {
      */
     clear() {
         this.data.clear();
-        this.knowledgeGraph = { nodes: [], edges: [], version: '1', updatedAt: new Date().toISOString() };
+        this.knowledgeGraph = {
+            nodes: [],
+            edges: [],
+            version: "1",
+            updatedAt: new Date().toISOString(),
+        };
         this.saveToDiskDebounced();
     }
     /**
@@ -62,7 +66,7 @@ export class UnifiedStore {
      */
     getStats() {
         const stats = {};
-        this.data.forEach(item => {
+        this.data.forEach((item) => {
             stats[item.type] = (stats[item.type] || 0) + 1;
         });
         return stats;
@@ -72,7 +76,7 @@ export class UnifiedStore {
      */
     exportByType() {
         const result = {};
-        this.data.forEach(item => {
+        this.data.forEach((item) => {
             if (!result[item.type]) {
                 result[item.type] = [];
             }
@@ -88,7 +92,10 @@ export class UnifiedStore {
         Object.entries(data).forEach(([type, items]) => {
             items.forEach((itemData, index) => {
                 const id = `${type}_${Date.now()}_${index}`;
-                this.add(id, { type: type, data: itemData });
+                this.add(id, {
+                    type: type,
+                    data: itemData,
+                });
             });
         });
         this.saveToDiskDebounced();
@@ -97,7 +104,7 @@ export class UnifiedStore {
      * Basic tagging on nodes; ensures node exists with label
      */
     tagNode(nodeId, label) {
-        const node = this.knowledgeGraph.nodes.find(n => n.id === nodeId);
+        const node = this.knowledgeGraph.nodes.find((n) => n.id === nodeId);
         if (node) {
             node.labels = Array.from(new Set([...(node.labels || []), label]));
             this.saveKnowledgeGraph();
@@ -108,12 +115,21 @@ export class UnifiedStore {
      */
     relate(fromId, toId, relation, properties) {
         const id = `${fromId}::${relation}::${toId}`;
-        const existing = this.knowledgeGraph.edges.find(e => e.id === id);
+        const existing = this.knowledgeGraph.edges.find((e) => e.id === id);
         if (existing) {
-            existing.properties = { ...(existing.properties || {}), ...(properties || {}) };
+            existing.properties = {
+                ...(existing.properties || {}),
+                ...(properties || {}),
+            };
         }
         else {
-            this.knowledgeGraph.edges.push({ id, from: fromId, to: toId, relation, properties });
+            this.knowledgeGraph.edges.push({
+                id,
+                from: fromId,
+                to: toId,
+                relation,
+                properties,
+            });
         }
         this.saveKnowledgeGraph();
     }
@@ -133,8 +149,8 @@ export class UnifiedStore {
     saveToDisk() {
         if (!this.persistenceDir)
             return;
-        const dataPath = path.join(this.persistenceDir, 'unified-store.json');
-        const graphPath = path.join(this.persistenceDir, this.knowledgeGraphFile || 'knowledge-graph.json');
+        const dataPath = path.join(this.persistenceDir, "unified-store.json");
+        const graphPath = path.join(this.persistenceDir, this.knowledgeGraphFile || "knowledge-graph.json");
         try {
             fs.writeFileSync(dataPath, JSON.stringify([...this.data.entries()], null, 2));
         }
@@ -147,7 +163,8 @@ export class UnifiedStore {
     saveKnowledgeGraph(customPath) {
         if (!this.persistenceDir)
             return;
-        const graphPath = customPath || path.join(this.persistenceDir, this.knowledgeGraphFile || 'knowledge-graph.json');
+        const graphPath = customPath ||
+            path.join(this.persistenceDir, this.knowledgeGraphFile || "knowledge-graph.json");
         this.knowledgeGraph.updatedAt = new Date().toISOString();
         try {
             fs.writeFileSync(graphPath, JSON.stringify(this.knowledgeGraph, null, 2));
@@ -157,11 +174,11 @@ export class UnifiedStore {
     loadFromDisk() {
         if (!this.persistenceDir)
             return;
-        const dataPath = path.join(this.persistenceDir, 'unified-store.json');
-        const graphPath = path.join(this.persistenceDir, this.knowledgeGraphFile || 'knowledge-graph.json');
+        const dataPath = path.join(this.persistenceDir, "unified-store.json");
+        const graphPath = path.join(this.persistenceDir, this.knowledgeGraphFile || "knowledge-graph.json");
         try {
             if (fs.existsSync(dataPath)) {
-                const raw = fs.readFileSync(dataPath, 'utf-8');
+                const raw = fs.readFileSync(dataPath, "utf-8");
                 const entries = JSON.parse(raw);
                 this.data = new Map(entries);
             }
@@ -169,7 +186,7 @@ export class UnifiedStore {
         catch { }
         try {
             if (fs.existsSync(graphPath)) {
-                const raw = fs.readFileSync(graphPath, 'utf-8');
+                const raw = fs.readFileSync(graphPath, "utf-8");
                 this.knowledgeGraph = JSON.parse(raw);
             }
         }
@@ -180,19 +197,27 @@ export class UnifiedStore {
     // ---------------------------------------------------------------------------
     indexIntoKnowledgeGraph(id, item) {
         // Ensure node exists
-        const existing = this.knowledgeGraph.nodes.find(n => n.id === id);
+        const existing = this.knowledgeGraph.nodes.find((n) => n.id === id);
         if (!existing) {
             this.knowledgeGraph.nodes.push({ id, type: item.type, properties: {} });
         }
         // Lightweight relations by session-like keys when present
         const props = item.data || {};
-        const maybeSessionId = props.sessionId || props.decisionId || props.monitoringId || props.inquiryId || props.diagramId;
+        const maybeSessionId = props.sessionId ||
+            props.decisionId ||
+            props.monitoringId ||
+            props.inquiryId ||
+            props.diagramId;
         if (maybeSessionId) {
             const sessionNodeId = `session:${maybeSessionId}`;
-            if (!this.knowledgeGraph.nodes.find(n => n.id === sessionNodeId)) {
-                this.knowledgeGraph.nodes.push({ id: sessionNodeId, type: 'concept', labels: ['session'] });
+            if (!this.knowledgeGraph.nodes.find((n) => n.id === sessionNodeId)) {
+                this.knowledgeGraph.nodes.push({
+                    id: sessionNodeId,
+                    type: "concept",
+                    labels: ["session"],
+                });
             }
-            this.relate(sessionNodeId, id, 'HAS_ITEM');
+            this.relate(sessionNodeId, id, "HAS_ITEM");
         }
         // Tag by type
         this.tagNode(id, item.type);

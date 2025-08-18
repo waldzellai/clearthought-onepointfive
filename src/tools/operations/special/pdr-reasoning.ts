@@ -134,9 +134,10 @@ export class PDRReasoningOperation extends BaseOperation {
           id: `trace-${Date.now()}`,
           policyId: passPolicy.id,
           startedAt: new Date().toISOString(),
-          processedSubjectIds: [],
+          processedSubjectIds: [] as string[],
           approachBySubject: {} as Record<string, PDRApproach>,
-          resultsBySubject: {} as Record<string, any>
+          resultsBySubject: {} as Record<string, any>,
+          completedAt: undefined as string | undefined
         };
 
         // Determine which subjects to process
@@ -263,7 +264,7 @@ export class PDRReasoningOperation extends BaseOperation {
 
         const exportData = {
           sessionId: session.id,
-          subjects: Array.from(session.subjects.entries()).map(([id, subject]) => ({ id, ...subject })),
+          subjects: Array.from(session.subjects.entries()).map(([id, subject]) => ({ ...subject, id })),
           passes: session.passes,
           traces: session.traces,
           summary: session.summary

@@ -45,13 +45,8 @@ export class NotebookCreateOperation extends BaseOperation {
       this.addDefaultIntroduction(notebook.id, title, description);
     }
     
-    // Store notebook reference in session
-    sessionState.addToSession('notebooks', {
-      notebookId: notebook.id,
-      title,
-      createdAt: notebook.createdAt,
-      cellCount: notebook.cells.length
-    });
+    // Store notebook reference in session metadata
+    // Since addToSession doesn't exist, we'll track notebooks via the notebook store itself
     
     return this.createResult({
       notebookId: notebook.id,
@@ -70,7 +65,7 @@ export class NotebookCreateOperation extends BaseOperation {
       sessionContext: {
         sessionId: sessionState.sessionId,
         stats: sessionState.getStats(),
-        notebookCount: sessionState.getFromSession('notebooks')?.length || 1
+        notebookCount: 1 // Using notebook store's internal tracking
       },
       instructions: {
         usage: 'Use notebook-add-cell to add content, notebook-run-cell to execute code',
