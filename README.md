@@ -227,6 +227,35 @@ docker run -it waldzellai/clear-thought-onepointfive
 - `npm run check` - Biome linting and formatting
 - `npm run test` - Run tests with Vitest
 
+### Dev Modes
+
+- **HTTP (Playground via Smithery)**
+  - `npm run dev`
+  - Starts the Smithery sHTTP dev server (prints a public URL). It also performs an initial build automatically.
+
+- **Local Inspector (browser UI over STDIO)**
+  - `npm run build`
+  - `npx @modelcontextprotocol/inspector dist/src/index.js`
+  - Open the printed URL (with prefilled token) to interact in the browser.
+
+Note: `prompts/list` is not implemented by design, so seeing 32601 “Method not found” for that endpoint is expected.
+
+### Tested Operations Summary
+
+All operations were verified end-to-end with multi-step, stateful behavior:
+
+- Core: sequential_thinking, mental_model, debugging_approach, creative_thinking, visual_reasoning, metacognitive_monitoring, scientific_method, collaborative_reasoning, decision_framework, socratic_method, structured_argumentation, systems_thinking
+- Advanced analysis: analogical_reasoning, causal_analysis, statistical_reasoning, simulation, optimization, ethical_analysis, research
+- Search patterns: tree_of_thought, beam_search, mcts, graph_of_thought
+- Specialized: visual_dashboard, custom_framework, code_execution, orchestration_suggest, ooda_loop, ulysses_protocol, pdr_reasoning
+- Notebook: notebook_create, notebook_add_cell, notebook_run_cell, notebook_export
+- Session: session_info, session_export, session_import
+
+Key findings:
+- Multi-step flows with session continuity and metrics
+- Rich structured outputs with suggested next steps
+- Resources include operation guides and examples
+
 ### Architecture
 
 The codebase follows a modular architecture:
