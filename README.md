@@ -178,6 +178,58 @@ const response = await mcp.callTool("clear_thought", {
 });
 ```
 
+### Example: MDP Planning
+```typescript
+const response = await mcp.callTool("clear_thought", {
+  operation: "mdp_planning",
+  prompt: "Plan warehouse robot navigation",
+  parameters: {
+    states: ["start", "aisle", "packing", "error"],
+    actions: ["go_to_aisle", "go_to_packing", "charge"],
+    transitions: [
+      { from: "start", action: "go_to_aisle", to: "aisle", probability: 0.9 },
+      { from: "start", action: "go_to_aisle", to: "error", probability: 0.1 }
+    ],
+    rewards: [
+      { state: "packing", action: "go_to_packing", value: 10 },
+      { state: "error", value: -20 }
+    ],
+    discount: 0.95,
+    algorithm: "value_iteration"
+  }
+});
+```
+
+### Example: Decision Networks
+```typescript
+const response = await mcp.callTool("clear_thought", {
+  operation: "decision_networks",
+  prompt: "Choose marketing strategy with demand uncertainty",
+  parameters: {
+    randomVariables: [
+      {
+        name: "demand",
+        states: ["high", "low"],
+        cpt: [{ when: {}, distribution: { high: 0.6, low: 0.4 } }]
+      }
+    ],
+    decision: {
+      name: "strategy",
+      states: ["aggressive", "cautious"]
+    },
+    utilityNodes: [
+      {
+        name: "profitUtility",
+        table: [
+          { when: { strategy: "aggressive", demand: "high" }, value: 100 },
+          { when: { strategy: "aggressive", demand: "low" }, value: -30 }
+        ]
+      }
+    ]
+  }
+});
+```
+
 ## Resources
 
 The server provides several resources for enhanced functionality:

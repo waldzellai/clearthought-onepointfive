@@ -33,6 +33,8 @@ import statisticalReasoning from './analysis/statistical-reasoning.js';
 import simulation from './analysis/simulation.js';
 import optimization from './analysis/optimization.js';
 import ethicalAnalysis from './analysis/ethical-analysis.js';
+import mdpPlanning from './analysis/mdp-planning.js';
+import decisionNetworks from './analysis/decision-networks.js';
 
 // Pattern operations
 import treeOfThought from './patterns/tree-of-thought.js';
@@ -91,6 +93,8 @@ function registerAllOperations(): void {
   operationRegistry.register(simulation);
   operationRegistry.register(optimization);
   operationRegistry.register(ethicalAnalysis);
+  operationRegistry.register(mdpPlanning);
+  operationRegistry.register(decisionNetworks);
   
   // Pattern operations
   operationRegistry.register(treeOfThought);
