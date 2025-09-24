@@ -45,12 +45,12 @@ export class DecisionNetworksOperation extends BaseOperation {
     this.validateParameters(params);
 
     const expectedUtilities: Record<string, number> = {};
-    const traces: Array<{ decision: string; expectedUtility: number; enumerationCount: number }> = [];
+    const traces: Array<{ decision: string; expectedUtility: number; rawUtility: number; evidenceProbability: number; enumerationCount: number }> = [];
 
     for (const decision of params.decision.states) {
-      const { expectedUtility, enumerationCount } = this.computeExpectedUtility(decision, params);
+      const { expectedUtility, rawUtility, evidenceProbability, enumerationCount } = this.computeExpectedUtility(decision, params);
       expectedUtilities[decision] = expectedUtility;
-      traces.push({ decision, expectedUtility, enumerationCount });
+      traces.push({ decision, expectedUtility, rawUtility, evidenceProbability, enumerationCount });
     }
 
     const bestDecision = Object.entries(expectedUtilities).reduce((best, [decision, utility]) => {
@@ -216,7 +216,8 @@ export class DecisionNetworksOperation extends BaseOperation {
       [params.decision.name]: decisionValue,
     };
 
-    let expectedUtility = 0;
+    let unnormalizedUtility = 0;
+    let evidenceProbability = 0;
     let enumerationCount = 0;
 
     const chanceVariables = params.randomVariables;
@@ -225,7 +226,8 @@ export class DecisionNetworksOperation extends BaseOperation {
       if (index === chanceVariables.length) {
         enumerationCount += 1;
         const utility = this.evaluateUtility(partial, params.utilityNodes);
-        expectedUtility += probability * utility;
+        unnormalizedUtility += probability * utility;
+        evidenceProbability += probability;
         return;
       }
 
@@ -251,7 +253,8 @@ export class DecisionNetworksOperation extends BaseOperation {
     };
 
     recurse(0, 1, assignment);
-    return { expectedUtility, enumerationCount };
+    const expectedUtility = evidenceProbability > 0 ? unnormalizedUtility / evidenceProbability : 0;
+    return { expectedUtility, rawUtility: unnormalizedUtility, evidenceProbability, enumerationCount };
   }
 
   private getDistribution(variable: RandomVariable, assignment: Assignment): Record<string, number> {
