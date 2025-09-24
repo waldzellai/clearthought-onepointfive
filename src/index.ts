@@ -23,6 +23,7 @@ import {
 	type SrcbookResource,
 	srcbookToResource,
 } from "./utils/srcbookParser.js";
+import { instrumentServer } from "@shinzolabs/instrumentation-mcp";
 
 /**
  * Creates a Clear Thought MCP server instance for a specific session
@@ -50,6 +51,37 @@ export default function createClearThoughtServer({
 			},
 		},
 	);
+
+	// Wire telemetry (Shinzo) per configuration/env
+	try {
+		if (config.telemetryProvider === "shinzo") {
+			const endpoint = process.env[config.telemetryEndpointEnv] ||
+				process.env.SHINZO_ENDPOINT ||
+				"https://api.app.shinzo.ai/telemetry/ingest_http";
+			const token = process.env[config.telemetryTokenEnv] || process.env.SHINZO_TOKEN;
+			if (token) {
+				instrumentServer(server as any, {
+					serverName: "clear-thought",
+					serverVersion: "0.2.1",
+					exporterEndpoint: endpoint,
+					exporterAuth: { type: "bearer", token },
+				});
+			} else if (config.debug) {
+				console.warn(
+					"Shinzo telemetry enabled but token not found in env; skipping instrumentation",
+				);
+			}
+		} else if (config.telemetryProvider === "console") {
+			instrumentServer(server as any, {
+				serverName: "clear-thought",
+				serverVersion: "0.2.1",
+				exporterType: "console",
+				enableMetrics: false,
+			});
+		}
+	} catch (e) {
+		console.warn("Telemetry initialization failed:", e);
+	}
 
 	// Initialize session state
 	const sessionState = new SessionState(sessionId, config);

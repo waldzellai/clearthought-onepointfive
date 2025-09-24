@@ -47,6 +47,7 @@
 	"dependencies": {
 		"@mcp-ui/server": "^5.2.0",
 		"@modelcontextprotocol/sdk": "^1.17.0",
+		"@shinzolabs/instrumentation-mcp": "^1.0.8",
 		"@smithery/sdk": "^1.5.5",
 		"@types/marked": "^5.0.2",
 		"marked": "^15.0.12",
