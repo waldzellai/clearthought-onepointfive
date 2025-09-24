@@ -89,6 +89,34 @@ export const operationExamples = {
     ]
   },
 
+  mdp_planning: {
+    description: "Solve MDPs via value or policy iteration",
+    examples: [
+      {
+        prompt: "Plan warehouse robot navigation",
+        parameters: {
+          states: ["start", "aisle", "packing", "error"],
+          actions: ["go_to_aisle", "go_to_packing", "charge"],
+          transitions: [
+            { from: "start", action: "go_to_aisle", to: "aisle", probability: 0.9 },
+            { from: "start", action: "go_to_aisle", to: "error", probability: 0.1 },
+            { from: "aisle", action: "go_to_packing", to: "packing", probability: 0.85 },
+            { from: "aisle", action: "go_to_packing", to: "error", probability: 0.15 },
+            { from: "aisle", action: "charge", to: "start", probability: 1.0 },
+            { from: "error", action: "charge", to: "start", probability: 1.0 }
+          ],
+          rewards: [
+            { state: "packing", action: "go_to_packing", value: 10 },
+            { state: "aisle", action: "charge", value: -1 },
+            { state: "error", value: -20 }
+          ],
+          discount: 0.95,
+          algorithm: "value_iteration"
+        }
+      }
+    ]
+  },
+
   creative_thinking: {
     description: "Generate creative ideas using various techniques",
     examples: [
@@ -187,6 +215,53 @@ export const operationExamples = {
           constraints: "engineering + marketing + sales <= 100",
           method: "grid",
           iterations: 100
+        }
+      }
+    ]
+  },
+
+  decision_networks: {
+    description: "Evaluate decision networks for maximum expected utility",
+    examples: [
+      {
+        prompt: "Choose marketing strategy with demand uncertainty",
+        parameters: {
+          randomVariables: [
+            {
+              name: "demand",
+              states: ["high", "low"],
+              cpt: [
+                { when: {}, distribution: { high: 0.6, low: 0.4 } }
+              ]
+            },
+            {
+              name: "profit",
+              parents: ["strategy", "demand"],
+              states: ["positive", "negative"],
+              cpt: [
+                { when: { strategy: "aggressive", demand: "high" }, distribution: { positive: 0.9, negative: 0.1 } },
+                { when: { strategy: "aggressive", demand: "low" }, distribution: { positive: 0.4, negative: 0.6 } },
+                { when: { strategy: "cautious", demand: "high" }, distribution: { positive: 0.7, negative: 0.3 } },
+                { when: { strategy: "cautious", demand: "low" }, distribution: { positive: 0.6, negative: 0.4 } }
+              ]
+            }
+          ],
+          decision: {
+            name: "strategy",
+            states: ["aggressive", "cautious"]
+          },
+          utilityNodes: [
+            {
+              name: "profitUtility",
+              table: [
+                { when: { profit: "positive" }, value: 100 },
+                { when: { profit: "negative" }, value: -30 },
+                { when: { strategy: "aggressive" }, value: -10 },
+                { when: { strategy: "cautious" }, value: 0 }
+              ]
+            }
+          ],
+          evidence: { demand: "high" }
         }
       }
     ]
