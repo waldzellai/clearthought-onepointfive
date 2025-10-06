@@ -47,7 +47,7 @@
 		"security:audit": "npm audit --audit-level=moderate",
 		"security:all": "npm run check:secrets && npm run security:audit",
 		"ci": "npm run lint && npm run typecheck && npm run test:coverage && npm run build",
-		"prepare": "husky",
+		"prepare": "node -e \"if (process.env.CI !== 'true') { require('child_process').execSync('husky', {stdio: 'inherit'}) }\" || true",
 		"prepublishOnly": "npm run ci",
 		"version": "npm run check && git add -A",
 		"postversion": "git push && git push --tags"
