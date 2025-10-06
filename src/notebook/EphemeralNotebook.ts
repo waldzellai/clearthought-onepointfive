@@ -133,9 +133,7 @@ export class EphemeralNotebookStore {
 		if (!notebook) return null;
 
 		if (notebook.cells.length >= this.config.maxCells!) {
-			throw new Error(
-				`Maximum number of cells (${this.config.maxCells}) reached`,
-			);
+			throw new Error(`Maximum number of cells (${this.config.maxCells}) reached`);
 		}
 
 		const cell: Cell = {
@@ -156,11 +154,7 @@ export class EphemeralNotebookStore {
 		return cell;
 	}
 
-	updateCell(
-		notebookId: string,
-		cellId: string,
-		updates: Partial<Cell>,
-	): Cell | null {
+	updateCell(notebookId: string, cellId: string, updates: Partial<Cell>): Cell | null {
 		const notebook = this.getNotebook(notebookId);
 		if (!notebook) return null;
 
@@ -187,11 +181,7 @@ export class EphemeralNotebookStore {
 		return true;
 	}
 
-	async executeCell(
-		notebookId: string,
-		cellId: string,
-		timeoutMs?: number,
-	): Promise<Execution> {
+	async executeCell(notebookId: string, cellId: string, timeoutMs?: number): Promise<Execution> {
 		const notebook = this.getNotebook(notebookId);
 		if (!notebook) {
 			throw new Error("Notebook not found");
@@ -203,9 +193,7 @@ export class EphemeralNotebookStore {
 		}
 
 		if (notebook.executions.size >= this.config.maxExecutions!) {
-			throw new Error(
-				`Maximum number of executions (${this.config.maxExecutions}) reached`,
-			);
+			throw new Error(`Maximum number of executions (${this.config.maxExecutions}) reached`);
 		}
 
 		const execution: Execution = {
@@ -249,10 +237,7 @@ export class EphemeralNotebookStore {
 		return execution;
 	}
 
-	private async runInSandbox(
-		code: string,
-		timeoutMs: number,
-	): Promise<{ outputs: Output[] }> {
+	private async runInSandbox(code: string, timeoutMs: number): Promise<{ outputs: Output[] }> {
 		const outputs: Output[] = [];
 		let outputSize = 0;
 		const maxSize = this.config.maxOutputBytesPerExec!;
@@ -261,11 +246,7 @@ export class EphemeralNotebookStore {
 			console: {
 				log: (...args: any[]) => {
 					const text = args
-						.map((arg) =>
-							typeof arg === "object"
-								? JSON.stringify(arg, null, 2)
-								: String(arg),
-						)
+						.map((arg) => (typeof arg === "object" ? JSON.stringify(arg, null, 2) : String(arg)))
 						.join(" ");
 
 					if (outputSize + text.length <= maxSize) {
@@ -275,11 +256,7 @@ export class EphemeralNotebookStore {
 				},
 				error: (...args: any[]) => {
 					const text = args
-						.map((arg) =>
-							typeof arg === "object"
-								? JSON.stringify(arg, null, 2)
-								: String(arg),
-						)
+						.map((arg) => (typeof arg === "object" ? JSON.stringify(arg, null, 2) : String(arg)))
 						.join(" ");
 
 					if (outputSize + text.length <= maxSize) {
@@ -320,9 +297,7 @@ export class EphemeralNotebookStore {
 
 				if (result !== undefined) {
 					const resultStr =
-						typeof result === "object"
-							? JSON.stringify(result, null, 2)
-							: String(result);
+						typeof result === "object" ? JSON.stringify(result, null, 2) : String(result);
 
 					if (outputSize + resultStr.length <= maxSize) {
 						outputs.push({ type: "result", data: resultStr });
@@ -380,11 +355,9 @@ export class EphemeralNotebookStore {
 			sessionId: notebook.sessionId,
 			createdAt: new Date(notebook.createdAt).toISOString(),
 			cells: notebook.cells,
-			executions: Array.from(notebook.executions.entries()).map(
-				([_id, exec]) => ({
-					...exec,
-				}),
-			),
+			executions: Array.from(notebook.executions.entries()).map(([_id, exec]) => ({
+				...exec,
+			})),
 		};
 	}
 

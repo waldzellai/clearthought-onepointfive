@@ -1,7 +1,7 @@
 /**
  * Configuration schema and types for the Clear Thought MCP server
  */
-import { z } from 'zod';
+import { z } from "zod";
 /**
  * Configuration schema for the Clear Thought MCP server
  *
@@ -11,19 +11,28 @@ import { z } from 'zod';
  * @property enableMetrics - Enable metrics collection (default: false)
  */
 export const ServerConfigSchema = z.object({
-    debug: z.boolean().default(false).describe('Enable debug logging'),
-    maxThoughtsPerSession: z.number().min(1).max(1000).default(100).describe('Maximum number of thoughts allowed per session'),
-    sessionTimeout: z.number().min(60000).default(3600000).describe('Session timeout in milliseconds'),
-    enableMetrics: z.boolean().default(false).describe('Enable metrics collection')
+	debug: z.boolean().default(false).describe("Enable debug logging"),
+	maxThoughtsPerSession: z
+		.number()
+		.min(1)
+		.max(1000)
+		.default(100)
+		.describe("Maximum number of thoughts allowed per session"),
+	sessionTimeout: z
+		.number()
+		.min(60000)
+		.default(3600000)
+		.describe("Session timeout in milliseconds"),
+	enableMetrics: z.boolean().default(false).describe("Enable metrics collection"),
 });
 /**
  * Default configuration values
  */
 export const defaultConfig = {
-    debug: false,
-    maxThoughtsPerSession: 100,
-    sessionTimeout: 3600000, // 1 hour
-    enableMetrics: false
+	debug: false,
+	maxThoughtsPerSession: 100,
+	sessionTimeout: 3600000, // 1 hour
+	enableMetrics: false,
 };
 /**
  * Validates and parses configuration
@@ -32,7 +41,7 @@ export const defaultConfig = {
  * @throws {z.ZodError} If configuration is invalid
  */
 export function parseConfig(config) {
-    return ServerConfigSchema.parse(config);
+	return ServerConfigSchema.parse(config);
 }
 /**
  * Safely parses configuration with fallback to defaults
@@ -40,11 +49,11 @@ export function parseConfig(config) {
  * @returns Validated configuration or default configuration
  */
 export function safeParseConfig(config) {
-    const result = ServerConfigSchema.safeParse(config);
-    if (result.success) {
-        return result.data;
-    }
-    console.warn('Invalid configuration provided, using defaults:', result.error.issues);
-    return defaultConfig;
+	const result = ServerConfigSchema.safeParse(config);
+	if (result.success) {
+		return result.data;
+	}
+	console.warn("Invalid configuration provided, using defaults:", result.error.issues);
+	return defaultConfig;
 }
 //# sourceMappingURL=config.js.map

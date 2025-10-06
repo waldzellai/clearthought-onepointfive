@@ -43,10 +43,7 @@ export function findRelevantNotebook(context: NotebookContext): string | null {
 	if (promptLower.includes("websocket") || promptLower.includes("realtime")) {
 		candidates.push("intro-to-websockets");
 	}
-	if (
-		promptLower.includes("json mode") ||
-		promptLower.includes("structured output")
-	) {
+	if (promptLower.includes("json mode") || promptLower.includes("structured output")) {
 		candidates.push("how_to_enable_json_mode");
 	}
 
@@ -64,11 +61,7 @@ export function findRelevantNotebook(context: NotebookContext): string | null {
 /**
  * Enhance tool response with embedded notebook resources
  */
-export function enhanceResponseWithNotebook(
-	response: any,
-	operation: string,
-	prompt: string,
-): any {
+export function enhanceResponseWithNotebook(response: any, operation: string, prompt: string): any {
 	// Check if we should enhance this response
 	const shouldEnhance = [
 		"code_execution",
@@ -139,10 +132,7 @@ function determineRelevance(operation: string, notebookName: string): number {
 /**
  * Extract specific cell for embedding
  */
-export function extractCellForEmbedding(
-	notebookPath: string,
-	cellIndex: number,
-): any | null {
+export function extractCellForEmbedding(notebookPath: string, cellIndex: number): any | null {
 	try {
 		const contents = fs.readFileSync(notebookPath, "utf-8");
 		const { parseSrcbook } = require("../utils/srcbookParser.js");

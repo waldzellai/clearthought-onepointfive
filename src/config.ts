@@ -33,19 +33,13 @@ export const ServerConfigSchema = z.object({
 		.min(60000)
 		.default(3600000)
 		.describe("Session timeout in milliseconds"),
-	enableMetrics: z
-		.boolean()
-		.default(false)
-		.describe("Enable metrics collection"),
+	enableMetrics: z.boolean().default(false).describe("Enable metrics collection"),
 	// Persistence & knowledge graph
 	persistenceEnabled: z
 		.boolean()
 		.default(false)
 		.describe("Enable persistent storage across sessions"),
-	persistenceDir: z
-		.string()
-		.default(".ct-data")
-		.describe("Directory to store persistent data"),
+	persistenceDir: z.string().default(".ct-data").describe("Directory to store persistent data"),
 	knowledgeGraphFile: z
 		.string()
 		.default("knowledge-graph.json")
@@ -58,9 +52,7 @@ export const ServerConfigSchema = z.object({
 	researchApiKeyEnv: z
 		.string()
 		.default("")
-		.describe(
-			"Env var name that contains the API key for the research provider",
-		),
+		.describe("Env var name that contains the API key for the research provider"),
 	// Telemetry / Observability (Shinzo)
 	telemetryProvider: z
 		.enum(["none", "shinzo", "console"]) // console = local dev exporter
@@ -77,14 +69,8 @@ export const ServerConfigSchema = z.object({
 			"Env var name that contains the Shinzo HTTP ingest endpoint (e.g., https://api.app.shinzo.ai/telemetry/ingest_http)",
 		),
 	// Code execution
-	allowCodeExecution: z
-		.boolean()
-		.default(false)
-		.describe("Allow code execution tools"),
-	pythonCommand: z
-		.string()
-		.default("python3")
-		.describe("Python executable to use"),
+	allowCodeExecution: z.boolean().default(false).describe("Allow code execution tools"),
+	pythonCommand: z.string().default("python3").describe("Python executable to use"),
 	executionTimeoutMs: z
 		.number()
 		.min(1000)
@@ -118,7 +104,6 @@ export const defaultConfig: ServerConfig = {
 	executionTimeoutMs: 10000,
 };
 
-
 /**
  * Validates and parses configuration
  * @param config - Raw configuration object
@@ -140,9 +125,6 @@ export function safeParseConfig(config: unknown): ServerConfig {
 		return result.data;
 	}
 
-	console.warn(
-		"Invalid configuration provided, using defaults:",
-		result.error.issues,
-	);
+	console.warn("Invalid configuration provided, using defaults:", result.error.issues);
 	return defaultConfig;
 }

@@ -42,6 +42,7 @@ index-old-bloated.ts
 
 # Local development
 claude_code_mcp_config.json
+cc_mcp_config.json
 mcp_config_claude_code.json
 .claude/
 trees/
@@ -75,3 +76,7 @@ dist/resources/
 vitest.config.ts.timestamp-*
 test-results/
 .vitest/
+
+# MCPJam
+inspector/
+evals-cli-starter/

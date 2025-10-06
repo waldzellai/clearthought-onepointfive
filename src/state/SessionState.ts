@@ -1060,7 +1060,11 @@ export class SessionState {
 	/**
 	 * Update active operation state
 	 */
-	private updateActiveOperation(operation: string, phase: string, data: Record<string, unknown>): void {
+	private updateActiveOperation(
+		operation: string,
+		phase: string,
+		data: Record<string, unknown>,
+	): void {
 		const existing = this.activeOperations.get(operation);
 		const now = new Date().toISOString();
 

@@ -268,11 +268,7 @@ export interface GraphOfThoughtOperations {
 	): GraphOfThoughtEdge;
 
 	/** Find paths between nodes */
-	findPaths(
-		startId: string,
-		endId: string,
-		session: GraphOfThoughtSession,
-	): string[][];
+	findPaths(startId: string, endId: string, session: GraphOfThoughtSession): string[][];
 
 	/** Get node neighbors */
 	getNeighbors(
@@ -293,10 +289,7 @@ export interface GraphOfThoughtOperations {
 	): Array<{ nodeIds: string[]; description: string }>;
 
 	/** Merge similar nodes */
-	mergeNodes(
-		nodeIds: string[],
-		session: GraphOfThoughtSession,
-	): GraphOfThoughtNode;
+	mergeNodes(nodeIds: string[], session: GraphOfThoughtSession): GraphOfThoughtNode;
 }
 
 /**

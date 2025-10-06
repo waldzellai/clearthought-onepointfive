@@ -182,13 +182,7 @@ export interface CollaborativeSession {
 	/** All contributions made */
 	contributions: ContributionData[];
 	/** Current stage of the process */
-	stage:
-		| "problem-definition"
-		| "ideation"
-		| "critique"
-		| "integration"
-		| "decision"
-		| "reflection";
+	stage: "problem-definition" | "ideation" | "critique" | "integration" | "decision" | "reflection";
 	/** Currently active persona ID */
 	activePersonaId: string;
 	/** Next persona ID if determined */
@@ -357,13 +351,7 @@ export interface KnowledgeAssessment {
 	/** Domain being assessed */
 	domain: string;
 	/** Level of knowledge */
-	knowledgeLevel:
-		| "expert"
-		| "proficient"
-		| "familiar"
-		| "basic"
-		| "minimal"
-		| "none";
+	knowledgeLevel: "expert" | "proficient" | "familiar" | "basic" | "minimal" | "none";
 	/** Confidence score (0.0-1.0) */
 	confidenceScore: number;
 	/** Evidence supporting the assessment */
@@ -893,9 +881,7 @@ export interface HypothesisTestResult {
 	effectSize?: number;
 }
 
-export interface BayesianUpdateResult<
-	T extends string | number | symbol = string,
-> {
+export interface BayesianUpdateResult<T extends string | number | symbol = string> {
 	prior: Record<T, number>;
 	likelihood: Record<T, number>;
 	posterior: Record<T, number>;

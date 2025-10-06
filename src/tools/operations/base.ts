@@ -74,8 +74,9 @@ export interface Operation {
 
 	/**
 	 * Category for organization (e.g., 'core', 'collaborative')
+	 * TODO Phase 2: Make this a strict union type after updating all operations
 	 */
-	category: "core" | "patterns" | "analysis" | "collaborative" | "metagame";
+	category: string; // "core" | "patterns" | "analysis" | "collaborative" | "metagame";
 
 	/**
 	 * Execute the operation with given context
@@ -84,18 +85,21 @@ export interface Operation {
 
 	/**
 	 * Get current progress through this operation
+	 * TODO Phase 2: Make this required after implementing in all operations
 	 */
-	getProgress(sessionState: SessionState): ProgressMetadata;
+	getProgress?(sessionState: SessionState): ProgressMetadata;
 
 	/**
 	 * Get guidance for what AI should do next
+	 * TODO Phase 2: Make this required after implementing in all operations
 	 */
-	getNextStep(sessionState: SessionState): NextStepGuidance;
+	getNextStep?(sessionState: SessionState): NextStepGuidance;
 
 	/**
 	 * Get tool description for MCP registration
+	 * TODO Phase 2: Make this required after implementing in all operations
 	 */
-	getToolDescription(): ToolDescription;
+	getToolDescription?(): ToolDescription;
 
 	/**
 	 * Optional validation of parameters before execution
@@ -108,12 +112,37 @@ export interface Operation {
  */
 export abstract class BaseOperation implements Operation {
 	abstract name: string;
-	abstract category: "core" | "patterns" | "analysis" | "collaborative" | "metagame";
+	abstract category: string;
 
 	abstract execute(context: OperationContext): Promise<OperationResult>;
-	abstract getProgress(sessionState: SessionState): ProgressMetadata;
-	abstract getNextStep(sessionState: SessionState): NextStepGuidance;
-	abstract getToolDescription(): ToolDescription;
+
+	// Default implementations for backward compatibility
+	// Operations should override these in Phase 2
+	getProgress(sessionState: SessionState): ProgressMetadata {
+		return {
+			stepsCompleted: 0,
+			stepsRequired: 1,
+			currentPhase: "execution",
+		};
+	}
+
+	getNextStep(sessionState: SessionState): NextStepGuidance {
+		return {
+			action: "continue",
+			prompt: "Continue with the operation",
+		};
+	}
+
+	getToolDescription(): ToolDescription {
+		return {
+			name: this.name,
+			description: `${this.name} operation`,
+			inputSchema: {
+				type: "object",
+				properties: {},
+			},
+		};
+	}
 
 	/**
 	 * Helper to get typed parameter with default value
@@ -124,12 +153,41 @@ export abstract class BaseOperation implements Operation {
 
 	/**
 	 * Create base result object with required fields
+	 *
+	 * BACKWARD COMPATIBILITY: Can be called with just data object (old style)
+	 * or with sessionState, status, and additionalData (new style)
 	 */
 	protected createResult(
-		sessionState: SessionState,
-		status: "in_progress" | "completed" | "requires_input" | "error",
+		sessionStateOrData: SessionState | Record<string, unknown>,
+		status?: "in_progress" | "completed" | "requires_input" | "error",
 		additionalData?: Record<string, unknown>,
 	): OperationResult {
+		// Old style: createResult({ toolOperation: "...", ...data })
+		if (!status && typeof sessionStateOrData === "object" && "toolOperation" in sessionStateOrData) {
+			const data = sessionStateOrData as Record<string, unknown>;
+			return {
+				operation: (data.toolOperation as string) || this.name,
+				progress: {
+					stepsCompleted: 0,
+					stepsRequired: 1,
+					currentPhase: "execution",
+				},
+				nextStep: {
+					action: "continue",
+					prompt: "Continue with the operation",
+				},
+				sessionContext: {
+					sessionId: "unknown",
+					operationHistory: [],
+					remainingBudget: 10000,
+				},
+				status: "completed",
+				...data,
+			};
+		}
+
+		// New style: createResult(sessionState, status, additionalData)
+		const sessionState = sessionStateOrData as SessionState;
 		return {
 			operation: this.name,
 			progress: this.getProgress(sessionState),
@@ -139,7 +197,7 @@ export abstract class BaseOperation implements Operation {
 				operationHistory: this.getOperationHistory(sessionState),
 				remainingBudget: this.getRemainingBudget(sessionState),
 			},
-			status,
+			status: status || "completed",
 			...additionalData,
 		};
 	}

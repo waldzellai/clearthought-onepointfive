@@ -6,23 +6,23 @@ import createClearThoughtServer from "../src/index.js";
 async function main() {
 	try {
 		// Parse environment variables for diagnostic configuration
-		const diagnosticEnabled = process.env.DIAGNOSTIC_ENABLED === 'true' || 
-		                         process.env.CT_DIAGNOSTIC_ENABLED === 'true';
-		const diagnosticVerbosity = process.env.DIAGNOSTIC_VERBOSITY || 
-		                           process.env.CT_DIAGNOSTIC_VERBOSITY || 'standard';
-		
+		const diagnosticEnabled =
+			process.env.DIAGNOSTIC_ENABLED === "true" || process.env.CT_DIAGNOSTIC_ENABLED === "true";
+		const diagnosticVerbosity =
+			process.env.DIAGNOSTIC_VERBOSITY || process.env.CT_DIAGNOSTIC_VERBOSITY || "standard";
+
 		// Create config with diagnostic settings from environment
 		const config = {
 			...defaultConfig,
 			diagnosticEnabled,
-			diagnosticVerbosity: diagnosticVerbosity as 'minimal' | 'standard' | 'verbose',
+			diagnosticVerbosity: diagnosticVerbosity as "minimal" | "standard" | "verbose",
 		};
-		
+
 		// Log diagnostic status to stderr
 		if (diagnosticEnabled) {
 			console.error(`🔍 Glass Box Diagnostic Tracing ENABLED (verbosity: ${diagnosticVerbosity})`);
 		}
-		
+
 		// Create the Clear Thought server instance
 		const server = createClearThoughtServer({
 			sessionId: `stdio-session-${Date.now()}`,

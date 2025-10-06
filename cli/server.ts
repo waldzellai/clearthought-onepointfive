@@ -32,9 +32,7 @@ const { app } = createStatefulServer(
 app.listen(port, () => {
 	console.log(`🧠 Clear Thought server running at http://localhost:${port}`);
 	console.log(`📝 MCP endpoint: http://localhost:${port}/mcp`);
-	console.log(
-		`🔧 Config schema: http://localhost:${port}/.well-known/mcp-config`,
-	);
+	console.log(`🔧 Config schema: http://localhost:${port}/.well-known/mcp-config`);
 	console.log("\nPress Ctrl+C to stop the server");
 });
 
