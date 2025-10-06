@@ -6,114 +6,111 @@
 import { generateDashboardHTML, generateRemoteDomScript } from "../../helpers/ui-generation.js";
 import { BaseOperation } from "../base.js";
 export class VisualDashboardOperation extends BaseOperation {
-    name = "visual_dashboard";
-    category = "ui";
-    async execute(context) {
-        const { sessionState, prompt, parameters } = context;
-        // Extract dashboard configuration
-        const title = this.getParam(parameters, "title", "Clear Thought Dashboard");
-        const visualizationType = this.getParam(parameters, "visualizationType", "chart");
-        const layout = this.getParam(parameters, "layout", "grid");
-        const interactive = this.getParam(parameters, "interactive", true);
-        const data = this.getParam(parameters, "data", {});
-        const panels = this.getParam(parameters, "panels", []);
-        // Generate default panels if none provided
-        const defaultPanels = panels.length > 0 ? panels : this.generateDefaultPanels(prompt, sessionState);
-        // Generate dashboard HTML
-        const dashboardHTML = generateDashboardHTML({
-            title,
-            visualizationType,
-            data,
-            panels: defaultPanels,
-            layout,
-            interactive,
-        });
-        // Generate remote DOM script for dynamic updates
-        const remoteDomScript = generateRemoteDomScript({
-            visualizationType,
-            data,
-            panels: defaultPanels,
-            interactive,
-        });
-        // Dashboard tracking (session storage not available)
-        const dashboardId = `dashboard_${Date.now()}`;
-        // Note: Dashboard is generated but not persisted in session
-        return this.createResult({
-            dashboardId,
-            title,
-            visualizationType,
-            layout,
-            interactive,
-            panels: defaultPanels,
-            html: dashboardHTML,
-            remoteDomScript,
-            sessionContext: {
-                sessionId: sessionState.sessionId,
-                stats: sessionState.getStats(),
-                dashboardCount: 1, // Tracking not available
-            },
-            instructions: {
-                usage: "Dashboard HTML can be saved to file or displayed in browser",
-                interactivity: interactive
-                    ? "Dashboard supports click interactions and real-time updates"
-                    : "Static dashboard for display only",
-                customization: "Modify panels array to add custom metrics, charts, or content",
-            },
-        });
-    }
-    /**
-     * Generate default panels based on prompt and session state
-     */
-    generateDefaultPanels(prompt, sessionState) {
-        const stats = sessionState.getStats();
-        const panels = [];
-        // Overview panel
-        panels.push({
-            title: "Session Overview",
-            type: "metric",
-            content: `<p>Analysis of: ${prompt.substring(0, 100)}${prompt.length > 100 ? "..." : ""}</p>`,
-            value: `${Object.keys(stats).length} data types`,
-        });
-        // Statistics panels
-        Object.entries(stats).forEach(([type, count]) => {
-            panels.push({
-                title: `${type.charAt(0).toUpperCase() + type.slice(1)} Analysis`,
-                type: "metric",
-                content: `<p>Reasoning operations of type: ${type}</p>`,
-                value: count,
-            });
-        });
-        // Analysis insights panel
-        panels.push({
-            title: "Key Insights",
-            type: "content",
-            content: `
+	name = "visual_dashboard";
+	category = "ui";
+	async execute(context) {
+		const { sessionState, prompt, parameters } = context;
+		// Extract dashboard configuration
+		const title = this.getParam(parameters, "title", "Clear Thought Dashboard");
+		const visualizationType = this.getParam(parameters, "visualizationType", "chart");
+		const layout = this.getParam(parameters, "layout", "grid");
+		const interactive = this.getParam(parameters, "interactive", true);
+		const data = this.getParam(parameters, "data", {});
+		const panels = this.getParam(parameters, "panels", []);
+		// Generate default panels if none provided
+		const defaultPanels =
+			panels.length > 0 ? panels : this.generateDefaultPanels(prompt, sessionState);
+		// Generate dashboard HTML
+		const dashboardHTML = generateDashboardHTML({
+			title,
+			visualizationType,
+			data,
+			panels: defaultPanels,
+			layout,
+			interactive,
+		});
+		// Generate remote DOM script for dynamic updates
+		const remoteDomScript = generateRemoteDomScript({
+			visualizationType,
+			data,
+			panels: defaultPanels,
+			interactive,
+		});
+		// Dashboard tracking (session storage not available)
+		const dashboardId = `dashboard_${Date.now()}`;
+		// Note: Dashboard is generated but not persisted in session
+		return this.createResult({
+			dashboardId,
+			title,
+			visualizationType,
+			layout,
+			interactive,
+			panels: defaultPanels,
+			html: dashboardHTML,
+			remoteDomScript,
+			sessionContext: {
+				sessionId: sessionState.sessionId,
+				stats: sessionState.getStats(),
+				dashboardCount: 1, // Tracking not available
+			},
+			instructions: {
+				usage: "Dashboard HTML can be saved to file or displayed in browser",
+				interactivity: interactive
+					? "Dashboard supports click interactions and real-time updates"
+					: "Static dashboard for display only",
+				customization: "Modify panels array to add custom metrics, charts, or content",
+			},
+		});
+	}
+	/**
+	 * Generate default panels based on prompt and session state
+	 */
+	generateDefaultPanels(prompt, sessionState) {
+		const stats = sessionState.getStats();
+		const panels = [];
+		// Overview panel
+		panels.push({
+			title: "Session Overview",
+			type: "metric",
+			content: `<p>Analysis of: ${prompt.substring(0, 100)}${prompt.length > 100 ? "..." : ""}</p>`,
+			value: `${Object.keys(stats).length} data types`,
+		});
+		// Statistics panels
+		Object.entries(stats).forEach(([type, count]) => {
+			panels.push({
+				title: `${type.charAt(0).toUpperCase() + type.slice(1)} Analysis`,
+				type: "metric",
+				content: `<p>Reasoning operations of type: ${type}</p>`,
+				value: count,
+			});
+		});
+		// Analysis insights panel
+		panels.push({
+			title: "Key Insights",
+			type: "content",
+			content: `
         <ul>
           <li>Total reasoning operations: ${Object.values(stats).reduce((a, b) => a + b, 0)}</li>
           <li>Most used operation: ${this.getMostUsedOperation(stats)}</li>
           <li>Session complexity: ${this.calculateComplexity(stats)}</li>
         </ul>
       `,
-        });
-        return panels;
-    }
-    getMostUsedOperation(stats) {
-        const entries = Object.entries(stats);
-        if (entries.length === 0)
-            return "None";
-        const max = entries.reduce((a, b) => (a[1] > b[1] ? a : b));
-        return max[0];
-    }
-    calculateComplexity(stats) {
-        const total = Object.values(stats).reduce((a, b) => a + b, 0);
-        const types = Object.keys(stats).length;
-        if (total < 5)
-            return "Low";
-        if (total < 15)
-            return "Medium";
-        if (types > 5)
-            return "High";
-        return "Very High";
-    }
+		});
+		return panels;
+	}
+	getMostUsedOperation(stats) {
+		const entries = Object.entries(stats);
+		if (entries.length === 0) return "None";
+		const max = entries.reduce((a, b) => (a[1] > b[1] ? a : b));
+		return max[0];
+	}
+	calculateComplexity(stats) {
+		const total = Object.values(stats).reduce((a, b) => a + b, 0);
+		const types = Object.keys(stats).length;
+		if (total < 5) return "Low";
+		if (total < 15) return "Medium";
+		if (types > 5) return "High";
+		return "Very High";
+	}
 }
 export default new VisualDashboardOperation();

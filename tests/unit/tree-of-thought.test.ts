@@ -1,6 +1,6 @@
-import { describe, expect, it, beforeEach } from "vitest";
-import { SessionState } from "../../src/state/SessionState.js";
+import { beforeEach, describe, expect, it } from "vitest";
 import { ServerConfigSchema } from "../../src/config.js";
+import { SessionState } from "../../src/state/SessionState.js";
 import { TreeOfThoughtOperation } from "../../src/tools/operations/patterns/tree-of-thought.js";
 
 describe("TreeOfThought Operation", () => {
@@ -138,8 +138,20 @@ describe("TreeOfThought Operation", () => {
 				depth: 2,
 				breadth: 2,
 				evaluations: [
-					{ branchId: "branch_0", feasibility: 8, completeness: 7, innovation: 6, reasoning: "Good" },
-					{ branchId: "branch_1", feasibility: 7, completeness: 8, innovation: 7, reasoning: "Better" },
+					{
+						branchId: "branch_0",
+						feasibility: 8,
+						completeness: 7,
+						innovation: 6,
+						reasoning: "Good",
+					},
+					{
+						branchId: "branch_1",
+						feasibility: 7,
+						completeness: 8,
+						innovation: 7,
+						reasoning: "Better",
+					},
 				],
 			},
 		});
@@ -179,4 +191,3 @@ describe("TreeOfThought Operation", () => {
 		expect(history.some((h) => h.includes("tree_of_thought"))).toBe(true);
 	});
 });
-

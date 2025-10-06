@@ -75,7 +75,11 @@ export class TreeOfThoughtOperation extends BaseOperation {
 		const result = await this.executePhase(context, state);
 
 		// Update session state with full state
-		sessionState.addOperationEntry("tree_of_thought", state.currentPhase, state as unknown as Record<string, unknown>);
+		sessionState.addOperationEntry(
+			"tree_of_thought",
+			state.currentPhase,
+			state as unknown as Record<string, unknown>,
+		);
 
 		// Log completion if done
 		if (result.status === "completed") {
@@ -98,7 +102,9 @@ export class TreeOfThoughtOperation extends BaseOperation {
 			// Reconstruct Map from plain object if needed
 			const data = existingState.data as unknown as TreeOfThoughtState;
 			if (data.evaluations && !(data.evaluations instanceof Map)) {
-				data.evaluations = new Map(Object.entries(data.evaluations as Record<string, BranchEvaluation>));
+				data.evaluations = new Map(
+					Object.entries(data.evaluations as Record<string, BranchEvaluation>),
+				);
 			}
 			return data;
 		}
@@ -156,8 +162,7 @@ export class TreeOfThoughtOperation extends BaseOperation {
 			// Process submitted branches
 			for (const branchContent of submittedBranches) {
 				const branchId = `branch_${state.branchCounter++}`;
-				const parentId =
-					state.currentDepth > 0 ? state.selectedPath[state.currentDepth - 1] : null;
+				const parentId = state.currentDepth > 0 ? state.selectedPath[state.currentDepth - 1] : null;
 
 				state.branches.push({
 					id: branchId,
@@ -246,7 +251,8 @@ Return your response as a JSON array of strings, where each string is a complete
 		if (submittedEvaluations.length > 0) {
 			// Process submitted evaluations
 			for (const evaluation of submittedEvaluations) {
-				const overall = (evaluation.feasibility + evaluation.completeness + evaluation.innovation) / 3;
+				const overall =
+					(evaluation.feasibility + evaluation.completeness + evaluation.innovation) / 3;
 				state.evaluations.set(evaluation.branchId, {
 					feasibility: evaluation.feasibility,
 					completeness: evaluation.completeness,
@@ -289,9 +295,13 @@ Return your response as a JSON array of strings, where each string is a complete
 				action: "evaluate_branches",
 				prompt: `Evaluate each of the following branches on three dimensions (1-10 scale):
 
-${branchesAtDepth.map((b, i) => `Branch ${i + 1} (ID: ${b.id}):
+${branchesAtDepth
+	.map(
+		(b, i) => `Branch ${i + 1} (ID: ${b.id}):
 ${b.content}
-`).join("\n")}
+`,
+	)
+	.join("\n")}
 
 For each branch, provide:
 1. Feasibility (1-10): Can this approach actually be implemented?
@@ -367,13 +377,17 @@ Return as JSON array: [{ branchId, feasibility, completeness, innovation, reason
 				action: "select_branches",
 				prompt: `Based on evaluations, select the top ${topCount} branches to explore further:
 
-${topBranches.map((b, i) => `${i + 1}. ${b.id}: ${b.content.substring(0, 100)}...
+${topBranches
+	.map(
+		(b, i) => `${i + 1}. ${b.id}: ${b.content.substring(0, 100)}...
    Feasibility: ${b.evaluation?.feasibility}/10
    Completeness: ${b.evaluation?.completeness}/10
    Innovation: ${b.evaluation?.innovation}/10
    Overall: ${b.evaluation?.overall.toFixed(1)}/10
    ${b.evaluation?.reasoning}
-`).join("\n")}
+`,
+	)
+	.join("\n")}
 
 Return the IDs of branches to explore as JSON array: ["branch_id_1", "branch_id_2", ...]`,
 				parameters: {

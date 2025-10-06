@@ -5,24 +5,24 @@
  */
 import { BaseOperation } from "../base.js";
 export class VisualReasoningOperation extends BaseOperation {
-    name = "visual_reasoning";
-    category = "core";
-    async execute(context) {
-        const { sessionState, prompt, parameters } = context;
-        const visualData = {
-            description: prompt,
-            spatialRelations: this.getParam(parameters, "spatialRelations", []),
-            patterns: this.getParam(parameters, "patterns", []),
-            transformations: this.getParam(parameters, "transformations", []),
-            inference: this.getParam(parameters, "inference", ""),
-        };
-        return this.createResult({
-            ...visualData,
-            sessionContext: {
-                sessionId: sessionState.sessionId,
-                stats: sessionState.getStats(),
-            },
-        });
-    }
+	name = "visual_reasoning";
+	category = "core";
+	async execute(context) {
+		const { sessionState, prompt, parameters } = context;
+		const visualData = {
+			description: prompt,
+			spatialRelations: this.getParam(parameters, "spatialRelations", []),
+			patterns: this.getParam(parameters, "patterns", []),
+			transformations: this.getParam(parameters, "transformations", []),
+			inference: this.getParam(parameters, "inference", ""),
+		};
+		return this.createResult({
+			...visualData,
+			sessionContext: {
+				sessionId: sessionState.sessionId,
+				stats: sessionState.getStats(),
+			},
+		});
+	}
 }
 export default new VisualReasoningOperation();

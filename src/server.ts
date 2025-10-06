@@ -2,7 +2,7 @@
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { createStatefulServer } from "@smithery/sdk";
 import type { ServerConfig } from "./config.js";
-import { ServerConfigSchema, defaultConfig } from "./config.js";
+import { defaultConfig, ServerConfigSchema } from "./config.js";
 import createClearThoughtServer from "./index.js";
 
 // Parse command line arguments
@@ -83,7 +83,10 @@ function startHttp() {
 
 // Handle graceful shutdown
 process.on("SIGINT", () => {
-	const msg = mode === "stdio" ? "\nShutting down Clear Thought stdio server..." : "\n👋 Shutting down Clear Thought server...";
+	const msg =
+		mode === "stdio"
+			? "\nShutting down Clear Thought stdio server..."
+			: "\n👋 Shutting down Clear Thought server...";
 	if (mode === "stdio") {
 		console.error(msg);
 	} else {
@@ -93,7 +96,10 @@ process.on("SIGINT", () => {
 });
 
 process.on("SIGTERM", () => {
-	const msg = mode === "stdio" ? "Received SIGTERM, shutting down..." : "👋 Received SIGTERM, shutting down...";
+	const msg =
+		mode === "stdio"
+			? "Received SIGTERM, shutting down..."
+			: "👋 Received SIGTERM, shutting down...";
 	if (mode === "stdio") {
 		console.error(msg);
 	} else {
