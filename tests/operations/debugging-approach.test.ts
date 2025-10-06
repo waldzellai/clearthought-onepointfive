@@ -366,7 +366,7 @@ describe("DebuggingApproachOperation - Structured Journal", () => {
 			};
 
 			const result = await operation.execute(context);
-			expect(result.data.approach).toBe("five_whys");
+			expect(result.approach).toBe("five_whys");
 		});
 	});
 });
