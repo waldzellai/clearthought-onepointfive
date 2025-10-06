@@ -283,7 +283,7 @@ describe("DebuggingApproachOperation - Structured Journal", () => {
 			};
 			const result = await operation.execute(context);
 
-			expect(result.data.historyLength).toBe(2);
+			expect(result.historyLength).toBe(2);
 		});
 	});
 
