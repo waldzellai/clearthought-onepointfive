@@ -51,11 +51,12 @@ Configures the hook system to:
 **Files Created**:
 - `docs/AGENTIC_WORKFLOW_GUIDE.md` - Complete workflow guide (407 lines)
 - `docs/AGENTIC_WORKFLOW_SUMMARY.md` - Implementation summary (385 lines)
-- `docs/QUICK_REFERENCE_VAPORWARE_DETECTION.md` - Quick reference (357 lines)
+- `docs/QUICK_REFERENCE_VAPORWARE_DETECTION.md` - Quick reference (387 lines)
 - `docs/WORKFLOW_DIAGRAM.md` - Visual diagrams with Mermaid (373 lines)
+- `docs/MCPJAM_EVALS_TESTING_GUIDE.md` - MCPJam Evals testing guide (516 lines)
 - `.claude/README.md` - Setup and configuration guide (200 lines)
 
-**Total Documentation**: 1,722 lines
+**Total Documentation**: 2,268 lines
 
 ## Key Features
 
@@ -223,7 +224,27 @@ Please address the issues above before proceeding.
 
 Address issues and save again. Hook re-runs automatically.
 
-### Step 5: Checkpoint
+### Step 5: MCP Integration Testing
+
+**CRITICAL**: Test with MCPJam Evals CLI!
+
+```bash
+# Build server
+npm run build
+
+# Create test config
+# Edit evals-cli-starter/tests.json
+
+# Run evals
+cd evals-cli-starter
+mcpjam evals run -t tests.json -e environment.json -l llms.json
+
+# Verify all tests pass
+```
+
+See `docs/MCPJAM_EVALS_TESTING_GUIDE.md` for details.
+
+### Step 6: Checkpoint
 
 ```bash
 git add -A && git commit --no-verify -m "checkpoint: converted analogical-reasoning to structured journal"
@@ -306,19 +327,20 @@ echo '{"tool_input":{"file_path":"src/tools/operations/test.ts","content":"..."}
 - `.claude/hooks/validate-vaporware.ts` (300 lines)
 - `.claude/settings.json` (13 lines)
 
-### Documentation (5 files)
+### Documentation (6 files)
 - `docs/AGENTIC_WORKFLOW_GUIDE.md` (407 lines)
 - `docs/AGENTIC_WORKFLOW_SUMMARY.md` (385 lines)
-- `docs/QUICK_REFERENCE_VAPORWARE_DETECTION.md` (357 lines)
+- `docs/QUICK_REFERENCE_VAPORWARE_DETECTION.md` (387 lines)
 - `docs/WORKFLOW_DIAGRAM.md` (373 lines)
+- `docs/MCPJAM_EVALS_TESTING_GUIDE.md` (516 lines)
 - `.claude/README.md` (200 lines)
 
 ### Modified (2 files)
 - `package.json` (added Claude Agent SDK)
 - `.gitignore` (updated to track .claude/ files)
 
-**Total**: 10 files (8 new, 2 modified)
-**Total Lines**: 2,335 lines
+**Total**: 11 files (9 new, 2 modified)
+**Total Lines**: 2,881 lines
 
 ## Next Steps
 
