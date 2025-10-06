@@ -1,68 +1,191 @@
 /**
  * Creative Thinking Operation
  *
- * Facilitates creative problem-solving through various techniques
+ * Structured tool for creative problem-solving through systematic ideation.
+ * This tool provides scaffolding for various creative techniques but does NOT
+ * generate ideas - the AI generates them using the provided framework.
  */
 import { BaseOperation } from "../base.js";
+import chalk from "chalk";
 export class CreativeThinkingOperation extends BaseOperation {
-	name = "creative_thinking";
-	category = "core";
-	async execute(context) {
-		const { sessionState, prompt, parameters } = context;
-		const technique = this.getParam(parameters, "technique", "brainstorming");
-		const ideas = parameters.ideas || [];
-		const constraints = parameters.constraints || [];
-		const evaluation = this.getParam(parameters, "evaluation", "");
-		// Generate ideas if none provided
-		const generatedIdeas = ideas.length === 0 ? this.generateIdeas(prompt, technique) : ideas;
-		const creativeData = {
-			technique,
-			challenge: prompt,
-			ideas: generatedIdeas,
-			constraints,
-			evaluation,
-			selectedIdea: this.getParam(parameters, "selectedIdea", null),
-			combinedConcepts: this.getParam(parameters, "combinedConcepts", []),
-		};
-		return this.createResult({
-			...creativeData,
-			sessionContext: {
-				sessionId: sessionState.sessionId,
-				stats: sessionState.getStats(),
-			},
-		});
-	}
-	generateIdeas(prompt, technique) {
-		const ideas = [];
-		switch (technique) {
-			case "brainstorming":
-				ideas.push(
-					"Explore alternative approaches",
-					"Consider opposite perspectives",
-					"Break down into smaller components",
-				);
-				break;
-			case "scamper":
-				ideas.push(
-					"Substitute: What can be substituted?",
-					"Combine: What can be combined?",
-					"Adapt: What can be adapted?",
-					"Modify: What can be modified?",
-					"Put to other uses: How else can this be used?",
-					"Eliminate: What can be removed?",
-					"Reverse: What can be reversed?",
-				);
-				break;
-			case "random_word": {
-				const randomWords = ["bridge", "cloud", "seed", "mirror", "wave"];
-				const randomWord = randomWords[Math.floor(Math.random() * randomWords.length)];
-				ideas.push(`How does "${randomWord}" relate to ${prompt}?`);
-				break;
-			}
-			default:
-				ideas.push("Generate creative solutions");
-		}
-		return ideas;
-	}
+    name = "creative_thinking";
+    category = "core";
+    entryHistory = [];
+    branches = {};
+    async execute(context) {
+        const { parameters } = context;
+        try {
+            const validatedData = this.validateData(parameters);
+            // Auto-adjust totalEntries if current exceeds total
+            if (validatedData.entryNumber > validatedData.totalEntries) {
+                validatedData.totalEntries = validatedData.entryNumber;
+            }
+            // Store in history
+            this.entryHistory.push(validatedData);
+            // Track branches if specified
+            if (validatedData.branchFromEntry && validatedData.branchId) {
+                if (!this.branches[validatedData.branchId]) {
+                    this.branches[validatedData.branchId] = [];
+                }
+                this.branches[validatedData.branchId].push(validatedData);
+            }
+            // Log to terminal (stderr) for human visibility
+            this.logEntry(validatedData);
+            // Return minimal metadata (no echoing)
+            return this.createResult({
+                entryNumber: validatedData.entryNumber,
+                totalEntries: validatedData.totalEntries,
+                nextEntryNeeded: validatedData.nextEntryNeeded,
+                technique: validatedData.technique,
+                branches: Object.keys(this.branches),
+                historyLength: this.entryHistory.length,
+            });
+        }
+        catch (error) {
+            return this.createResult({
+                error: error instanceof Error ? error.message : String(error),
+                status: "failed",
+            }, false);
+        }
+    }
+    validateData(parameters) {
+        if (!parameters.entry || typeof parameters.entry !== "string") {
+            throw new Error("Invalid entry: must be a string containing the creative idea or technique application");
+        }
+        if (!parameters.entryNumber || typeof parameters.entryNumber !== "number") {
+            throw new Error("Invalid entryNumber: must be a number");
+        }
+        if (!parameters.totalEntries || typeof parameters.totalEntries !== "number") {
+            throw new Error("Invalid totalEntries: must be a number");
+        }
+        if (typeof parameters.nextEntryNeeded !== "boolean") {
+            throw new Error("Invalid nextEntryNeeded: must be a boolean");
+        }
+        return {
+            entry: parameters.entry,
+            entryNumber: parameters.entryNumber,
+            totalEntries: parameters.totalEntries,
+            nextEntryNeeded: parameters.nextEntryNeeded,
+            isRevision: parameters.isRevision,
+            revisesEntry: parameters.revisesEntry,
+            branchFromEntry: parameters.branchFromEntry,
+            branchId: parameters.branchId,
+            technique: parameters.technique,
+            evaluation: parameters.evaluation,
+        };
+    }
+    logEntry(data) {
+        const formatted = this.formatEntry(data);
+        console.error(formatted);
+    }
+    formatEntry(data) {
+        const { entryNumber, totalEntries, entry, isRevision, revisesEntry, branchFromEntry, branchId, technique } = data;
+        let prefix = "";
+        let context = "";
+        if (isRevision) {
+            prefix = chalk.yellow("🔄 Revision");
+            context = ` (revising entry ${revisesEntry})`;
+        }
+        else if (branchFromEntry) {
+            prefix = chalk.green("🌿 Branch");
+            context = ` (from entry ${branchFromEntry}, ID: ${branchId})`;
+        }
+        else {
+            prefix = chalk.magenta("💡 Creative");
+            context = technique ? ` [${technique}]` : "";
+        }
+        const header = `${prefix} ${entryNumber}/${totalEntries}${context}`;
+        const border = "─".repeat(Math.max(header.length, entry.length) + 4);
+        return `
+┌${border}┐
+│ ${header} │
+├${border}┤
+│ ${entry.padEnd(border.length - 2)} │
+└${border}┘`;
+    }
+    getDescription() {
+        return `Structured tool for creative problem-solving through systematic ideation.
+
+This tool provides scaffolding for various creative thinking techniques. The AI generates
+ideas using these frameworks - the tool itself does NOT generate ideas.
+
+SUPPORTED CREATIVE TECHNIQUES:
+
+1. **Brainstorming** (technique: "brainstorming")
+   - Generate multiple ideas without judgment
+   - Build on previous ideas
+   - Encourage wild and unusual concepts
+   - AI should: produce 5-10+ ideas, defer judgment, combine ideas
+
+2. **SCAMPER** (technique: "scamper")
+   - Substitute: What can be replaced?
+   - Combine: What can be merged?
+   - Adapt: What can be adjusted?
+   - Modify: What can be changed?
+   - Put to other uses: How else can this be used?
+   - Eliminate: What can be removed?
+   - Reverse/Rearrange: What can be flipped or reordered?
+   - AI should: apply each lens systematically to the problem
+
+3. **Random Word Association** (technique: "random_word")
+   - Pick a random word unrelated to the problem
+   - Find connections between word and problem
+   - Use word as creative catalyst
+   - AI should: select random word, explore 3-5 connections
+
+4. **Six Thinking Hats** (technique: "six_thinking_hats")
+   - White Hat: Facts and information
+   - Red Hat: Emotions and intuition
+   - Black Hat: Caution and risks
+   - Yellow Hat: Benefits and optimism
+   - Green Hat: Creativity and alternatives
+   - Blue Hat: Process and meta-thinking
+   - AI should: wear each hat systematically, one per entry
+
+5. **TRIZ** (technique: "triz")
+   - Use contradiction matrix
+   - Apply 40 inventive principles
+   - Identify patterns from patent analysis
+   - AI should: identify contradictions, apply relevant principles
+
+6. **Mind Mapping** (technique: "mind_mapping")
+   - Start with central concept
+   - Branch into related ideas
+   - Use branching parameters (branchFromEntry, branchId)
+   - AI should: create hierarchical idea network
+
+7. **Reverse Brainstorming** (technique: "reverse_brainstorming")
+   - How could we cause the problem?
+   - How could we make it worse?
+   - Reverse these to find solutions
+   - AI should: generate anti-solutions, then reverse them
+
+PARAMETERS:
+- entry (required): The creative idea or technique application
+- entryNumber (required): Current entry number
+- totalEntries (required): Estimated total entries needed
+- nextEntryNeeded (required): Whether more entries are needed
+- technique (optional): Which creative technique being used
+- evaluation (optional): Evaluation or refinement of the idea
+- isRevision (optional): Whether this revises a previous entry
+- revisesEntry (optional): Which entry is being revised
+- branchFromEntry (optional): For mind mapping - which entry to branch from
+- branchId (optional): Identifier for this branch
+
+WORKFLOW:
+1. AI selects appropriate creative technique(s) for the problem
+2. AI generates ideas using that technique's framework
+3. Each idea is one entry in the structured journal
+4. AI can revise entries, branch (for mind mapping), or switch techniques
+5. AI evaluates and refines promising ideas
+6. Tool tracks progress, branches, and provides transparency
+
+IMPORTANT:
+- The AI generates ALL ideas - the tool only provides structure
+- Each technique guides HOW to think, not WHAT to think
+- Tool returns minimal metadata, no echoing
+- Terminal shows formatted progress for human visibility
+- Supports revision and branching for iterative refinement`;
+    }
 }
 export default new CreativeThinkingOperation();

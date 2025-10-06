@@ -5,14 +5,14 @@
  */
 import { BaseOperation } from "../base.js";
 export class SessionImportOperation extends BaseOperation {
-	name = "session_import";
-	category = "session";
-	async execute(context) {
-		// Note: Actual import logic would need to be implemented in SessionState
-		// This is a placeholder that returns success
-		return this.createResult({
-			result: "Session import completed",
-		});
-	}
+    name = "session_import";
+    category = "session";
+    async execute(context) {
+        // Note: Actual import logic would need to be implemented in SessionState
+        // This is a placeholder that returns success
+        return this.createResult({
+            result: "Session import completed",
+        });
+    }
 }
 export default new SessionImportOperation();

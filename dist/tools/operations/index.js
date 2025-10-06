@@ -51,76 +51,75 @@ import { PDRReasoningOperation } from "./special/pdr-reasoning.js";
 import customFramework from "./ui/custom-framework.js";
 // UI Operations
 import visualDashboard from "./ui/visual-dashboard.js";
-
 // Register all operations
 function registerAllOperations() {
-	// Core operations
-	operationRegistry.register(sequentialThinking);
-	operationRegistry.register(mentalModel);
-	operationRegistry.register(debuggingApproach);
-	operationRegistry.register(creativeThinking);
-	operationRegistry.register(visualReasoning);
-	operationRegistry.register(metacognitiveMonitoring);
-	operationRegistry.register(scientificMethod);
-	// Session operations
-	operationRegistry.register(sessionInfo);
-	operationRegistry.register(sessionExport);
-	operationRegistry.register(sessionImport);
-	// Collaborative operations
-	operationRegistry.register(systemsThinking);
-	operationRegistry.register(collaborativeReasoning);
-	operationRegistry.register(decisionFramework);
-	operationRegistry.register(socraticMethod);
-	operationRegistry.register(structuredArgumentation);
-	// Analysis operations
-	operationRegistry.register(research);
-	operationRegistry.register(analogicalReasoning);
-	operationRegistry.register(causalAnalysis);
-	operationRegistry.register(statisticalReasoning);
-	operationRegistry.register(simulation);
-	operationRegistry.register(optimization);
-	operationRegistry.register(ethicalAnalysis);
-	operationRegistry.register(mdpPlanning);
-	operationRegistry.register(decisionNetworks);
-	// Pattern operations
-	operationRegistry.register(treeOfThought);
-	operationRegistry.register(beamSearch);
-	operationRegistry.register(mcts);
-	operationRegistry.register(graphOfThought);
-	operationRegistry.register(orchestrationSuggest);
-	// UI Operations
-	operationRegistry.register(visualDashboard);
-	operationRegistry.register(customFramework);
-	// Notebook Operations
-	operationRegistry.register(notebookCreate);
-	operationRegistry.register(notebookAddCell);
-	operationRegistry.register(notebookRunCell);
-	operationRegistry.register(notebookExport);
-	// Metagame Operations
-	operationRegistry.register(new OODALoopOperation());
-	operationRegistry.register(new UlyssesProtocolOperation());
-	// Special Operations
-	operationRegistry.register(new PDRReasoningOperation());
-	operationRegistry.register(new CodeExecutionOperation());
-	operationRegistry.register(new OrchestrationSuggestOperation());
+    // Core operations
+    operationRegistry.register(sequentialThinking);
+    operationRegistry.register(mentalModel);
+    operationRegistry.register(debuggingApproach);
+    operationRegistry.register(creativeThinking);
+    operationRegistry.register(visualReasoning);
+    operationRegistry.register(metacognitiveMonitoring);
+    operationRegistry.register(scientificMethod);
+    // Session operations
+    operationRegistry.register(sessionInfo);
+    operationRegistry.register(sessionExport);
+    operationRegistry.register(sessionImport);
+    // Collaborative operations
+    operationRegistry.register(systemsThinking);
+    operationRegistry.register(collaborativeReasoning);
+    operationRegistry.register(decisionFramework);
+    operationRegistry.register(socraticMethod);
+    operationRegistry.register(structuredArgumentation);
+    // Analysis operations
+    operationRegistry.register(research);
+    operationRegistry.register(analogicalReasoning);
+    operationRegistry.register(causalAnalysis);
+    operationRegistry.register(statisticalReasoning);
+    operationRegistry.register(simulation);
+    operationRegistry.register(optimization);
+    operationRegistry.register(ethicalAnalysis);
+    operationRegistry.register(mdpPlanning);
+    operationRegistry.register(decisionNetworks);
+    // Pattern operations
+    operationRegistry.register(treeOfThought);
+    operationRegistry.register(beamSearch);
+    operationRegistry.register(mcts);
+    operationRegistry.register(graphOfThought);
+    operationRegistry.register(orchestrationSuggest);
+    // UI Operations
+    operationRegistry.register(visualDashboard);
+    operationRegistry.register(customFramework);
+    // Notebook Operations
+    operationRegistry.register(notebookCreate);
+    operationRegistry.register(notebookAddCell);
+    operationRegistry.register(notebookRunCell);
+    operationRegistry.register(notebookExport);
+    // Metagame Operations
+    operationRegistry.register(new OODALoopOperation());
+    operationRegistry.register(new UlyssesProtocolOperation());
+    // Special Operations
+    operationRegistry.register(new PDRReasoningOperation());
+    operationRegistry.register(new CodeExecutionOperation());
+    operationRegistry.register(new OrchestrationSuggestOperation());
 }
 // Auto-register on import
 registerAllOperations();
 // Export registry and utilities
 export { operationRegistry };
-export { BaseOperation } from "./base.js";
+export { BaseOperation, } from "./base.js";
 /**
  * Execute an operation by name
  */
 export async function executeOperation(name, context) {
-	const operation = operationRegistry.get(name);
-	if (!operation) {
-		return {
-			operation: "unknown",
-			status: "error",
-			error: `Unknown operation: ${name}`,
-			availableOperations: operationRegistry.getNames(),
-		};
-	}
-	return await operation.execute(context);
+    const operation = operationRegistry.get(name);
+    if (!operation) {
+        return {
+            operation: "unknown",
+            status: "error",
+            error: `Unknown operation: ${name}`,
+            availableOperations: operationRegistry.getNames(),
+        };
+    }
+    return await operation.execute(context);
 }

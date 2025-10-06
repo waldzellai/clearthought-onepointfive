@@ -7,30 +7,27 @@
  * Generate dashboard HTML content
  */
 export function generateDashboardHTML(options) {
-	const { title, visualizationType, data, panels, layout, interactive } = options;
-	// Generate HTML with embedded Chart.js or D3.js visualization
-	const chartScript =
-		visualizationType === "chart"
-			? `
+    const { title, visualizationType, data, panels, layout, interactive } = options;
+    // Generate HTML with embedded Chart.js or D3.js visualization
+    const chartScript = visualizationType === "chart"
+        ? `
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
       const ctx = document.getElementById('mainChart').getContext('2d');
       const chart = new Chart(ctx, {
         type: '${data.chartType || "bar"}',
-        data: ${JSON.stringify(
-					data.chartData || {
-						labels: ["Jan", "Feb", "Mar", "Apr", "May"],
-						datasets: [
-							{
-								label: "Dataset",
-								data: [12, 19, 3, 5, 2],
-								backgroundColor: "rgba(75, 192, 192, 0.2)",
-								borderColor: "rgba(75, 192, 192, 1)",
-								borderWidth: 1,
-							},
-						],
-					},
-				)},
+        data: ${JSON.stringify(data.chartData || {
+            labels: ["Jan", "Feb", "Mar", "Apr", "May"],
+            datasets: [
+                {
+                    label: "Dataset",
+                    data: [12, 19, 3, 5, 2],
+                    backgroundColor: "rgba(75, 192, 192, 0.2)",
+                    borderColor: "rgba(75, 192, 192, 1)",
+                    borderWidth: 1,
+                },
+            ],
+        })},
         options: {
           responsive: true,
           maintainAspectRatio: false,
@@ -42,10 +39,9 @@ export function generateDashboardHTML(options) {
       });
     </script>
   `
-			: "";
-	const panelsHTML = panels
-		.map(
-			(panel, index) => `
+        : "";
+    const panelsHTML = panels
+        .map((panel, index) => `
     <div class="panel" style="
       padding: 15px;
       margin: 10px;
@@ -60,10 +56,9 @@ export function generateDashboardHTML(options) {
         ${panel.value ? `<div class="metric-value" style="font-size: 2em; font-weight: bold; color: #2196F3;">${panel.value}</div>` : ""}
       </div>
     </div>
-  `,
-		)
-		.join("");
-	return `
+  `)
+        .join("");
+    return `
     <!DOCTYPE html>
     <html>
     <head>
@@ -113,23 +108,20 @@ export function generateDashboardHTML(options) {
           <h1>${title}</h1>
           <p>Interactive Dashboard - ${new Date().toLocaleString()}</p>
         </div>
-        ${
-					visualizationType === "chart"
-						? `
+        ${visualizationType === "chart"
+        ? `
           <div class="chart-container">
             <canvas id="mainChart"></canvas>
           </div>
         `
-						: ""
-				}
+        : ""}
         <div class="panels-container">
           ${panelsHTML}
         </div>
       </div>
       ${chartScript}
-      ${
-				interactive
-					? `
+      ${interactive
+        ? `
         <script>
           // Enable interactive features
           window.parent.postMessage({
@@ -151,8 +143,7 @@ export function generateDashboardHTML(options) {
           });
         </script>
       `
-					: ""
-			}
+        : ""}
     </body>
     </html>
   `;
@@ -161,8 +152,8 @@ export function generateDashboardHTML(options) {
  * Generate remote DOM script for dynamic content
  */
 export function generateRemoteDomScript(options) {
-	const { visualizationType, data, panels, interactive } = options;
-	return `
+    const { visualizationType, data, panels, interactive } = options;
+    return `
     // Create dashboard container
     const container = document.createElement('ui-container');
     container.style.padding = '20px';
@@ -177,8 +168,7 @@ export function generateRemoteDomScript(options) {
     
     // Add panels
     ${panels
-			.map(
-				(panel, index) => `
+        .map((panel, index) => `
       const panel${index} = document.createElement('ui-panel');
       panel${index}.style.padding = '15px';
       panel${index}.style.margin = '10px';
@@ -190,21 +180,18 @@ export function generateRemoteDomScript(options) {
       panelTitle${index}.style.fontWeight = 'bold';
       panel${index}.appendChild(panelTitle${index});
       
-      ${
-				panel.value
-					? `
+      ${panel.value
+        ? `
         const panelValue${index} = document.createElement('ui-text');
         panelValue${index}.textContent = '${panel.value}';
         panelValue${index}.style.fontSize = '2em';
         panelValue${index}.style.color = '#2196F3';
         panel${index}.appendChild(panelValue${index});
       `
-					: ""
-			}
+        : ""}
       
-      ${
-				interactive
-					? `
+      ${interactive
+        ? `
         panel${index}.style.cursor = 'pointer';
         panel${index}.onclick = () => {
           window.parent.postMessage({
@@ -216,13 +203,11 @@ export function generateRemoteDomScript(options) {
           }, '*');
         };
       `
-					: ""
-			}
+        : ""}
       
       container.appendChild(panel${index});
-    `,
-			)
-			.join("\n")}
+    `)
+        .join("\n")}
     
     // Append to root
     root.appendChild(container);
