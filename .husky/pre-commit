@@ -1,6 +1,3 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
 # Check if this is a checkpoint commit by looking at the commit message
 # (commit message is in .git/COMMIT_EDITMSG)
 if [ -f .git/COMMIT_EDITMSG ]; then

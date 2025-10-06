@@ -1,6 +1,3 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
 # Validate commit message format
 # Allows:
 # - checkpoint: <description> (for checkpoint commits - warns but doesn't block)
