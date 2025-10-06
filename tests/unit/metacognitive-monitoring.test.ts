@@ -291,7 +291,7 @@ describe("MetacognitiveMonitoring Structured Journal", () => {
 			await operation.execute(context);
 
 			const kpis = sessionState.getKPIs();
-			const confidenceKPI = kpis.find((kpi) => kpi.name === "metacognitive_confidence");
+			const confidenceKPI = kpis.find((kpi) => kpi.key === "metacognitive_confidence");
 
 			expect(confidenceKPI).toBeDefined();
 			expect(confidenceKPI?.value).toBe(0.85);
@@ -311,7 +311,7 @@ describe("MetacognitiveMonitoring Structured Journal", () => {
 			await operation.execute(context);
 
 			const kpis = sessionState.getKPIs();
-			const confidenceKPI = kpis.find((kpi) => kpi.name === "metacognitive_confidence");
+			const confidenceKPI = kpis.find((kpi) => kpi.key === "metacognitive_confidence");
 
 			expect(confidenceKPI).toBeUndefined();
 		});

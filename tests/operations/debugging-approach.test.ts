@@ -95,8 +95,8 @@ describe("DebuggingApproachOperation - Structured Journal", () => {
 			};
 
 			const result = await operation.execute(context);
-			expect(result.isError).toBe(false);
-			expect(result.data.approach).toBe("binary_search");
+			expect(result.status).toBe("success");
+			expect(result.approach).toBe("binary_search");
 		});
 
 		it("throws error for invalid approach type", async () => {
@@ -109,8 +109,8 @@ describe("DebuggingApproachOperation - Structured Journal", () => {
 			};
 
 			const result = await operation.execute(context);
-			expect(result.isError).toBe(true);
-			expect(result.data.error).toContain("Invalid approach");
+			expect(result.status).toBe("error");
+			expect(result.error).toContain("Invalid approach");
 		});
 	});
 
@@ -124,7 +124,7 @@ describe("DebuggingApproachOperation - Structured Journal", () => {
 				nextEntryNeeded: true,
 			};
 			let result = await operation.execute(context);
-			expect(result.data.historyLength).toBe(1);
+			expect(result.historyLength).toBe(1);
 
 			// Second entry
 			context.parameters = {
@@ -134,7 +134,7 @@ describe("DebuggingApproachOperation - Structured Journal", () => {
 				nextEntryNeeded: true,
 			};
 			result = await operation.execute(context);
-			expect(result.data.historyLength).toBe(2);
+			expect(result.historyLength).toBe(2);
 
 			// Third entry
 			context.parameters = {
@@ -144,7 +144,7 @@ describe("DebuggingApproachOperation - Structured Journal", () => {
 				nextEntryNeeded: false,
 			};
 			result = await operation.execute(context);
-			expect(result.data.historyLength).toBe(3);
+			expect(result.historyLength).toBe(3);
 		});
 
 		it("auto-adjusts totalEntries when exceeded", async () => {
@@ -156,7 +156,7 @@ describe("DebuggingApproachOperation - Structured Journal", () => {
 			};
 
 			const result = await operation.execute(context);
-			expect(result.data.totalEntries).toBe(8);
+			expect(result.totalEntries).toBe(8);
 		});
 	});
 
@@ -182,8 +182,8 @@ describe("DebuggingApproachOperation - Structured Journal", () => {
 			};
 			const result = await operation.execute(context);
 
-			expect(result.data.branches).toContain("alternative-1");
-			expect(result.data.historyLength).toBe(2);
+			expect(result.branches).toContain("alternative-1");
+			expect(result.historyLength).toBe(2);
 		});
 
 		it("stores multiple entries in same branch", async () => {
@@ -209,8 +209,8 @@ describe("DebuggingApproachOperation - Structured Journal", () => {
 			};
 			const result = await operation.execute(context);
 
-			expect(result.data.branches).toContain("branch-a");
-			expect(result.data.historyLength).toBe(2);
+			expect(result.branches).toContain("branch-a");
+			expect(result.historyLength).toBe(2);
 		});
 	});
 
@@ -228,19 +228,19 @@ describe("DebuggingApproachOperation - Structured Journal", () => {
 			const result = await operation.execute(context);
 
 			// Check metadata fields
-			expect(result.data).toHaveProperty("entryNumber");
-			expect(result.data).toHaveProperty("totalEntries");
-			expect(result.data).toHaveProperty("nextEntryNeeded");
-			expect(result.data).toHaveProperty("approach");
-			expect(result.data).toHaveProperty("findings");
-			expect(result.data).toHaveProperty("branches");
-			expect(result.data).toHaveProperty("historyLength");
+			expect(result).toHaveProperty("entryNumber");
+			expect(result).toHaveProperty("totalEntries");
+			expect(result).toHaveProperty("nextEntryNeeded");
+			expect(result).toHaveProperty("approach");
+			expect(result).toHaveProperty("findings");
+			expect(result).toHaveProperty("branches");
+			expect(result).toHaveProperty("historyLength");
 
 			// Should NOT echo the entry content
-			expect(result.data).not.toHaveProperty("entry");
+			expect(result).not.toHaveProperty("entry");
 
 			// Verify response is minimal
-			const responseText = JSON.stringify(result.data);
+			const responseText = JSON.stringify(result);
 			const tokenEstimate = responseText.length / 4; // Rough estimate: 4 chars per token
 			expect(tokenEstimate).toBeLessThan(100);
 		});
@@ -256,8 +256,8 @@ describe("DebuggingApproachOperation - Structured Journal", () => {
 			};
 
 			const result = await operation.execute(context);
-			expect(result.data.approach).toBe("binary_search");
-			expect(result.data.findings).toBe("Error occurs in authentication module");
+			expect(result.approach).toBe("binary_search");
+			expect(result.findings).toBe("Error occurs in authentication module");
 		});
 	});
 
