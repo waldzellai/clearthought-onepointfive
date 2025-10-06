@@ -65,6 +65,19 @@ This configures how to start your MCP server.
 
 This is where you define your test cases.
 
+## Test Checklist
+
+**IMPORTANT**: Use the comprehensive test checklist at `.claude/checklists/mcp-evals-test-checklist.md`
+
+This checklist defines:
+- 10 test categories
+- What to test in each category
+- Query templates
+- Success criteria
+- Failure indicators
+
+**Always reference this checklist when creating tests!**
+
 ## Test Structure
 
 Each test has:
