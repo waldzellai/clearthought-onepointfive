@@ -5,7 +5,7 @@
  * Based on Sequential Thinking MCP server pattern.
  */
 
-import { BaseOperation, type OperationContext, type OperationResult } from "../base.js";
+import { BaseOperation, type OperationContext, type OperationResult, type ToolDescription } from "../base.js";
 import chalk from "chalk";
 
 interface MetacognitiveData {
@@ -45,7 +45,7 @@ export class MetacognitiveMonitoringOperation extends BaseOperation {
 	/**
 	 * Get tool description for MCP registration
 	 */
-	getToolDescription() {
+	getToolDescription(): ToolDescription {
 		return {
 			name: this.name,
 			description: `A structured tool for metacognitive monitoring and self-reflection through systematic entries.

@@ -34,6 +34,115 @@ export class DebuggingApproachOperation extends BaseOperation {
 	private disableLogging: boolean = false;
 
 	/**
+	 * Tool description that guides AI behavior
+	 */
+	getToolDescription() {
+		return {
+			name: this.name,
+			description: `A structured tool for systematic debugging through methodical investigation.
+
+This tool provides scaffolding for debugging workflows, enforcing discipline through
+required parameters while allowing flexibility in investigation approach.
+
+When to use this tool:
+- Isolating bugs through binary search debugging
+- Conducting root cause analysis for production issues
+- Rubber duck debugging to explain problems step-by-step
+- Applying the Five Whys methodology
+- Systematic investigation requiring clear documentation
+- Problems where the investigation path needs to be tracked
+
+Supported debugging approaches:
+- binary_search: Divide and conquer - test midpoints to narrow down issue location
+- root_cause: Deep analysis to find underlying causes, not just symptoms
+- rubber_duck: Explain the problem step-by-step to clarify thinking
+- five_whys: Ask "why" repeatedly to get to root cause (typically 5 iterations)
+- hypothesis_testing: Form and test hypotheses systematically
+- differential_diagnosis: Compare symptoms to known patterns
+- timeline_analysis: Trace events chronologically to find trigger points
+
+Key features:
+- Track investigation progress with numbered entries
+- Adjust totalEntries as complexity becomes clearer
+- Mark revisions when reconsidering previous findings
+- Branch to explore alternative hypotheses
+- Document findings at each step
+- Specify debugging approach being used
+
+Parameters explained:
+- entry: Your current debugging step or observation (required)
+- entryNumber: Current step number in investigation (required, numeric)
+- totalEntries: Estimated total steps needed (required, adjustable)
+- nextEntryNeeded: True if more investigation needed (required, boolean)
+- approach: Debugging methodology (optional: binary_search, root_cause, rubber_duck, five_whys, etc.)
+- findings: Key findings or observations from this step (optional)
+- isRevision: Boolean indicating if reconsidering previous finding (optional)
+- revisesEntry: Which entry number is being reconsidered (optional)
+- branchFromEntry: Entry number for branching point (optional)
+- branchId: Identifier for investigation branch (optional)
+
+You should:
+1. Start with an estimated totalEntries, but adjust as understanding deepens
+2. Choose a debugging approach and stick with it (or explicitly switch)
+3. Document findings at each step for clarity
+4. Mark revisions explicitly when reconsidering previous conclusions
+5. Branch when exploring alternative hypotheses
+6. Only set nextEntryNeeded to false when bug is isolated/understood`,
+			inputSchema: {
+				type: "object" as const,
+				properties: {
+					entry: {
+						type: "string",
+						description: "Current debugging step or observation",
+					},
+					entryNumber: {
+						type: "integer",
+						description: "Current entry number (1, 2, 3, etc.)",
+						minimum: 1,
+					},
+					totalEntries: {
+						type: "integer",
+						description: "Estimated total entries needed",
+						minimum: 1,
+					},
+					nextEntryNeeded: {
+						type: "boolean",
+						description: "Whether more investigation is needed",
+					},
+					approach: {
+						type: "string",
+						description:
+							"Debugging methodology (binary_search, root_cause, rubber_duck, five_whys, etc.)",
+					},
+					findings: {
+						type: "string",
+						description: "Key findings or observations from this step",
+					},
+					isRevision: {
+						type: "boolean",
+						description: "Whether this revises previous thinking",
+					},
+					revisesEntry: {
+						type: "integer",
+						description: "Which entry is being reconsidered",
+						minimum: 1,
+					},
+					branchFromEntry: {
+						type: "integer",
+						description: "Branching point entry number",
+						minimum: 1,
+					},
+					branchId: {
+						type: "string",
+						description: "Branch identifier for alternative hypothesis",
+					},
+				},
+				required: ["entry", "entryNumber", "totalEntries", "nextEntryNeeded"],
+			},
+		};
+	}
+
+	/**
 	 * Validate debugging data with strict type checking
 	 */
 	private validateData(input: unknown): DebuggingData {
