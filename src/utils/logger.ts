@@ -144,21 +144,15 @@ export class TerminalLogger {
 	 * Format completion message
 	 */
 	private formatCompletion(operation: string, result: OperationResult): string {
-		const statusEmoji = result.status === "completed" ? "✓" : result.status === "error" ? "✗" : "⏸";
+		const statusEmoji = result.status === "success" ? "✓" : "✗";
 		const header = `${statusEmoji} ${operation} ${result.status}`;
 		const border = "═".repeat(header.length + 4);
 
 		let formatted = `\n╔${border}╗\n║ ${chalk.green(header)} ║\n╚${border}╝`;
 
-		// Add progress summary
-		if (result.progress) {
-			formatted += `\n  ${chalk.gray("Progress:")} ${result.progress.stepsCompleted}/${result.progress.stepsRequired} steps`;
-			formatted += `\n  ${chalk.gray("Phase:")} ${result.progress.currentPhase}`;
-		}
-
-		// Add next step if present
-		if (result.nextStep && result.status !== "completed") {
-			formatted += `\n  ${chalk.gray("Next:")} ${result.nextStep.action}`;
+		// Add error message if present
+		if (result.error) {
+			formatted += `\n  ${chalk.red("Error:")} ${result.error}`;
 		}
 
 		return `${formatted}\n`;

@@ -5,4 +5,3 @@
  * in the Clear Thought MCP server.
  */
 export {};
-//# sourceMappingURL=index.js.map

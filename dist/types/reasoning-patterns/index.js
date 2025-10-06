@@ -12,6 +12,8 @@ export * from "./beam-search.js";
 export * from "./graph-of-thought.js";
 // Monte Carlo Tree Search
 export * from "./mcts.js";
+// Progressive Deep Reasoning
+export * from "./pdr.js";
 // Tree of Thought
 export * from "./tree-of-thought.js";
-//# sourceMappingURL=index.js.map
+export * from "./ulysses-protocol.js";

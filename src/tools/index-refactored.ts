@@ -6,10 +6,8 @@
 
 import { z } from "zod";
 import { EphemeralNotebookStore } from "../notebook/EphemeralNotebook.js";
-import { getPresetForPattern } from "../notebook/presets.js";
 import type { SessionState } from "../state/SessionState.js";
 import { executePython } from "../utils/execution.js";
-import { enhanceResponseWithNotebook } from "./notebookEnhancement.js";
 import { executeOperation, type OperationContext, operationRegistry } from "./operations/index.js";
 
 // Initialize notebook store
@@ -68,27 +66,11 @@ export const ClearThoughtParamsSchema = z.object({
 			"notebook_export",
 		])
 		.describe("What type of reasoning operation to perform"),
-	// Common parameters
-	prompt: z.string().describe("The problem, question, or challenge to work on"),
-	context: z.string().optional().describe("Additional context or background information"),
-	sessionId: z.string().optional().describe("Session identifier for continuity"),
-	// Operation-specific parameters
+	// Operation-specific parameters - AI submits structured data here
 	parameters: z
 		.record(z.string(), z.unknown())
 		.optional()
-		.describe("Operation-specific parameters"),
-	// Advanced options
-	advanced: z
-		.object({
-			autoProgress: z
-				.boolean()
-				.optional()
-				.describe("Automatically progress through stages when applicable"),
-			saveToSession: z.boolean().default(true).describe("Save results to session state"),
-			generateNextSteps: z.boolean().default(true).describe("Generate recommended next steps"),
-		})
-		.optional()
-		.describe("Advanced reasoning options"),
+		.describe("Operation-specific structured data (see tool description for each operation)"),
 });
 
 /**
@@ -101,8 +83,6 @@ export async function handleClearThoughtTool(
 	content: Array<{ type: "text"; text: string }>;
 	isError?: boolean;
 }> {
-	const startTime = Date.now();
-
 	try {
 		// Special handling for code execution
 		if (args.operation === "code_execution") {
@@ -114,53 +94,19 @@ export async function handleClearThoughtTool(
 			return await handleNotebookRunCell(args);
 		}
 
-		// Auto-seed most operations with a brief sequential_thinking step
-		const seedExclusions = new Set([
-			"sequential_thinking",
-			"code_execution",
-			"session_info",
-			"session_export",
-			"session_import",
-		]);
-
-		const shouldSeed = !seedExclusions.has(args.operation);
-
 		// Create operation context
 		const context: OperationContext = {
 			sessionState,
-			prompt: args.prompt,
 			parameters: args.parameters || {},
 		};
 
-		// Execute the main operation using the registry
+		// Execute the operation using the registry
 		const result = await executeOperation(args.operation, context);
 
-		// Add initial thought if needed
-		const enriched = shouldSeed
-			? {
-					...result,
-					initialThought: await executeOperation("sequential_thinking", {
-						sessionState,
-						prompt: `Plan approach for: ${args.prompt}`,
-						parameters: {
-							thoughtNumber: 1,
-							totalThoughts: 3,
-							nextThoughtNeeded: true,
-							needsMoreThoughts: true,
-							pattern: "chain",
-						},
-					}),
-				}
-			: result;
-
-		// Enhance response with notebook resources if applicable
-		const baseResponse = {
-			content: [{ type: "text" as const, text: JSON.stringify(enriched, null, 2) }],
+		// Return metadata only - content was already logged to stderr by the operation
+		return {
+			content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
 		};
-
-		const enhancedResponse = enhanceResponseWithNotebook(baseResponse, args.operation, args.prompt);
-
-		return enhancedResponse;
 	} catch (error: any) {
 		const errorResponse = {
 			toolOperation: args.operation,
@@ -195,7 +141,6 @@ async function handleCodeExecution(
 	if (lang !== "python" || !cfg.allowCodeExecution) {
 		const preview = await executeOperation("code_execution", {
 			sessionState,
-			prompt: args.prompt,
 			parameters: args.parameters || {},
 		});
 
@@ -272,36 +217,6 @@ async function handleNotebookRunCell(
 			],
 		};
 	}
-}
-
-/**
- * Legacy function for backward compatibility
- */
-export async function executeClearThoughtOperation(
-	sessionState: SessionState,
-	operation: string,
-	args: { prompt: string; parameters?: Record<string, unknown> },
-): Promise<Record<string, unknown>> {
-	const context: OperationContext = {
-		sessionState,
-		prompt: args.prompt,
-		parameters: args.parameters || {},
-	};
-
-	return await executeOperation(operation, context);
-}
-
-/**
- * Register tools with the server (backward compatibility)
- */
-export function registerTools(server: { tool: Function }, sessionState: SessionState): void {
-	server.tool(
-		"clear_thought",
-		"Unified Clear Thought reasoning tool - provides all reasoning operations through a single interface",
-		ClearThoughtParamsSchema.shape,
-		async (args: z.infer<typeof ClearThoughtParamsSchema>) =>
-			handleClearThoughtTool(sessionState, args),
-	);
 }
 
 // Re-export for convenience

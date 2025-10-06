@@ -16,19 +16,19 @@
 		"LICENSE",
 		"package.json"
 	],
-	"main": "dist/src/index.js",
-	"types": "dist/src/index.d.ts",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
 	"exports": {
 		".": {
-			"import": "./dist/src/index.js",
-			"types": "./dist/src/index.d.ts"
+			"import": "./dist/index.js",
+			"types": "./dist/index.d.ts"
 		}
 	},
 	"bin": {
-		"clear-thought": "./dist/cli/stdio-server.js"
+		"clear-thought": "./dist/server.js"
 	},
 	"scripts": {
-		"build:stdio": "tsc cli/stdio-server.ts --outDir dist --module esnext --target es2020 --moduleResolution node --esModuleInterop true",
+		"build:stdio": "tsc",
 		"build:http": "npx @smithery/cli build",
 		"copy-resources": "mkdir -p dist/resources && cp -r src/resources/* dist/resources/",
 		"build": "npm run build:stdio && npm run build:http && npm run copy-resources",

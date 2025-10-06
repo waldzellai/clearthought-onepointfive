@@ -139,13 +139,6 @@ export async function executeOperation(
 	if (!operation) {
 		return {
 			operation: "unknown",
-			progress: { stepsCompleted: 0, stepsRequired: 1, currentPhase: "error" },
-			nextStep: { action: "error", prompt: `Unknown operation: ${name}` },
-			sessionContext: {
-				sessionId: context.sessionState.sessionId,
-				operationHistory: [],
-				remainingBudget: 10000,
-			},
 			status: "error" as const,
 			error: `Unknown operation: ${name}`,
 			availableOperations: operationRegistry.getNames(),

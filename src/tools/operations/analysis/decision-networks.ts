@@ -42,7 +42,7 @@ export class DecisionNetworksOperation extends BaseOperation {
 
 	async execute(context: OperationContext): Promise<OperationResult> {
 		const params = this.normalizeParameters(context.parameters);
-		this.validateParameters(params);
+		this.validateParametersInternal(params);
 
 		const expectedUtilities: Record<string, number> = {};
 		const traces: Array<{
@@ -200,7 +200,7 @@ export class DecisionNetworksOperation extends BaseOperation {
 		return value.map((item) => String(item));
 	}
 
-	protected validateParameters(params: DecisionNetworkParameters): void {
+	private validateParametersInternal(params: DecisionNetworkParameters): void {
 		const { randomVariables, decision, utilityNodes, evidence } = params;
 
 		const variableNameSet = new Set(randomVariables.map((rv) => rv.name));

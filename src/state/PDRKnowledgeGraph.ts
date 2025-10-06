@@ -188,7 +188,7 @@ export class PDRKnowledgeGraph {
 				createdInPass: data.metadata?.createdInPass || "initial",
 				confidence: data.metadata?.confidence || 0.5,
 				justification: data.metadata?.justification,
-				bidirectional: data.metadata?.bidirectional,
+				bidirectional: data.metadata?.bidirectional ?? false,
 			},
 		};
 

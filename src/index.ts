@@ -15,7 +15,7 @@ import type { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import type { ServerConfigSchema } from "./config.js";
 import { SessionState } from "./state/SessionState.js";
-import { ClearThoughtParamsSchema, handleClearThoughtTool } from "./tools/index.js";
+import { ClearThoughtParamsSchema, handleClearThoughtTool } from "./tools/index-refactored.js";
 import { parseSrcbook, type SrcbookResource, srcbookToResource } from "./utils/srcbookParser.js";
 
 /**
