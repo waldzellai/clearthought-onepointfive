@@ -1,3 +1,7 @@
+---
+type: "always_apply"
+---
+
 # CHECKPOINTING.md
 
 ## Automatic Checkpointing Requirement
