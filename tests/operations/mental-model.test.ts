@@ -14,7 +14,11 @@ describe("MentalModelOperation - Structured Journal Pattern", () => {
 
 	beforeEach(() => {
 		operation = new MentalModelOperation();
-		sessionState = new SessionState();
+		sessionState = new SessionState("test-session", {
+			persistenceEnabled: false,
+			maxThoughts: 1000,
+			maxContextSize: 50000,
+		});
 		// Suppress console.error for cleaner test output
 		vi.spyOn(console, "error").mockImplementation(() => {});
 	});

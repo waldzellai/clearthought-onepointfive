@@ -297,9 +297,8 @@ describe("DebuggingApproachOperation - Structured Journal", () => {
 			};
 
 			const result = await operation.execute(context);
-			expect(result.isError).toBe(true);
-			expect(result.data).toHaveProperty("error");
-			expect(result.data).toHaveProperty("status", "failed");
+			expect(result.status).toBe("error");
+			expect(result).toHaveProperty("error");
 		});
 
 		it("provides descriptive error messages", async () => {
@@ -311,9 +310,9 @@ describe("DebuggingApproachOperation - Structured Journal", () => {
 			};
 
 			const result = await operation.execute(context);
-			expect(result.isError).toBe(true);
-			expect(result.data.error).toContain("Invalid entry");
-			expect(result.data.error).toContain("must be a string");
+			expect(result.status).toBe("error");
+			expect(result.error).toContain("Invalid entry");
+			expect(result.error).toContain("must be a string");
 		});
 	});
 
@@ -328,7 +327,7 @@ describe("DebuggingApproachOperation - Structured Journal", () => {
 			};
 
 			const result = await operation.execute(context);
-			expect(result.data.approach).toBe("binary_search");
+			expect(result.approach).toBe("binary_search");
 		});
 
 		it("supports root cause analysis", async () => {
@@ -341,7 +340,7 @@ describe("DebuggingApproachOperation - Structured Journal", () => {
 			};
 
 			const result = await operation.execute(context);
-			expect(result.data.approach).toBe("root_cause");
+			expect(result.approach).toBe("root_cause");
 		});
 
 		it("supports rubber duck debugging", async () => {
@@ -354,7 +353,7 @@ describe("DebuggingApproachOperation - Structured Journal", () => {
 			};
 
 			const result = await operation.execute(context);
-			expect(result.data.approach).toBe("rubber_duck");
+			expect(result.approach).toBe("rubber_duck");
 		});
 
 		it("supports five whys approach", async () => {
