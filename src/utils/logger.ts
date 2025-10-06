@@ -144,7 +144,6 @@ export class TerminalLogger {
 	 * Format completion message
 	 */
 	private formatCompletion(operation: string, result: OperationResult): string {
-		const emoji = this.getOperationEmoji(operation);
 		const statusEmoji = result.status === "completed" ? "✓" : result.status === "error" ? "✗" : "⏸";
 		const header = `${statusEmoji} ${operation} ${result.status}`;
 		const border = "═".repeat(header.length + 4);
@@ -162,7 +161,7 @@ export class TerminalLogger {
 			formatted += `\n  ${chalk.gray("Next:")} ${result.nextStep.action}`;
 		}
 
-		return formatted + "\n";
+		return `${formatted}\n`;
 	}
 
 	/**
@@ -180,4 +179,3 @@ export class TerminalLogger {
  * Singleton instance
  */
 export const logger = new TerminalLogger();
-

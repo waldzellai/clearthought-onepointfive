@@ -148,7 +148,7 @@ export abstract class BaseOperation implements Operation {
 	 * Get operation history from session state
 	 * Override this when unified history is implemented
 	 */
-	protected getOperationHistory(sessionState: SessionState): string[] {
+	protected getOperationHistory(_sessionState: SessionState): string[] {
 		// Temporary implementation - will be replaced with unified history
 		return [];
 	}
