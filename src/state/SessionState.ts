@@ -44,6 +44,33 @@ export interface SessionStatistics {
 }
 
 /**
+ * Unified operation history entry
+ */
+export interface OperationHistoryEntry {
+	id: string;
+	timestamp: string;
+	operation: string;
+	phase: string;
+	data: Record<string, unknown>;
+	metadata: {
+		stepsCompleted: number;
+		status: string;
+	};
+}
+
+/**
+ * Active operation state
+ */
+export interface OperationState {
+	operation: string;
+	currentPhase: string;
+	stepsCompleted: number;
+	startedAt: string;
+	lastUpdatedAt: string;
+	data: Record<string, unknown>;
+}
+
+/**
  * Main session state class
  */
 export class SessionState {
@@ -89,6 +116,15 @@ export class SessionState {
 			history: Array<{ timestamp: string; value: number }>;
 		}
 	> = new Map();
+
+	/** Unified operation history (NEW - aligned architecture) */
+	private operationHistory: OperationHistoryEntry[] = [];
+
+	/** Active operations tracking (NEW - aligned architecture) */
+	private activeOperations: Map<string, OperationState> = new Map();
+
+	/** Operation entry counter for generating IDs */
+	private operationEntryCounter = 0;
 
 	/** Expose config via getter */
 	getConfig(): ServerConfig {
@@ -160,10 +196,7 @@ export class SessionState {
 		this.touch();
 
 		// Check thought limit
-		if (
-			this.unifiedStore.getByType("thought").length >=
-			this.config.maxThoughtsPerSession
-		) {
+		if (this.unifiedStore.getByType("thought").length >= this.config.maxThoughtsPerSession) {
 			return false;
 		}
 
@@ -186,8 +219,7 @@ export class SessionState {
 	getRemainingThoughts(): number {
 		return Math.max(
 			0,
-			this.config.maxThoughtsPerSession -
-				this.unifiedStore.getByType("thought").length,
+			this.config.maxThoughtsPerSession - this.unifiedStore.getByType("thought").length,
 		);
 	}
 
@@ -251,9 +283,7 @@ export class SessionState {
 	 */
 	getCollaborativeSessions(): CollaborativeSession[] {
 		this.touch();
-		return this.unifiedStore
-			.getByType("collaborative")
-			.map((item) => item.data);
+		return this.unifiedStore.getByType("collaborative").map((item) => item.data);
 	}
 
 	/**
@@ -313,9 +343,7 @@ export class SessionState {
 	 */
 	getMetacognitiveSessions(): MetacognitiveData[] {
 		this.touch();
-		return this.unifiedStore
-			.getByType("metacognitive")
-			.map((item) => item.data);
+		return this.unifiedStore.getByType("metacognitive").map((item) => item.data);
 	}
 
 	/**
@@ -426,9 +454,7 @@ export class SessionState {
 	getVisualDiagram(diagramId: string): VisualData[] {
 		this.touch();
 		const items = this.unifiedStore.getByType("visual");
-		return items
-			.filter((item) => item.data.diagramId === diagramId)
-			.map((item) => item.data);
+		return items.filter((item) => item.data.diagramId === diagramId).map((item) => item.data);
 	}
 
 	// ============================================================================
@@ -999,5 +1025,126 @@ export class SessionState {
 		this.ulyssesSessions.clear();
 		this.metagameKPIs.clear();
 		this.resetTimeout();
+	}
+
+	// ============= Unified Operation History (NEW - Aligned Architecture) =============
+
+	/**
+	 * Generate unique ID for operation history entry
+	 */
+	private generateOperationEntryId(): string {
+		return `op-${this.sessionId}-${++this.operationEntryCounter}-${Date.now()}`;
+	}
+
+	/**
+	 * Add entry to unified operation history
+	 */
+	addOperationEntry(operation: string, phase: string, data: Record<string, unknown>): void {
+		const entry: OperationHistoryEntry = {
+			id: this.generateOperationEntryId(),
+			timestamp: new Date().toISOString(),
+			operation,
+			phase,
+			data,
+			metadata: {
+				stepsCompleted: this.getOperationStepCount(operation),
+				status: "active",
+			},
+		};
+
+		this.operationHistory.push(entry);
+		this.updateActiveOperation(operation, phase, data);
+		this.resetTimeout();
+	}
+
+	/**
+	 * Update active operation state
+	 */
+	private updateActiveOperation(operation: string, phase: string, data: Record<string, unknown>): void {
+		const existing = this.activeOperations.get(operation);
+		const now = new Date().toISOString();
+
+		if (existing) {
+			existing.currentPhase = phase;
+			existing.stepsCompleted++;
+			existing.lastUpdatedAt = now;
+			existing.data = { ...existing.data, ...data };
+		} else {
+			this.activeOperations.set(operation, {
+				operation,
+				currentPhase: phase,
+				stepsCompleted: 1,
+				startedAt: now,
+				lastUpdatedAt: now,
+				data,
+			});
+		}
+	}
+
+	/**
+	 * Get current state of an active operation
+	 */
+	getOperationState(operation: string): OperationState | undefined {
+		return this.activeOperations.get(operation);
+	}
+
+	/**
+	 * Get all active operations
+	 */
+	getActiveOperations(): OperationState[] {
+		return Array.from(this.activeOperations.values());
+	}
+
+	/**
+	 * Get operation history for a specific operation
+	 */
+	getHistoryForOperation(operation: string): OperationHistoryEntry[] {
+		return this.operationHistory.filter((e) => e.operation === operation);
+	}
+
+	/**
+	 * Get full operation history
+	 */
+	getOperationHistory(): OperationHistoryEntry[] {
+		return [...this.operationHistory];
+	}
+
+	/**
+	 * Get operation history as string array (for backward compatibility)
+	 */
+	getOperationHistoryStrings(): string[] {
+		return this.operationHistory.map((e) => `${e.operation}:${e.phase}`);
+	}
+
+	/**
+	 * Get step count for an operation
+	 */
+	private getOperationStepCount(operation: string): number {
+		return this.operationHistory.filter((e) => e.operation === operation).length;
+	}
+
+	/**
+	 * Mark operation as complete
+	 */
+	completeOperation(operation: string): void {
+		const state = this.activeOperations.get(operation);
+		if (state) {
+			// Update last entry to completed status
+			const lastEntry = this.operationHistory.filter((e) => e.operation === operation).pop();
+			if (lastEntry) {
+				lastEntry.metadata.status = "completed";
+			}
+			this.activeOperations.delete(operation);
+		}
+		this.resetTimeout();
+	}
+
+	/**
+	 * Clear operation history (for testing or reset)
+	 */
+	clearOperationHistory(): void {
+		this.operationHistory = [];
+		this.activeOperations.clear();
+		this.operationEntryCounter = 0;
 	}
 }
