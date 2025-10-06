@@ -242,39 +242,149 @@ You should:
 
 ### Phase 8: Testing
 
-Create a test file that verifies:
+#### 8.1 Unit Tests
+
+Create a unit test file that verifies:
 
 ```typescript
 describe('[OperationName] Structured Journal', () => {
   it('validates required parameters', () => {
     // Test missing parameters throw errors
   });
-  
+
   it('stores entries in history', () => {
     // Test history accumulation
   });
-  
+
   it('auto-adjusts totalEntries', () => {
     // Test max() logic
   });
-  
+
   it('tracks branches correctly', () => {
     // Test branch storage
   });
-  
+
   it('returns minimal metadata', () => {
     // Test response size < 100 tokens
   });
-  
+
   it('logs to stderr', () => {
     // Test terminal output
   });
-  
+
   it('handles errors gracefully', () => {
     // Test error responses
   });
 });
 ```
+
+#### 8.2 MCP Integration Tests (MCPJam Evals CLI)
+
+**CRITICAL**: Test the dynamic server-client MCP experience using MCPJam Evals CLI.
+
+**Setup**:
+
+1. Create test configuration in `evals-cli-starter/tests.json`:
+
+```json
+[
+  {
+    "title": "[Operation Name] - Basic Usage",
+    "query": "Use [operation-name] to [describe task]",
+    "runs": 3,
+    "model": "anthropic/claude-sonnet-4.5",
+    "provider": "openrouter",
+    "expectedToolCalls": ["[operation-tool-name]"]
+  },
+  {
+    "title": "[Operation Name] - Multi-step",
+    "query": "Use [operation-name] to [complex multi-step task]",
+    "runs": 2,
+    "model": "anthropic/claude-sonnet-4.5",
+    "provider": "openrouter",
+    "expectedToolCalls": ["[operation-tool-name]"]
+  },
+  {
+    "title": "[Operation Name] - Revision",
+    "query": "Use [operation-name] and revise entry 2",
+    "runs": 2,
+    "model": "anthropic/claude-sonnet-4.5",
+    "provider": "openrouter",
+    "expectedToolCalls": ["[operation-tool-name]"]
+  },
+  {
+    "title": "[Operation Name] - Branching",
+    "query": "Use [operation-name] and explore alternative from entry 3",
+    "runs": 2,
+    "model": "anthropic/claude-sonnet-4.5",
+    "provider": "openrouter",
+    "expectedToolCalls": ["[operation-tool-name]"]
+  }
+]
+```
+
+2. Ensure `evals-cli-starter/environment.json` is configured:
+
+```json
+{
+  "servers": {
+    "clear-thought": {
+      "command": "node",
+      "args": ["dist/server.js"],
+      "env": {}
+    }
+  }
+}
+```
+
+3. Run the evals:
+
+```bash
+# Build the server first
+npm run build
+
+# Run MCPJam evals
+cd evals-cli-starter
+mcpjam evals run -t tests.json -e environment.json -l llms.json
+
+# Or use the full command
+mcpjam evals run --tests tests.json --environment environment.json --llms llms.json
+```
+
+**What to verify**:
+
+- [ ] Tool is called correctly by Claude
+- [ ] Parameters are validated properly
+- [ ] Responses are minimal (<100 tokens)
+- [ ] Terminal logging appears in eval output
+- [ ] Multi-turn conversations work
+- [ ] Revisions are handled correctly
+- [ ] Branching works as expected
+- [ ] Error messages are clear and actionable
+
+**Expected output**:
+
+```
+✓ [Operation Name] - Basic Usage (3/3 runs passed)
+✓ [Operation Name] - Multi-step (2/2 runs passed)
+✓ [Operation Name] - Revision (2/2 runs passed)
+✓ [Operation Name] - Branching (2/2 runs passed)
+
+Summary:
+- Total tests: 4
+- Passed: 4
+- Failed: 0
+- Success rate: 100%
+```
+
+**If tests fail**:
+
+1. Check the eval output for specific errors
+2. Verify tool description guides AI correctly
+3. Check parameter validation is working
+4. Ensure responses are minimal
+5. Verify terminal logging is present
+6. Test manually with MCP Inspector if needed
 
 ## Anti-Patterns to Avoid
 
