@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "tsx \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/validate-vaporware.ts",
+            "timeout": 120
+          }
+        ]
+      }
+    ]
+  }
+}
+

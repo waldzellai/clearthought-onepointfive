@@ -44,7 +44,9 @@ index-old-bloated.ts
 claude_code_mcp_config.json
 cc_mcp_config.json
 mcp_config_claude_code.json
-.claude/
+.claude/*.local.json
+.claude/cache/
+.claude/sessions/
 trees/
 specs/
 temp/
