@@ -279,7 +279,35 @@ if (input.entryNumber < 1) {
 
 ## Testing Your Implementation
 
-### Manual Test
+### Unit Tests
+
+```bash
+# Run unit tests
+npm test
+
+# Run specific test file
+npm test tests/unit/[operation].test.ts
+```
+
+### MCP Integration Tests (MCPJam Evals)
+
+**CRITICAL**: Test the real MCP server-client experience!
+
+```bash
+# 1. Build server
+npm run build
+
+# 2. Create test config in evals-cli-starter/tests.json
+# See docs/MCPJAM_EVALS_TESTING_GUIDE.md
+
+# 3. Run evals
+cd evals-cli-starter
+mcpjam evals run -t tests.json -e environment.json -l llms.json
+
+# 4. Verify all tests pass
+```
+
+### Validation Hook Test
 
 ```bash
 # 1. Save the file
@@ -331,6 +359,7 @@ Please address the issues above before proceeding.
 - **Reference Implementation**: `docs/sequential-thinking-mcp-index.ts`
 - **Anti-Patterns**: `reports/analysis-clear-thought-actually-does-nothing.md`
 - **Full Guide**: `docs/AGENTIC_WORKFLOW_GUIDE.md`
+- **MCPJam Evals Guide**: `docs/MCPJAM_EVALS_TESTING_GUIDE.md`
 
 ## Emergency Bypass
 
