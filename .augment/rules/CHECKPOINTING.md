@@ -15,8 +15,14 @@ After EVERY file modification using `str-replace-editor` or `save-file` tools, y
 After each file edit, execute:
 
 ```bash
-git add -A && git commit --no-verify -m "checkpoint: <brief description>"
+git add -A && git commit -m "checkpoint: <brief description>"
 ```
+
+**Note**: Checkpoint commits trigger lightweight validation hooks that **warn but don't block**:
+- Quick syntax check (shows errors but allows commit)
+- Commit message quality check (warns if too vague)
+
+This provides visibility into issues while maintaining fast iteration.
 
 ## Checkpoint Message Format
 

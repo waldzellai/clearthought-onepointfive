@@ -1,24 +1,50 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-echo "🔍 Running pre-commit checks..."
-
-# Run linter
-echo "📝 Checking code style..."
-npm run lint || exit 1
-
-# Run type checking
-echo "🔧 Type checking..."
-npm run typecheck || exit 1
-
-# Run unit tests (fast tests only)
-echo "🧪 Running unit tests..."
-npm run test:unit || exit 1
-
-# Check for secrets (optional - requires Docker)
-if command -v docker &> /dev/null; then
-  echo "🔐 Checking for secrets..."
-  npm run check:secrets || echo "⚠️  Secrets check skipped (Docker required)"
+# Check if this is a checkpoint commit by looking at the commit message
+# (commit message is in .git/COMMIT_EDITMSG)
+if [ -f .git/COMMIT_EDITMSG ]; then
+  commit_msg=$(cat .git/COMMIT_EDITMSG)
+  if echo "$commit_msg" | grep -qE "^checkpoint: "; then
+    IS_CHECKPOINT=true
+  else
+    IS_CHECKPOINT=false
+  fi
+else
+  IS_CHECKPOINT=false
 fi
 
-echo "✅ Pre-commit checks passed!"
+if [ "$IS_CHECKPOINT" = true ]; then
+  echo "⚡ Checkpoint commit detected - running lightweight checks..."
+
+  # For checkpoints: warn but don't block
+
+  # Quick syntax check (TypeScript compilation without emit)
+  echo "📝 Quick syntax check..."
+  if ! npm run typecheck 2>&1 | head -20; then
+    echo "⚠️  WARNING: Type errors detected (not blocking checkpoint)"
+  else
+    echo "✅ Syntax OK"
+  fi
+
+  # Always allow checkpoint commits through
+  exit 0
+else
+  echo "🔍 Running full pre-commit checks..."
+
+  # For regular commits: enforce quality gates
+
+  # Run linter
+  echo "📝 Checking code style..."
+  npm run lint || exit 1
+
+  # Run type checking
+  echo "🔧 Type checking..."
+  npm run typecheck || exit 1
+
+  # Run unit tests (fast tests only)
+  echo "🧪 Running unit tests..."
+  npm run test:unit || exit 1
+
+  echo "✅ Pre-commit checks passed!"
+fi

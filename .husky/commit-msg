@@ -1,0 +1,69 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Validate commit message format
+# Allows:
+# - checkpoint: <description> (for checkpoint commits - warns but doesn't block)
+# - Conventional commits: type: description or type(scope): description
+# - Merge commits
+# - Revert commits
+
+commit_msg_file=$1
+commit_msg=$(cat "$commit_msg_file")
+
+# Skip validation for merge commits
+if echo "$commit_msg" | grep -qE "^Merge (branch|remote-tracking branch)"; then
+  exit 0
+fi
+
+# Skip validation for revert commits
+if echo "$commit_msg" | grep -qE "^Revert "; then
+  exit 0
+fi
+
+# Check for checkpoint commits
+if echo "$commit_msg" | grep -qE "^checkpoint: .+"; then
+  # Validate checkpoint message quality (warn but don't block)
+  if echo "$commit_msg" | grep -qE "^checkpoint: (wip|temp|test|fix|update|change)$"; then
+    echo "⚠️  WARNING: Checkpoint message is too vague"
+    echo "   Consider being more specific: 'checkpoint: added MCP Evals checklist'"
+    echo "   (Allowing commit to proceed)"
+  else
+    echo "✅ Checkpoint commit format valid"
+  fi
+  exit 0
+fi
+
+# Check for conventional commit format
+# Types: feat, fix, docs, style, refactor, test, chore, perf, ci, build, revert
+if echo "$commit_msg" | grep -qE "^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)(\(.+\))?: .+"; then
+  echo "✅ Conventional commit format valid"
+  exit 0
+fi
+
+# If we get here, the commit message is invalid
+echo "❌ Invalid commit message format!"
+echo ""
+echo "Commit message must follow one of these formats:"
+echo ""
+echo "1. Checkpoint commits (warn but don't block):"
+echo "   checkpoint: <brief description>"
+echo "   Example: checkpoint: added MCP Evals checklist"
+echo ""
+echo "2. Conventional commits (enforced):"
+echo "   <type>: <description>"
+echo "   <type>(<scope>): <description>"
+echo ""
+echo "   Types: feat, fix, docs, style, refactor, test, chore, perf, ci, build, revert"
+echo ""
+echo "   Examples:"
+echo "   feat: add new operation for analogical reasoning"
+echo "   fix(operations): correct parameter validation"
+echo "   docs: update README with installation instructions"
+echo ""
+echo "Your commit message:"
+echo "  $commit_msg"
+echo ""
+
+exit 1
+
