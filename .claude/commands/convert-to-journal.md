@@ -282,15 +282,21 @@ describe('[OperationName] Structured Journal', () => {
 
 **CRITICAL**: Test the dynamic server-client MCP experience using MCPJam Evals CLI.
 
+**Reference**: Read `.claude/checklists/mcp-evals-test-checklist.md` for the complete test checklist.
+
 **Setup**:
 
-1. Create test configuration in `evals-cli-starter/tests.json`:
+1. **Read the checklist**: Open `.claude/checklists/mcp-evals-test-checklist.md` and review all test categories
+
+2. **Generate tests.json**: Using the checklist, create test configuration in `evals-cli-starter/tests.json`
+
+**Minimum required tests** (from checklist):
 
 ```json
 [
   {
     "title": "[Operation Name] - Basic Usage",
-    "query": "Use [operation-name] to [describe task]",
+    "query": "Use [operation-name] to [simple, clear task description]",
     "runs": 3,
     "model": "anthropic/claude-sonnet-4.5",
     "provider": "openrouter",
@@ -298,7 +304,7 @@ describe('[OperationName] Structured Journal', () => {
   },
   {
     "title": "[Operation Name] - Multi-step",
-    "query": "Use [operation-name] to [complex multi-step task]",
+    "query": "Use [operation-name] to [complex task requiring multiple steps/entries]",
     "runs": 2,
     "model": "anthropic/claude-sonnet-4.5",
     "provider": "openrouter",
@@ -306,7 +312,7 @@ describe('[OperationName] Structured Journal', () => {
   },
   {
     "title": "[Operation Name] - Revision",
-    "query": "Use [operation-name] and revise entry 2",
+    "query": "Use [operation-name] to [task]. Make [N] entries, then revise entry [X] to [improvement].",
     "runs": 2,
     "model": "anthropic/claude-sonnet-4.5",
     "provider": "openrouter",
@@ -314,8 +320,16 @@ describe('[OperationName] Structured Journal', () => {
   },
   {
     "title": "[Operation Name] - Branching",
-    "query": "Use [operation-name] and explore alternative from entry 3",
+    "query": "Use [operation-name] to [task]. Make [N] entries, then explore an alternative from entry [X].",
     "runs": 2,
+    "model": "anthropic/claude-sonnet-4.5",
+    "provider": "openrouter",
+    "expectedToolCalls": ["[operation-tool-name]"]
+  },
+  {
+    "title": "[Operation Name] - Error Handling",
+    "query": "Use [operation-name] but [do something invalid]",
+    "runs": 1,
     "model": "anthropic/claude-sonnet-4.5",
     "provider": "openrouter",
     "expectedToolCalls": ["[operation-tool-name]"]
@@ -323,7 +337,9 @@ describe('[OperationName] Structured Journal', () => {
 ]
 ```
 
-2. Ensure `evals-cli-starter/environment.json` is configured:
+**IMPORTANT**: The checklist defines 10 test categories. Use ALL of them for comprehensive coverage.
+
+3. Ensure `evals-cli-starter/environment.json` is configured:
 
 ```json
 {
@@ -337,7 +353,7 @@ describe('[OperationName] Structured Journal', () => {
 }
 ```
 
-3. Run the evals:
+4. Run the evals:
 
 ```bash
 # Build the server first
