@@ -1,7 +1,7 @@
 ---
 description: Convert a Clear-Thought operation to use structured journal pattern
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob
-model: claude-opus-4-20250514
+model: claude-sonnet-4-5-20250929
 ---
 
 # Convert Operation to Structured Journal Pattern
