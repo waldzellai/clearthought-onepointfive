@@ -124,9 +124,7 @@ export interface OODASession extends BaseReasoningSession {
 /**
  * Creates a new OODA session
  */
-export function createOODASession(
-	config?: Partial<OODASession["config"]>,
-): OODASession {
+export function createOODASession(config?: Partial<OODASession["config"]>): OODASession {
 	const now = new Date().toISOString();
 
 	return {
@@ -151,14 +149,8 @@ export function createOODASession(
 		loopStartTime: now,
 		phaseChecklist: new Map([
 			["observe", ["data_collected", "anomalies_noted", "patterns_identified"]],
-			[
-				"orient",
-				["context_analyzed", "biases_acknowledged", "framework_applied"],
-			],
-			[
-				"decide",
-				["options_evaluated", "risks_assessed", "decision_documented"],
-			],
+			["orient", ["context_analyzed", "biases_acknowledged", "framework_applied"]],
+			["decide", ["options_evaluated", "risks_assessed", "decision_documented"]],
 			["act", ["action_executed", "results_captured", "feedback_collected"]],
 		]),
 		config: {
@@ -192,8 +184,7 @@ export function advancePhase(session: OODASession): OODASession {
 		if (session.loopStartTime) {
 			const loopTime = Date.now() - new Date(session.loopStartTime).getTime();
 			updated.metrics.avgLoopTimeMs =
-				(updated.metrics.avgLoopTimeMs * (updated.metrics.completedLoops - 1) +
-					loopTime) /
+				(updated.metrics.avgLoopTimeMs * (updated.metrics.completedLoops - 1) + loopTime) /
 				updated.metrics.completedLoops;
 		}
 
@@ -209,11 +200,7 @@ export function advancePhase(session: OODASession): OODASession {
 /**
  * Creates a new OODA node for the current phase
  */
-export function createOODANode(
-	content: string,
-	phase: OODAPhase,
-	evidence?: string[],
-): OODANode {
+export function createOODANode(content: string, phase: OODAPhase, evidence?: string[]): OODANode {
 	return {
 		id: `ooda-node-${Date.now()}`,
 		content,
@@ -291,8 +278,7 @@ export function evaluateEvidenceQuality(node: OODANode): number {
 	quality += Math.min(node.evidence.length / 5, 0.3); // Up to 30% for quantity
 
 	// Check evidence detail (avg length as proxy)
-	const avgLength =
-		node.evidence.reduce((sum, e) => sum + e.length, 0) / node.evidence.length;
+	const avgLength = node.evidence.reduce((sum, e) => sum + e.length, 0) / node.evidence.length;
 	quality += Math.min(avgLength / 100, 0.3); // Up to 30% for detail
 
 	// Phase-specific quality checks
@@ -303,9 +289,7 @@ export function evaluateEvidenceQuality(node: OODANode): number {
 			break;
 		case "orient":
 			// Orientation should reference frameworks or models
-			quality += node.evidence.some((e) => /framework|model|theory/i.test(e))
-				? 0.2
-				: 0;
+			quality += node.evidence.some((e) => /framework|model|theory/i.test(e)) ? 0.2 : 0;
 			break;
 		case "decide":
 			// Decisions should have clear rationale

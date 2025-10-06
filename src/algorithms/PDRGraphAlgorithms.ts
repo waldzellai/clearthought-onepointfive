@@ -103,13 +103,9 @@ export class PDRGraphAlgorithms {
 				clusterNodes.add(current);
 
 				// Add strongly connected neighbors
-				const edges = [
-					...graph.getOutgoingEdges(current),
-					...graph.getIncomingEdges(current),
-				];
+				const edges = [...graph.getOutgoingEdges(current), ...graph.getIncomingEdges(current)];
 				edges.forEach((edge) => {
-					const neighbor =
-						edge.targetId === current ? edge.sourceId : edge.targetId;
+					const neighbor = edge.targetId === current ? edge.sourceId : edge.targetId;
 					if (!visited.has(neighbor) && edge.weight > 0.6) {
 						queue.push(neighbor);
 					}
@@ -134,10 +130,7 @@ export class PDRGraphAlgorithms {
 	/**
 	 * Calculate cluster coherence (internal connectivity)
 	 */
-	private calculateCoherence(
-		graph: PDRKnowledgeGraph,
-		nodeIds: Set<string>,
-	): number {
+	private calculateCoherence(graph: PDRKnowledgeGraph, nodeIds: Set<string>): number {
 		if (nodeIds.size <= 1) return 1;
 
 		let internalEdges = 0;
@@ -160,7 +153,7 @@ export class PDRGraphAlgorithms {
 	 */
 	findPath(graph: PDRKnowledgeGraph, startId: string, endId: string): string[] {
 		// Validate inputs
-		if (!graph.hasNode(startId) || !graph.hasNode(endId)) {
+		if (!(graph.hasNode(startId) && graph.hasNode(endId))) {
 			throw new Error("Start or end node not found in graph");
 		}
 
@@ -198,9 +191,7 @@ export class PDRGraphAlgorithms {
 			edges.forEach((edge) => {
 				// Validate edge weight
 				if (edge.weight <= 0) {
-					console.warn(
-						`Invalid edge weight ${edge.weight} for edge ${edge.id}`,
-					);
+					console.warn(`Invalid edge weight ${edge.weight} for edge ${edge.id}`);
 					return;
 				}
 
@@ -253,10 +244,7 @@ export class PDRGraphAlgorithms {
 		return gaps;
 	}
 
-	private findMissingConnections(
-		graph: PDRKnowledgeGraph,
-		gaps: KnowledgeGap[],
-	): void {
+	private findMissingConnections(graph: PDRKnowledgeGraph, gaps: KnowledgeGap[]): void {
 		const nodes = graph.getAllNodes();
 
 		// Look for nodes that should be connected based on tags
@@ -269,10 +257,7 @@ export class PDRGraphAlgorithms {
 					node2.metadata.tags.has(tag),
 				);
 
-				if (
-					commonTags.length > 0 &&
-					!graph.hasEdgeBetween(node1.id, node2.id)
-				) {
+				if (commonTags.length > 0 && !graph.hasEdgeBetween(node1.id, node2.id)) {
 					gaps.push({
 						type: "missing-link",
 						nodeIds: [node1.id, node2.id],
@@ -284,10 +269,7 @@ export class PDRGraphAlgorithms {
 		});
 	}
 
-	private findLowConfidenceAreas(
-		graph: PDRKnowledgeGraph,
-		gaps: KnowledgeGap[],
-	): void {
+	private findLowConfidenceAreas(graph: PDRKnowledgeGraph, gaps: KnowledgeGap[]): void {
 		const nodes = graph.getAllNodes();
 
 		nodes.forEach((node) => {
@@ -302,10 +284,7 @@ export class PDRGraphAlgorithms {
 		});
 	}
 
-	private findContradictions(
-		graph: PDRKnowledgeGraph,
-		gaps: KnowledgeGap[],
-	): void {
+	private findContradictions(graph: PDRKnowledgeGraph, gaps: KnowledgeGap[]): void {
 		const contradictionEdges = graph.getEdgesByType("contradicts");
 
 		contradictionEdges.forEach((edge) => {
@@ -318,10 +297,7 @@ export class PDRGraphAlgorithms {
 		});
 	}
 
-	private findIsolatedClusters(
-		graph: PDRKnowledgeGraph,
-		gaps: KnowledgeGap[],
-	): void {
+	private findIsolatedClusters(graph: PDRKnowledgeGraph, gaps: KnowledgeGap[]): void {
 		const clusters = graph.getClusters();
 
 		clusters.forEach((cluster) => {

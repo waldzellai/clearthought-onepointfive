@@ -3,13 +3,7 @@
  * Based on Deep Research methodology for multi-pass exploration
  */
 
-export type PDRApproach =
-	| "sequential"
-	| "tree"
-	| "beam"
-	| "mcts"
-	| "graph"
-	| "auto";
+export type PDRApproach = "sequential" | "tree" | "beam" | "mcts" | "graph" | "auto";
 
 export type EdgeType =
 	| "supports"
@@ -21,12 +15,7 @@ export type EdgeType =
 	| "derived-from"
 	| "clusters-with";
 
-export type NodeType =
-	| "subject"
-	| "concept"
-	| "evidence"
-	| "question"
-	| "insight";
+export type NodeType = "subject" | "concept" | "evidence" | "question" | "insight";
 
 export interface PDRNode {
 	id: string;

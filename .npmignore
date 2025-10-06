@@ -91,3 +91,7 @@ Effect-TS/
 # Build artifacts not needed
 *.d.ts.map
 *.js.map
+
+# MCPJam
+inspector/
+evals-cli-starter/

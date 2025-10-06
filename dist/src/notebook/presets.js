@@ -5,21 +5,21 @@
  * based on research implementations.
  */
 export const TREE_OF_THOUGHT_PRESET = {
-    name: 'Tree of Thought',
-    description: 'Systematic exploration of multiple reasoning paths',
-    cells: [
-        {
-            type: 'markdown',
-            source: `# Tree of Thought Reasoning
+	name: "Tree of Thought",
+	description: "Systematic exploration of multiple reasoning paths",
+	cells: [
+		{
+			type: "markdown",
+			source: `# Tree of Thought Reasoning
 
 This notebook implements Tree of Thought (ToT) reasoning for systematic exploration of solution paths.
 
 ## Problem Statement
-Define your problem here...`
-        },
-        {
-            type: 'code',
-            source: `// Tree of Thought Implementation
+Define your problem here...`,
+		},
+		{
+			type: "code",
+			source: `// Tree of Thought Implementation
 class TreeNode {
   constructor(state, thought, value = null) {
     this.state = state;
@@ -101,11 +101,11 @@ const problem = "How to optimize database queries?";
 const tot = new TreeOfThought(problem, 3, 2);
 const solution = tot.solve();
 console.log("Best solution path:", solution);`,
-            language: 'javascript'
-        },
-        {
-            type: 'markdown',
-            source: `## Visualization
+			language: "javascript",
+		},
+		{
+			type: "markdown",
+			source: `## Visualization
 
 \`\`\`mermaid
 graph TD
@@ -119,23 +119,23 @@ graph TD
     style D fill:#90EE90
 \`\`\`
 
-Green nodes indicate the selected path.`
-        }
-    ]
+Green nodes indicate the selected path.`,
+		},
+	],
 };
 export const BEAM_SEARCH_PRESET = {
-    name: 'Beam Search',
-    description: 'Parallel exploration with periodic pruning',
-    cells: [
-        {
-            type: 'markdown',
-            source: `# Beam Search Reasoning
+	name: "Beam Search",
+	description: "Parallel exploration with periodic pruning",
+	cells: [
+		{
+			type: "markdown",
+			source: `# Beam Search Reasoning
 
-Maintains multiple promising paths simultaneously, exploring them in parallel with periodic pruning.`
-        },
-        {
-            type: 'code',
-            source: `// Beam Search Implementation
+Maintains multiple promising paths simultaneously, exploring them in parallel with periodic pruning.`,
+		},
+		{
+			type: "code",
+			source: `// Beam Search Implementation
 class BeamSearchPath {
   constructor(thoughts = [], score = 0) {
     this.thoughts = thoughts;
@@ -210,17 +210,17 @@ const beamSearch = new BeamSearch(
 
 const bestPath = beamSearch.search();
 console.log("\\nBest path found:", bestPath.thoughts);`,
-            language: 'javascript'
-        }
-    ]
+			language: "javascript",
+		},
+	],
 };
 export const MCTS_PRESET = {
-    name: 'Monte Carlo Tree Search',
-    description: 'Balances exploration and exploitation through simulations',
-    cells: [
-        {
-            type: 'markdown',
-            source: `# Monte Carlo Tree Search (MCTS)
+	name: "Monte Carlo Tree Search",
+	description: "Balances exploration and exploitation through simulations",
+	cells: [
+		{
+			type: "markdown",
+			source: `# Monte Carlo Tree Search (MCTS)
 
 MCTS combines tree search with random sampling for decision-making under uncertainty.
 
@@ -228,11 +228,11 @@ MCTS combines tree search with random sampling for decision-making under uncerta
 1. **Selection**: Navigate to promising leaf using UCB
 2. **Expansion**: Add new child node
 3. **Simulation**: Random rollout to terminal state
-4. **Backpropagation**: Update values up the tree`
-        },
-        {
-            type: 'code',
-            source: `// MCTS Implementation for Reasoning
+4. **Backpropagation**: Update values up the tree`,
+		},
+		{
+			type: "code",
+			source: `// MCTS Implementation for Reasoning
 class MCTSNode {
   constructor(state, parent = null) {
     this.state = state;
@@ -346,23 +346,23 @@ console.log("\\nRoot children statistics:");
 mcts.root.children.forEach(child => {
   console.log(\`  "\${child.state}": visits=\${child.visits}, avg_value=\${(child.value/child.visits).toFixed(3)}\`);
 });`,
-            language: 'javascript'
-        }
-    ]
+			language: "javascript",
+		},
+	],
 };
 export const GRAPH_OF_THOUGHT_PRESET = {
-    name: 'Graph of Thought',
-    description: 'Non-hierarchical connections between thoughts',
-    cells: [
-        {
-            type: 'markdown',
-            source: `# Graph of Thought Reasoning
+	name: "Graph of Thought",
+	description: "Non-hierarchical connections between thoughts",
+	cells: [
+		{
+			type: "markdown",
+			source: `# Graph of Thought Reasoning
 
-Graph of Thought allows arbitrary connections between reasoning nodes, enabling complex relationships and feedback loops.`
-        },
-        {
-            type: 'code',
-            source: `// Graph of Thought Implementation
+Graph of Thought allows arbitrary connections between reasoning nodes, enabling complex relationships and feedback loops.`,
+		},
+		{
+			type: "code",
+			source: `// Graph of Thought Implementation
 class GraphNode {
   constructor(id, content, nodeType = 'thought') {
     this.id = id;
@@ -488,11 +488,11 @@ console.log("Graph Analysis:", analysis);
 // Find paths
 const paths = got.findPaths("node_0", policyId);
 console.log(\`\\nFound \${paths.length} paths from root to policy node\`);`,
-            language: 'javascript'
-        },
-        {
-            type: 'markdown',
-            source: `## Graph Visualization
+			language: "javascript",
+		},
+		{
+			type: "markdown",
+			source: `## Graph Visualization
 
 \`\`\`mermaid
 graph LR
@@ -505,23 +505,23 @@ graph LR
     
     style A fill:#FFE4B5
     style E fill:#90EE90
-\`\`\``
-        }
-    ]
+\`\`\``,
+		},
+	],
 };
 export const ORCHESTRATION_SUGGEST_PRESET = {
-    name: 'Orchestration Suggest',
-    description: 'Multi-agent coordination for complex tasks',
-    cells: [
-        {
-            type: 'markdown',
-            source: `# Orchestration Suggestion
+	name: "Orchestration Suggest",
+	description: "Multi-agent coordination for complex tasks",
+	cells: [
+		{
+			type: "markdown",
+			source: `# Orchestration Suggestion
 
-This notebook demonstrates how to decompose complex tasks and suggest tool combinations for efficient problem-solving.`
-        },
-        {
-            type: 'code',
-            source: `// Task Orchestration Framework
+This notebook demonstrates how to decompose complex tasks and suggest tool combinations for efficient problem-solving.`,
+		},
+		{
+			type: "code",
+			source: `// Task Orchestration Framework
 class TaskOrchestrator {
   constructor(mainTask) {
     this.mainTask = mainTask;
@@ -666,17 +666,17 @@ plan.forEach((step, index) => {
     console.log(\`  Dependencies: \${deps.join(', ')}\`);
   }
 });`,
-            language: 'javascript'
-        }
-    ]
+			language: "javascript",
+		},
+	],
 };
 export const OODA_LOOP_PRESET = {
-    name: 'OODA Loop Sprint',
-    description: 'Observe-Orient-Decide-Act rapid decision cycles',
-    cells: [
-        {
-            type: 'markdown',
-            source: `# OODA Loop Sprint Session
+	name: "OODA Loop Sprint",
+	description: "Observe-Orient-Decide-Act rapid decision cycles",
+	cells: [
+		{
+			type: "markdown",
+			source: `# OODA Loop Sprint Session
 
 ## Overview
 The OODA Loop (Observe-Orient-Decide-Act) is a rapid decision-making framework with automated timing and hypothesis tracking.
@@ -690,11 +690,11 @@ The OODA Loop (Observe-Orient-Decide-Act) is a rapid decision-making framework w
 - [ ] Collect raw data from environment
 - [ ] Note anomalies and changes  
 - [ ] Identify emerging patterns
-- [ ] Document observations without interpretation`
-        },
-        {
-            type: 'code',
-            source: `// Initialize OODA Loop Session
+- [ ] Document observations without interpretation`,
+		},
+		{
+			type: "code",
+			source: `// Initialize OODA Loop Session
 const session = {
   loopNumber: 1,
   currentPhase: 'observe',
@@ -751,17 +751,17 @@ collectEvidence('observe', [
 ]);
 
 console.log('Current session:', session);`,
-            language: 'javascript'
-        },
-        {
-            type: 'markdown',
-            source: `## Hypothesis Tracking
+			language: "javascript",
+		},
+		{
+			type: "markdown",
+			source: `## Hypothesis Tracking
 
-Track hypotheses across loops to measure learning rate:`
-        },
-        {
-            type: 'code',
-            source: `// Hypothesis management
+Track hypotheses across loops to measure learning rate:`,
+		},
+		{
+			type: "code",
+			source: `// Hypothesis management
 class Hypothesis {
   constructor(statement, confidence = 0.5) {
     this.id = \`hyp-\${Date.now()}\`;
@@ -802,17 +802,17 @@ h1.addEvidence('Query logs show 5s+ execution times', true);
 h1.addEvidence('CPU usage normal during spikes', false);
 
 console.log('Hypothesis status:', h1);`,
-            language: 'javascript'
-        },
-        {
-            type: 'markdown',
-            source: `## Learning Rate Calculation
+			language: "javascript",
+		},
+		{
+			type: "markdown",
+			source: `## Learning Rate Calculation
 
-Learning rate = (validated hypotheses / total) × loop efficiency`
-        },
-        {
-            type: 'code',
-            source: `// Calculate learning metrics
+Learning rate = (validated hypotheses / total) × loop efficiency`,
+		},
+		{
+			type: "code",
+			source: `// Calculate learning metrics
 function calculateLearningRate() {
   const validated = session.hypotheses.filter(h => h.status === 'validated').length;
   const total = session.hypotheses.length;
@@ -834,17 +834,17 @@ function calculateLearningRate() {
 
 const metrics = calculateLearningRate();
 console.log('Learning Metrics:', metrics);`,
-            language: 'javascript'
-        }
-    ]
+			language: "javascript",
+		},
+	],
 };
 export const ULYSSES_PROTOCOL_PRESET = {
-    name: 'Ulysses Protocol',
-    description: 'Time-boxed execution with iteration limits and confidence tracking',
-    cells: [
-        {
-            type: 'markdown',
-            source: `# Ulysses Protocol Session
+	name: "Ulysses Protocol",
+	description: "Time-boxed execution with iteration limits and confidence tracking",
+	cells: [
+		{
+			type: "markdown",
+			source: `# Ulysses Protocol Session
 
 ## Overview
 Enforces disciplined, time-boxed execution with strict iteration limits to prevent scope creep.
@@ -859,11 +859,11 @@ Enforces disciplined, time-boxed execution with strict iteration limits to preve
 - **Phase**: Reconnaissance
 - **Gate Status**: 🔓 Open
 - **Confidence**: 0%
-- **Time Remaining**: 4:00:00`
-        },
-        {
-            type: 'code',
-            source: `// Initialize Ulysses Protocol Session
+- **Time Remaining**: 4:00:00`,
+		},
+		{
+			type: "code",
+			source: `// Initialize Ulysses Protocol Session
 const protocol = {
   sessionId: \`ulysses-\${Date.now()}\`,
   startTime: Date.now(),
@@ -912,15 +912,15 @@ const evidence = [
 
 const result = checkGateCriteria('recon', evidence);
 console.log('Gate check result:', result);`,
-            language: 'javascript'
-        },
-        {
-            type: 'markdown',
-            source: `## Constraint Monitoring & Auto-Escalation`
-        },
-        {
-            type: 'code',
-            source: `// Constraint violation detection
+			language: "javascript",
+		},
+		{
+			type: "markdown",
+			source: `## Constraint Monitoring & Auto-Escalation`,
+		},
+		{
+			type: "code",
+			source: `// Constraint violation detection
 function checkConstraints() {
   const violations = [];
   const elapsed = Date.now() - protocol.startTime;
@@ -974,17 +974,17 @@ protocol.metrics.iterations = 4;
 protocol.metrics.confidence = 0.65;
 
 const escalation = checkConstraints();`,
-            language: 'javascript'
-        },
-        {
-            type: 'markdown',
-            source: `## Confidence Tracking
+			language: "javascript",
+		},
+		{
+			type: "markdown",
+			source: `## Confidence Tracking
 
-Track confidence throughout phases to ensure quality decisions:`
-        },
-        {
-            type: 'code',
-            source: `// Confidence calculation
+Track confidence throughout phases to ensure quality decisions:`,
+		},
+		{
+			type: "code",
+			source: `// Confidence calculation
 class ConfidenceTracker {
   constructor() {
     this.history = [];
@@ -1051,11 +1051,11 @@ tracker.updateFactor('stakeholderAlignment', 0.9);
 
 console.log('Current confidence:', (protocol.metrics.confidence * 100).toFixed(1) + '%');
 console.log('Recommendation:', tracker.getRecommendation());`,
-            language: 'javascript'
-        },
-        {
-            type: 'markdown',
-            source: `## Ship/Abort Decision Matrix
+			language: "javascript",
+		},
+		{
+			type: "markdown",
+			source: `## Ship/Abort Decision Matrix
 
 | Metric | Status | Recommendation |
 |--------|--------|----------------|
@@ -1064,20 +1064,20 @@ console.log('Recommendation:', tracker.getRecommendation());`,
 | Time | ⏰ | Check remaining |
 | Scope | -- | Based on drift |
 
-Update the table dynamically based on your protocol.metrics values.`
-        }
-    ]
+Update the table dynamically based on your protocol.metrics values.`,
+		},
+	],
 };
 // Export all presets
 export const NOTEBOOK_PRESETS = {
-    tree_of_thought: TREE_OF_THOUGHT_PRESET,
-    beam_search: BEAM_SEARCH_PRESET,
-    mcts: MCTS_PRESET,
-    graph_of_thought: GRAPH_OF_THOUGHT_PRESET,
-    orchestration_suggest: ORCHESTRATION_SUGGEST_PRESET,
-    ooda_loop: OODA_LOOP_PRESET,
-    ulysses_protocol: ULYSSES_PROTOCOL_PRESET
+	tree_of_thought: TREE_OF_THOUGHT_PRESET,
+	beam_search: BEAM_SEARCH_PRESET,
+	mcts: MCTS_PRESET,
+	graph_of_thought: GRAPH_OF_THOUGHT_PRESET,
+	orchestration_suggest: ORCHESTRATION_SUGGEST_PRESET,
+	ooda_loop: OODA_LOOP_PRESET,
+	ulysses_protocol: ULYSSES_PROTOCOL_PRESET,
 };
 export function getPresetForPattern(pattern) {
-    return NOTEBOOK_PRESETS[pattern];
+	return NOTEBOOK_PRESETS[pattern];
 }

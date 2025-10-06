@@ -11,11 +11,7 @@ import type { BaseReasoningNode, BaseReasoningSession } from "./base.js";
 /**
  * Phase of MCTS algorithm
  */
-export type MCTSPhase =
-	| "selection"
-	| "expansion"
-	| "simulation"
-	| "backpropagation";
+export type MCTSPhase = "selection" | "expansion" | "simulation" | "backpropagation";
 
 /**
  * Rollout policy types
@@ -228,20 +224,13 @@ export interface MCTSOperations {
 	backpropagate(leafNodeId: string, value: number, session: MCTSSession): void;
 
 	/** Calculate UCB score for a node */
-	calculateUCB(
-		nodeId: string,
-		parentVisits: number,
-		session: MCTSSession,
-	): number;
+	calculateUCB(nodeId: string, parentVisits: number, session: MCTSSession): number;
 
 	/** Get best action from root */
 	getBestAction(session: MCTSSession): string;
 
 	/** Get action probabilities */
-	getActionProbabilities(
-		nodeId: string,
-		session: MCTSSession,
-	): Map<string, number>;
+	getActionProbabilities(nodeId: string, session: MCTSSession): Map<string, number>;
 
 	/** Run one complete MCTS iteration */
 	runIteration(session: MCTSSession): void;

@@ -1,0 +1,24 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🔍 Running pre-commit checks..."
+
+# Run linter
+echo "📝 Checking code style..."
+npm run lint || exit 1
+
+# Run type checking
+echo "🔧 Type checking..."
+npm run typecheck || exit 1
+
+# Run unit tests (fast tests only)
+echo "🧪 Running unit tests..."
+npm run test:unit || exit 1
+
+# Check for secrets (optional - requires Docker)
+if command -v docker &> /dev/null; then
+  echo "🔐 Checking for secrets..."
+  npm run check:secrets || echo "⚠️  Secrets check skipped (Docker required)"
+fi
+
+echo "✅ Pre-commit checks passed!"
