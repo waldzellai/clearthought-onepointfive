@@ -1,9 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { EphemeralNotebookStore } from "../src/notebook/EphemeralNotebook.js";
-import {
-	getPresetForPattern,
-	NOTEBOOK_PRESETS,
-} from "../src/notebook/presets.js";
+import { getPresetForPattern, NOTEBOOK_PRESETS } from "../src/notebook/presets.js";
 
 describe("EphemeralNotebook", () => {
 	let store: EphemeralNotebookStore;
@@ -60,12 +57,7 @@ describe("EphemeralNotebook", () => {
 
 		it("should add a code cell", () => {
 			const notebook = store.createNotebook("test-session");
-			const cell = store.addCell(
-				notebook.id,
-				"code",
-				'console.log("test");',
-				"javascript",
-			);
+			const cell = store.addCell(notebook.id, "code", 'console.log("test");', "javascript");
 
 			expect(cell).toBeDefined();
 			expect(cell?.type).toBe("code");
@@ -113,11 +105,7 @@ describe("EphemeralNotebook", () => {
 	describe("Code Execution", () => {
 		it("should execute simple JavaScript code", async () => {
 			const notebook = store.createNotebook("test-session");
-			const cell = store.addCell(
-				notebook.id,
-				"code",
-				'console.log("Hello, World!");',
-			);
+			const cell = store.addCell(notebook.id, "code", 'console.log("Hello, World!");');
 
 			const execution = await store.executeCell(notebook.id, cell?.id);
 
@@ -142,11 +130,7 @@ describe("EphemeralNotebook", () => {
 
 		it("should handle errors gracefully", async () => {
 			const notebook = store.createNotebook("test-session");
-			const cell = store.addCell(
-				notebook.id,
-				"code",
-				'throw new Error("Test error");',
-			);
+			const cell = store.addCell(notebook.id, "code", 'throw new Error("Test error");');
 
 			const execution = await store.executeCell(notebook.id, cell?.id);
 
@@ -166,11 +150,7 @@ describe("EphemeralNotebook", () => {
 
 		it("should handle console.error", async () => {
 			const notebook = store.createNotebook("test-session");
-			const cell = store.addCell(
-				notebook.id,
-				"code",
-				'console.error("Error message");',
-			);
+			const cell = store.addCell(notebook.id, "code", 'console.error("Error message");');
 
 			const execution = await store.executeCell(notebook.id, cell?.id);
 
@@ -207,11 +187,7 @@ describe("EphemeralNotebook", () => {
 
 		it("should include outputs in srcmd export", async () => {
 			const notebook = store.createNotebook("test-session");
-			const cell = store.addCell(
-				notebook.id,
-				"code",
-				'console.log("Output test");',
-			);
+			const cell = store.addCell(notebook.id, "code", 'console.log("Output test");');
 
 			await store.executeCell(notebook.id, cell?.id);
 

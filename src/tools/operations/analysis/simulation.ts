@@ -1,515 +1,747 @@
 /**
- * Simulation Operation
- * 
- * Runs simulations and models to understand system behavior
+ * Simulation Operation - Structured Journal Pattern
+ *
+ * Tracks simulation steps provided by AI reasoning.
+ * AI provides simulation steps through journal entries - we don't run simulations,
+ * we validate and track what the AI has reasoned about.
  */
 
-import { BaseOperation, type OperationContext, type OperationResult } from '../base.js';
-import type { SimulationResult } from '../../../types/index.js';
+import type { SimulationResult } from "../../../types/index.js";
+import { BaseOperation, type OperationContext, type OperationResult } from "../base.js";
+
+/**
+ * Simulation Step Interface
+ * AI provides these through journal entries
+ */
+interface SimulationStep {
+	stepNumber: number;
+	state: Record<string, number>;
+	changes: Record<string, number>;
+	reasoning: string;
+	timestamp?: number;
+	metadata?: Record<string, any>;
+}
+
+/**
+ * Journal Entry for Simulation
+ */
+interface SimulationJournalEntry {
+	entry: string;
+	entryNumber: number;
+	simulationStep: SimulationStep;
+	validationStatus?: "valid" | "invalid" | "warning";
+	validationMessages?: string[];
+}
+
+/**
+ * Validation Result
+ */
+interface ValidationResult {
+	isValid: boolean;
+	messages: string[];
+	warnings: string[];
+}
 
 export class SimulationOperation extends BaseOperation {
-  name = 'simulation';
-  category = 'analysis';
-  
-  async execute(context: OperationContext): Promise<OperationResult> {
-    const { sessionState, prompt, parameters } = context;
-    
-    const simulationType = this.getParam(parameters, 'simulationType', 'system-dynamics') as 'system-dynamics' | 'agent-based' | 'monte-carlo' | 'discrete-event' | 'cellular-automata';
-    const steps = this.getParam(parameters, 'steps', 100);
-    const initialState = (parameters.initialState as Record<string, number>) || this.parseInitialState(prompt);
-    const rules = (parameters.rules as string[]) || this.extractRules(prompt);
-    const timeStep = this.getParam(parameters, 'timeStep', 1);
-    
-    let result: SimulationResult;
-    
-    switch (simulationType) {
-      case 'system-dynamics':
-        result = this.runSystemDynamicsSimulation(initialState, rules, steps, timeStep);
-        break;
-      case 'agent-based':
-        const agentCount = this.getParam(parameters, 'agentCount', 10);
-        result = this.runAgentBasedSimulation(agentCount, rules, steps);
-        break;
-      case 'monte-carlo':
-        const iterations = this.getParam(parameters, 'iterations', 1000);
-        result = this.runMonteCarloSimulation(initialState, rules, iterations);
-        break;
-      case 'discrete-event':
-        const events = (parameters.events as Array<{time: number, type: string, data: any}>) || [];
-        result = this.runDiscreteEventSimulation(initialState, events, steps);
-        break;
-      case 'cellular-automata':
-        const gridSize = this.getParam(parameters, 'gridSize', 10);
-        result = this.runCellularAutomataSimulation(gridSize, rules, steps);
-        break;
-      default:
-        result = this.runSystemDynamicsSimulation(initialState, rules, steps, timeStep);
-    }
-    
-    return this.createResult({
-      simulationType,
-      result,
-      parameters: {
-        steps,
-        timeStep,
-        initialState,
-        rules
-      },
-      analysis: this.analyzeSimulationResults(result),
-      insights: this.generateInsights(result, simulationType),
-      recommendations: this.generateRecommendations(result, simulationType),
-      sessionContext: {
-        sessionId: sessionState.sessionId,
-        stats: sessionState.getStats(),
-      },
-    });
-  }
-  
-  private parseInitialState(prompt: string): Record<string, number> {
-    const state: Record<string, number> = {};
-    
-    // Look for variable assignments in the prompt
-    const assignments = prompt.match(/([a-zA-Z_]\w*)\s*[=:]\s*(\d+(?:\.\d+)?)/g);
-    if (assignments) {
-      for (const assignment of assignments) {
-        const match = assignment.match(/([a-zA-Z_]\w*)\s*[=:]\s*(\d+(?:\.\d+)?)/);
-        if (match) {
-          state[match[1]] = parseFloat(match[2]);
-        }
-      }
-    }
-    
-    // Default state if nothing found
-    if (Object.keys(state).length === 0) {
-      state.population = 100;
-      state.resources = 1000;
-      state.growth_rate = 0.05;
-    }
-    
-    return state;
-  }
-  
-  private extractRules(prompt: string): string[] {
-    const rules: string[] = [];
-    
-    // Look for rule-like statements
-    const sentences = prompt.split(/[.!?]+/);
-    for (const sentence of sentences) {
-      const trimmed = sentence.trim().toLowerCase();
-      if (trimmed.includes('if') || trimmed.includes('when') || trimmed.includes('increase') || trimmed.includes('decrease')) {
-        rules.push(sentence.trim());
-      }
-    }
-    
-    // Default rules if none found
-    if (rules.length === 0) {
-      rules.push('population increases by growth_rate * population');
-      rules.push('resources decrease by population * 0.1');
-      rules.push('if resources < 100, growth_rate decreases');
-    }
-    
-    return rules;
-  }
-  
-  private runSystemDynamicsSimulation(
-    initialState: Record<string, number>,
-    rules: string[],
-    steps: number,
-    timeStep: number
-  ): SimulationResult {
-    const trajectory: Array<Record<string, number>> = [];
-    let currentState = { ...initialState };
-    
-    for (let step = 0; step < steps; step++) {
-      trajectory.push({ ...currentState, time: step * timeStep });
-      
-      // Apply rules to update state
-      const newState = { ...currentState };
-      
-      // Simple rule interpreter
-      for (const rule of rules) {
-        this.applySystemDynamicsRule(rule, newState, timeStep);
-      }
-      
-      currentState = newState;
-    }
-    
-    return {
-      steps,
-      trajectory,
-      finalState: currentState
-    };
-  }
-  
-  private applySystemDynamicsRule(rule: string, state: Record<string, number>, timeStep: number): void {
-    const ruleLower = rule.toLowerCase();
-    
-    // Growth rule
-    if (ruleLower.includes('population') && ruleLower.includes('growth_rate')) {
-      const growthRate = state.growth_rate || 0.05;
-      const population = state.population || 0;
-      state.population = population + (population * growthRate * timeStep);
-    }
-    
-    // Resource consumption
-    if (ruleLower.includes('resources') && ruleLower.includes('decrease')) {
-      const population = state.population || 0;
-      const consumption = population * 0.1 * timeStep;
-      state.resources = Math.max(0, (state.resources || 1000) - consumption);
-    }
-    
-    // Resource constraint
-    if (ruleLower.includes('resources < 100')) {
-      if ((state.resources || 0) < 100) {
-        state.growth_rate = Math.max(0, (state.growth_rate || 0.05) * 0.9);
-      }
+	name = "simulation";
+	category = "analysis";
+
+	async execute(context: OperationContext): Promise<OperationResult> {
+		const { sessionState, parameters } = context;
+		const prompt = this.getParam(parameters, "prompt", "");
+
+		// Get simulation configuration from parameters
+		const simulationType = this.getParam(parameters, "simulationType", "system-dynamics") as
+			| "system-dynamics"
+			| "agent-based"
+			| "monte-carlo"
+			| "discrete-event"
+			| "cellular-automata";
+
+		// Get journal entries from AI
+		const journalEntries = this.getParam(
+			parameters,
+			"journalEntries",
+			[],
+		) as SimulationJournalEntry[];
+
+		// Validate we have entries
+		if (journalEntries.length === 0) {
+			return this.createResult({
+				error: "No simulation journal entries provided",
+				prompt: this.buildSimulationPrompt(simulationType, prompt),
+				simulationType,
+				sessionContext: {
+					sessionId: sessionState.sessionId,
+					stats: sessionState.getStats(),
+				},
+			});
+		}
+
+		// Process and validate journal entries
+		const processedResults = this.processJournalEntries(journalEntries, simulationType);
+
+		// Build simulation result from journal entries
+		const simulationResult = this.buildSimulationResult(
+			processedResults.validatedEntries,
+			simulationType,
+		);
+
+		// Generate analysis and insights
+		const analysis = this.analyzeSimulationResults(simulationResult);
+		const insights = this.generateInsights(simulationResult, simulationType, processedResults);
+		const recommendations = this.generateRecommendations(
+			simulationResult,
+			simulationType,
+			processedResults,
+		);
+
+		return this.createResult({
+			simulationType,
+			result: simulationResult,
+			journalEntries: processedResults.validatedEntries,
+			validation: processedResults.validation,
+			analysis,
+			insights,
+			recommendations,
+			sessionContext: {
+				sessionId: sessionState.sessionId,
+				stats: sessionState.getStats(),
+			},
+		});
+	}
+
+	/**
+	 * Build prompt to guide AI in providing simulation journal entries
+	 */
+	private buildSimulationPrompt(simulationType: string, userPrompt: string): string {
+		const basePrompt = `# Simulation Journal Entry Format
+
+You are running a ${simulationType} simulation. For each simulation step, provide a journal entry in this format:
+
+\`\`\`json
+{
+  "entry": "Population grows from 1000 to 1020 in step 1",
+  "entryNumber": 1,
+  "simulationStep": {
+    "stepNumber": 1,
+    "state": {
+      "population": 1020,
+      "growth_rate": 0.02,
+      "resources": 990
+    },
+    "changes": {
+      "population": +20,
+      "resources": -10
+    },
+    "reasoning": "Applied exponential growth formula: pop * (1 + rate). Resources consumed at 0.01 per capita.",
+    "metadata": {
+      "formula": "pop_new = pop_old * (1 + growth_rate)",
+      "constraints": ["resources >= 0", "population >= 0"]
     }
   }
-  
-  private runAgentBasedSimulation(agentCount: number, rules: string[], steps: number): SimulationResult {
-    const trajectory: Array<Record<string, number>> = [];
-    
-    // Initialize agents
-    const agents = Array.from({ length: agentCount }, (_, i) => ({
-      id: i,
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-      energy: 100,
-      state: 'active'
-    }));
-    
-    for (let step = 0; step < steps; step++) {
-      // Update agents
-      for (const agent of agents) {
-        agent.energy -= 1; // Energy decay
-        
-        if (agent.energy <= 0) {
-          agent.state = 'inactive';
-        } else {
-          // Random movement
-          agent.x += (Math.random() - 0.5) * 10;
-          agent.y += (Math.random() - 0.5) * 10;
-          
-          // Boundary conditions
-          agent.x = Math.max(0, Math.min(100, agent.x));
-          agent.y = Math.max(0, Math.min(100, agent.y));
-        }
-      }
-      
-      // Record aggregate statistics
-      const activeAgents = agents.filter(a => a.state === 'active').length;
-      const avgEnergy = agents.reduce((sum, a) => sum + a.energy, 0) / agents.length;
-      
-      trajectory.push({
-        time: step,
-        active_agents: activeAgents,
-        average_energy: avgEnergy,
-        total_agents: agentCount
-      });
-    }
-    
-    const finalState = {
-      active_agents: agents.filter(a => a.state === 'active').length,
-      total_agents: agentCount,
-      average_energy: agents.reduce((sum, a) => sum + a.energy, 0) / agents.length
-    };
-    
-    return { steps, trajectory, finalState };
-  }
-  
-  private runMonteCarloSimulation(
-    initialState: Record<string, number>,
-    rules: string[],
-    iterations: number
-  ): SimulationResult {
-    const results: Array<Record<string, number>> = [];
-    
-    for (let i = 0; i < iterations; i++) {
-      // Add randomness to initial state
-      const randomizedState: Record<string, number> = {};
-      for (const [key, value] of Object.entries(initialState)) {
-        // Add ±20% random variation
-        const variation = (Math.random() - 0.5) * 0.4;
-        randomizedState[key] = value * (1 + variation);
-      }
-      
-      // Run a short simulation
-      const shortSim = this.runSystemDynamicsSimulation(randomizedState, rules, 10, 1);
-      results.push({ iteration: i, ...shortSim.finalState });
-    }
-    
-    // Calculate summary statistics
-    const keys = Object.keys(results[0]).filter(k => k !== 'iteration');
-    const finalState: Record<string, number> = {};
-    
-    for (const key of keys) {
-      const values = results.map(r => r[key]).filter(v => typeof v === 'number');
-      finalState[key] = values.reduce((sum, v) => sum + v, 0) / values.length;
-      finalState[`${key}_std`] = Math.sqrt(
-        values.reduce((sum, v) => sum + Math.pow(v - finalState[key], 2), 0) / values.length
-      );
-    }
-    
-    return {
-      steps: iterations,
-      trajectory: results,
-      finalState
-    };
-  }
-  
-  private runDiscreteEventSimulation(
-    initialState: Record<string, number>,
-    events: Array<{time: number, type: string, data: any}>,
-    maxTime: number
-  ): SimulationResult {
-    const trajectory: Array<Record<string, number>> = [];
-    let currentState = { ...initialState };
-    const sortedEvents = events.sort((a, b) => a.time - b.time);
-    
-    let eventIndex = 0;
-    
-    for (let time = 0; time < maxTime; time++) {
-      // Process events at current time
-      while (eventIndex < sortedEvents.length && sortedEvents[eventIndex].time <= time) {
-        const event = sortedEvents[eventIndex];
-        this.processEvent(event, currentState);
-        eventIndex++;
-      }
-      
-      trajectory.push({ time, ...currentState });
-    }
-    
-    return {
-      steps: maxTime,
-      trajectory,
-      finalState: currentState
-    };
-  }
-  
-  private processEvent(event: {time: number, type: string, data: any}, state: Record<string, number>): void {
-    switch (event.type) {
-      case 'increase':
-        if (event.data.variable && typeof event.data.amount === 'number') {
-          state[event.data.variable] = (state[event.data.variable] || 0) + event.data.amount;
-        }
-        break;
-      case 'decrease':
-        if (event.data.variable && typeof event.data.amount === 'number') {
-          state[event.data.variable] = Math.max(0, (state[event.data.variable] || 0) - event.data.amount);
-        }
-        break;
-      case 'set':
-        if (event.data.variable && typeof event.data.value === 'number') {
-          state[event.data.variable] = event.data.value;
-        }
-        break;
-    }
-  }
-  
-  private runCellularAutomataSimulation(gridSize: number, rules: string[], steps: number): SimulationResult {
-    const trajectory: Array<Record<string, number>> = [];
-    
-    // Initialize grid
-    let grid = Array.from({ length: gridSize }, () => 
-      Array.from({ length: gridSize }, () => Math.random() > 0.5 ? 1 : 0)
-    );
-    
-    for (let step = 0; step < steps; step++) {
-      const newGrid = grid.map(row => [...row]);
-      
-      // Apply rules (simplified Conway's Game of Life)
-      for (let i = 0; i < gridSize; i++) {
-        for (let j = 0; j < gridSize; j++) {
-          const neighbors = this.countNeighbors(grid, i, j);
-          
-          if (grid[i][j] === 1) {
-            // Live cell
-            newGrid[i][j] = (neighbors === 2 || neighbors === 3) ? 1 : 0;
-          } else {
-            // Dead cell
-            newGrid[i][j] = (neighbors === 3) ? 1 : 0;
-          }
-        }
-      }
-      
-      grid = newGrid;
-      
-      // Record statistics
-      const aliveCells = grid.flat().reduce((sum: number, cell: number) => sum + cell, 0);
-      trajectory.push({
-        time: step,
-        alive_cells: aliveCells,
-        total_cells: gridSize * gridSize,
-        density: aliveCells / (gridSize * gridSize)
-      });
-    }
-    
-    const finalAliveCells = grid.flat().reduce((sum: number, cell: number) => sum + cell, 0);
-    const finalState = {
-      alive_cells: finalAliveCells,
-      total_cells: gridSize * gridSize,
-      density: finalAliveCells / (gridSize * gridSize)
-    };
-    
-    return { steps, trajectory, finalState };
-  }
-  
-  private countNeighbors(grid: number[][], row: number, col: number): number {
-    let count = 0;
-    const size = grid.length;
-    
-    for (let i = -1; i <= 1; i++) {
-      for (let j = -1; j <= 1; j++) {
-        if (i === 0 && j === 0) continue;
-        
-        const newRow = (row + i + size) % size;
-        const newCol = (col + j + size) % size;
-        count += grid[newRow][newCol];
-      }
-    }
-    
-    return count;
-  }
-  
-  private analyzeSimulationResults(result: SimulationResult): Record<string, any> {
-    const analysis: Record<string, any> = {};
-    
-    if (result.trajectory.length === 0) {
-      return { error: 'No trajectory data to analyze' };
-    }
-    
-    // Find trends in key variables
-    const firstState = result.trajectory[0];
-    const lastState = result.trajectory[result.trajectory.length - 1];
-    
-    analysis.trends = {};
-    for (const key of Object.keys(firstState)) {
-      if (typeof firstState[key] === 'number' && key !== 'time') {
-        const initial = firstState[key];
-        const final = lastState[key];
-        const change = final - initial;
-        const percentChange = initial !== 0 ? (change / initial) * 100 : 0;
-        
-        analysis.trends[key] = {
-          change,
-          percentChange,
-          direction: change > 0 ? 'increasing' : change < 0 ? 'decreasing' : 'stable'
-        };
-      }
-    }
-    
-    // Identify equilibrium
-    analysis.equilibrium = this.checkEquilibrium(result.trajectory);
-    
-    // Find peaks and valleys
-    analysis.extremes = this.findExtremes(result.trajectory);
-    
-    return analysis;
-  }
-  
-  private checkEquilibrium(trajectory: Array<Record<string, number>>): Record<string, boolean> {
-    const equilibrium: Record<string, boolean> = {};
-    
-    if (trajectory.length < 10) return equilibrium;
-    
-    const lastTenStates = trajectory.slice(-10);
-    
-    for (const key of Object.keys(trajectory[0])) {
-      if (typeof trajectory[0][key] === 'number' && key !== 'time') {
-        const values = lastTenStates.map(state => state[key]);
-        const mean = values.reduce((sum, v) => sum + v, 0) / values.length;
-        const variance = values.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) / values.length;
-        
-        // Consider equilibrium if variance is very small
-        equilibrium[key] = variance < mean * 0.01;
-      }
-    }
-    
-    return equilibrium;
-  }
-  
-  private findExtremes(trajectory: Array<Record<string, number>>): Record<string, any> {
-    const extremes: Record<string, any> = {};
-    
-    for (const key of Object.keys(trajectory[0])) {
-      if (typeof trajectory[0][key] === 'number' && key !== 'time') {
-        const values = trajectory.map(state => state[key]);
-        extremes[key] = {
-          min: Math.min(...values),
-          max: Math.max(...values),
-          minTime: trajectory[values.indexOf(Math.min(...values))].time,
-          maxTime: trajectory[values.indexOf(Math.max(...values))].time
-        };
-      }
-    }
-    
-    return extremes;
-  }
-  
-  private generateInsights(result: SimulationResult, simulationType: string): string[] {
-    const insights: string[] = [];
-    
-    if (result.trajectory.length === 0) {
-      insights.push('Simulation produced no data to analyze');
-      return insights;
-    }
-    
-    const analysis = this.analyzeSimulationResults(result);
-    
-    // General insights
-    if (analysis.equilibrium) {
-      const equilibriumVars = Object.entries(analysis.equilibrium)
-        .filter(([, isEquilibrium]) => isEquilibrium)
-        .map(([key]) => key);
-      
-      if (equilibriumVars.length > 0) {
-        insights.push(`Variables reaching equilibrium: ${equilibriumVars.join(', ')}`);
-      }
-    }
-    
-    // Type-specific insights
-    switch (simulationType) {
-      case 'system-dynamics':
-        insights.push('System dynamics simulation shows long-term behavior patterns');
-        break;
-      case 'agent-based':
-        insights.push('Agent-based simulation reveals emergent collective behavior');
-        break;
-      case 'monte-carlo':
-        insights.push('Monte Carlo simulation provides uncertainty estimates');
-        break;
-      case 'cellular-automata':
-        insights.push('Cellular automata simulation shows spatial pattern evolution');
-        break;
-    }
-    
-    return insights;
-  }
-  
-  private generateRecommendations(result: SimulationResult, simulationType: string): string[] {
-    const recommendations: string[] = [];
-    
-    recommendations.push('Validate simulation results against real-world data if available');
-    recommendations.push('Consider sensitivity analysis by varying key parameters');
-    
-    if (result.steps < 100) {
-      recommendations.push('Consider running longer simulations to observe long-term behavior');
-    }
-    
-    switch (simulationType) {
-      case 'monte-carlo':
-        recommendations.push('Increase number of iterations for more stable estimates');
-        break;
-      case 'agent-based':
-        recommendations.push('Experiment with different agent behaviors and interaction rules');
-        break;
-      case 'system-dynamics':
-        recommendations.push('Examine feedback loops and their stability');
-        break;
-    }
-    
-    return recommendations;
-  }
+}
+\`\`\`
+
+## Key Requirements:
+
+1. **entry**: Natural language description of what happened in this step
+2. **entryNumber**: Sequential numbering of journal entries
+3. **simulationStep**: Contains:
+   - **stepNumber**: The simulation step number
+   - **state**: Complete state after this step (all variables)
+   - **changes**: What changed from previous step (delta values, use +/- prefix)
+   - **reasoning**: WHY these changes occurred (formulas, rules applied)
+   - **metadata** (optional): Additional context (formulas used, constraints, events)
+
+## Simulation Type: ${simulationType}
+
+${this.getSimulationTypeGuidance(simulationType)}
+
+## Your Task:
+
+${userPrompt}
+
+Provide simulation journal entries following the format above.`;
+
+		return basePrompt;
+	}
+
+	/**
+	 * Get simulation-type-specific guidance
+	 */
+	private getSimulationTypeGuidance(simulationType: string): string {
+		const guidance: Record<string, string> = {
+			"system-dynamics": `
+**System Dynamics Simulation:**
+- Track continuous variables over time
+- Apply differential equations or difference equations
+- Show feedback loops and accumulations
+- Include stock and flow relationships`,
+
+			"agent-based": `
+**Agent-Based Simulation:**
+- Track individual agent states and behaviors
+- Show agent interactions and emergent patterns
+- Include spatial information if relevant
+- Report aggregate statistics (averages, counts)`,
+
+			"monte-carlo": `
+**Monte Carlo Simulation:**
+- Run multiple iterations with random variations
+- Track probability distributions
+- Report mean, standard deviation, confidence intervals
+- Show range of possible outcomes`,
+
+			"discrete-event": `
+**Discrete Event Simulation:**
+- Process events at specific time points
+- Track event queue and system state changes
+- Show causality between events
+- Include event timing and ordering`,
+
+			"cellular-automata": `
+**Cellular Automata Simulation:**
+- Track grid/cell states over time
+- Show rule applications and pattern evolution
+- Include spatial statistics (density, clusters)
+- Report emergent structures`,
+		};
+
+		return guidance[simulationType] || "";
+	}
+
+	/**
+	 * Process and validate journal entries from AI
+	 */
+	private processJournalEntries(
+		entries: SimulationJournalEntry[],
+		simulationType: string,
+	): {
+		validatedEntries: SimulationJournalEntry[];
+		validation: {
+			totalEntries: number;
+			validEntries: number;
+			invalidEntries: number;
+			warnings: number;
+		};
+		issues: string[];
+	} {
+		const validatedEntries: SimulationJournalEntry[] = [];
+		const issues: string[] = [];
+		let validCount = 0;
+		let invalidCount = 0;
+		let warningCount = 0;
+
+		// Sort entries by entry number
+		const sortedEntries = [...entries].sort((a, b) => a.entryNumber - b.entryNumber);
+
+		let previousStep: SimulationStep | null = null;
+
+		for (const entry of sortedEntries) {
+			const validation = this.validateJournalEntry(entry, previousStep, simulationType);
+
+			// Add validation status to entry
+			const validatedEntry = {
+				...entry,
+				validationStatus: validation.isValid
+					? ("valid" as const)
+					: validation.warnings.length > 0
+						? ("warning" as const)
+						: ("invalid" as const),
+				validationMessages: [...validation.messages, ...validation.warnings],
+			};
+
+			validatedEntries.push(validatedEntry);
+
+			if (validation.isValid) {
+				validCount++;
+				previousStep = entry.simulationStep;
+			} else {
+				invalidCount++;
+				issues.push(`Entry ${entry.entryNumber}: ${validation.messages.join("; ")}`);
+			}
+
+			if (validation.warnings.length > 0) {
+				warningCount++;
+			}
+		}
+
+		return {
+			validatedEntries,
+			validation: {
+				totalEntries: entries.length,
+				validEntries: validCount,
+				invalidEntries: invalidCount,
+				warnings: warningCount,
+			},
+			issues,
+		};
+	}
+
+	/**
+	 * Validate a single journal entry
+	 */
+	private validateJournalEntry(
+		entry: SimulationJournalEntry,
+		previousStep: SimulationStep | null,
+		simulationType: string,
+	): ValidationResult {
+		const messages: string[] = [];
+		const warnings: string[] = [];
+
+		// Check required fields
+		if (!entry.entry || typeof entry.entry !== "string") {
+			messages.push("Missing or invalid 'entry' field");
+		}
+
+		if (typeof entry.entryNumber !== "number" || entry.entryNumber < 1) {
+			messages.push("Invalid 'entryNumber': must be positive number");
+		}
+
+		if (!entry.simulationStep) {
+			messages.push("Missing 'simulationStep' object");
+			return { isValid: false, messages, warnings };
+		}
+
+		const step = entry.simulationStep;
+
+		// Validate simulation step
+		if (typeof step.stepNumber !== "number" || step.stepNumber < 1) {
+			messages.push("Invalid 'stepNumber': must be positive number");
+		}
+
+		if (!step.state || typeof step.state !== "object") {
+			messages.push("Missing or invalid 'state' object");
+		}
+
+		if (!step.changes || typeof step.changes !== "object") {
+			messages.push("Missing or invalid 'changes' object");
+		}
+
+		if (!step.reasoning || typeof step.reasoning !== "string") {
+			messages.push("Missing or invalid 'reasoning' string");
+		}
+
+		// Validate state values are numbers
+		if (step.state) {
+			for (const [key, value] of Object.entries(step.state)) {
+				if (typeof value !== "number") {
+					messages.push(`State variable '${key}' must be a number`);
+				}
+			}
+		}
+
+		// Validate changes match state (if we have previous step)
+		if (previousStep && step.state && step.changes) {
+			for (const [key, change] of Object.entries(step.changes)) {
+				if (typeof change !== "number") {
+					messages.push(`Change value for '${key}' must be a number`);
+					continue;
+				}
+
+				const previousValue = previousStep.state[key] ?? 0;
+				const currentValue = step.state[key] ?? 0;
+				const expectedValue = previousValue + change;
+
+				// Allow small floating point errors
+				if (Math.abs(currentValue - expectedValue) > 0.0001) {
+					warnings.push(
+						`Change inconsistency for '${key}': ` +
+							`previous=${previousValue}, change=${change}, ` +
+							`expected=${expectedValue}, actual=${currentValue}`,
+					);
+				}
+			}
+		}
+
+		// Type-specific validation
+		this.validateSimulationType(step, simulationType, messages, warnings);
+
+		return {
+			isValid: messages.length === 0,
+			messages,
+			warnings,
+		};
+	}
+
+	/**
+	 * Validation specific to simulation type
+	 */
+	private validateSimulationType(
+		step: SimulationStep,
+		simulationType: string,
+		messages: string[],
+		warnings: string[],
+	): void {
+		switch (simulationType) {
+			case "agent-based":
+				// Should have agent-related metrics
+				if (step.state) {
+					const hasAgentMetrics =
+						"agent_count" in step.state ||
+						"active_agents" in step.state ||
+						"total_agents" in step.state;
+					if (!hasAgentMetrics) {
+						warnings.push("Agent-based simulation should include agent count metrics");
+					}
+				}
+				break;
+
+			case "monte-carlo":
+				// Should have statistical measures
+				if (step.state && step.stepNumber > 10) {
+					const hasStats =
+						Object.keys(step.state).some((k) => k.includes("_mean")) ||
+						Object.keys(step.state).some((k) => k.includes("_std"));
+					if (!hasStats) {
+						warnings.push("Monte Carlo simulation should include statistical measures (mean, std)");
+					}
+				}
+				break;
+
+			case "cellular-automata":
+				// Should have grid/cell metrics
+				if (step.state) {
+					const hasCellMetrics =
+						"alive_cells" in step.state || "density" in step.state || "cell_count" in step.state;
+					if (!hasCellMetrics) {
+						warnings.push("Cellular automata simulation should include cell/grid metrics");
+					}
+				}
+				break;
+
+			case "discrete-event":
+				// Should have event-related info
+				if (step.metadata && !("event" in step.metadata) && !("events" in step.metadata)) {
+					warnings.push("Discrete-event simulation should include event information in metadata");
+				}
+				break;
+		}
+	}
+
+	/**
+	 * Build simulation result from validated journal entries
+	 */
+	private buildSimulationResult(
+		entries: SimulationJournalEntry[],
+		simulationType: string,
+	): SimulationResult {
+		const validEntries = entries.filter((e) => e.validationStatus === "valid");
+
+		if (validEntries.length === 0) {
+			return {
+				steps: 0,
+				trajectory: [],
+				finalState: {},
+			};
+		}
+
+		// Build trajectory from entries
+		const trajectory: Array<Record<string, number>> = validEntries.map((entry) => ({
+			time: entry.simulationStep.stepNumber,
+			...entry.simulationStep.state,
+		}));
+
+		const finalStep = validEntries[validEntries.length - 1].simulationStep;
+
+		return {
+			steps: validEntries.length,
+			trajectory,
+			finalState: finalStep.state,
+		};
+	}
+
+	/**
+	 * Analyze simulation results from journal entries
+	 */
+	private analyzeSimulationResults(result: SimulationResult): Record<string, any> {
+		const analysis: Record<string, any> = {};
+
+		if (result.trajectory.length === 0) {
+			return { error: "No trajectory data to analyze" };
+		}
+
+		// Find trends in key variables
+		const firstState = result.trajectory[0];
+		const lastState = result.trajectory[result.trajectory.length - 1];
+
+		analysis.trends = {};
+		for (const key of Object.keys(firstState)) {
+			if (typeof firstState[key] === "number" && key !== "time") {
+				const initial = firstState[key];
+				const final = lastState[key];
+				const change = final - initial;
+				const percentChange = initial !== 0 ? (change / initial) * 100 : 0;
+
+				analysis.trends[key] = {
+					initial,
+					final,
+					change,
+					percentChange,
+					direction: change > 0 ? "increasing" : change < 0 ? "decreasing" : "stable",
+				};
+			}
+		}
+
+		// Identify equilibrium
+		analysis.equilibrium = this.checkEquilibrium(result.trajectory);
+
+		// Find peaks and valleys
+		analysis.extremes = this.findExtremes(result.trajectory);
+
+		// Calculate rates of change
+		analysis.ratesOfChange = this.calculateRatesOfChange(result.trajectory);
+
+		return analysis;
+	}
+
+	/**
+	 * Check if variables have reached equilibrium
+	 */
+	private checkEquilibrium(trajectory: Array<Record<string, number>>): Record<string, boolean> {
+		const equilibrium: Record<string, boolean> = {};
+
+		if (trajectory.length < 10) return equilibrium;
+
+		const windowSize = Math.min(10, Math.floor(trajectory.length / 3));
+		const lastStates = trajectory.slice(-windowSize);
+
+		for (const key of Object.keys(trajectory[0])) {
+			if (typeof trajectory[0][key] === "number" && key !== "time") {
+				const values = lastStates.map((state) => state[key]);
+				const mean = values.reduce((sum, v) => sum + v, 0) / values.length;
+				const variance = values.reduce((sum, v) => sum + (v - mean) ** 2, 0) / values.length;
+				const stdDev = Math.sqrt(variance);
+
+				// Consider equilibrium if coefficient of variation is very small
+				const coefficientOfVariation = mean !== 0 ? stdDev / Math.abs(mean) : 0;
+				equilibrium[key] = coefficientOfVariation < 0.05;
+			}
+		}
+
+		return equilibrium;
+	}
+
+	/**
+	 * Find extreme values in trajectory
+	 */
+	private findExtremes(trajectory: Array<Record<string, number>>): Record<string, any> {
+		const extremes: Record<string, any> = {};
+
+		for (const key of Object.keys(trajectory[0])) {
+			if (typeof trajectory[0][key] === "number" && key !== "time") {
+				const values = trajectory.map((state) => state[key]);
+				const minValue = Math.min(...values);
+				const maxValue = Math.max(...values);
+				const minIndex = values.indexOf(minValue);
+				const maxIndex = values.indexOf(maxValue);
+
+				extremes[key] = {
+					min: minValue,
+					max: maxValue,
+					minTime: trajectory[minIndex].time,
+					maxTime: trajectory[maxIndex].time,
+					range: maxValue - minValue,
+				};
+			}
+		}
+
+		return extremes;
+	}
+
+	/**
+	 * Calculate rates of change for variables
+	 */
+	private calculateRatesOfChange(trajectory: Array<Record<string, number>>): Record<string, any> {
+		const rates: Record<string, any> = {};
+
+		if (trajectory.length < 2) return rates;
+
+		for (const key of Object.keys(trajectory[0])) {
+			if (typeof trajectory[0][key] === "number" && key !== "time") {
+				const changes: number[] = [];
+
+				for (let i = 1; i < trajectory.length; i++) {
+					const prev = trajectory[i - 1][key];
+					const curr = trajectory[i][key];
+					const timeDiff = trajectory[i].time - trajectory[i - 1].time;
+
+					if (timeDiff > 0) {
+						changes.push((curr - prev) / timeDiff);
+					}
+				}
+
+				if (changes.length > 0) {
+					const meanRate = changes.reduce((sum, r) => sum + r, 0) / changes.length;
+					const maxRate = Math.max(...changes);
+					const minRate = Math.min(...changes);
+
+					rates[key] = {
+						meanRate,
+						maxRate,
+						minRate,
+						accelerating: changes[changes.length - 1] > changes[0],
+					};
+				}
+			}
+		}
+
+		return rates;
+	}
+
+	/**
+	 * Generate insights from simulation results and journal entries
+	 */
+	private generateInsights(
+		result: SimulationResult,
+		simulationType: string,
+		processedResults: any,
+	): string[] {
+		const insights: string[] = [];
+
+		if (result.trajectory.length === 0) {
+			insights.push("Simulation produced no valid data to analyze");
+			return insights;
+		}
+
+		const analysis = this.analyzeSimulationResults(result);
+
+		// Validation insights
+		if (processedResults.validation.invalidEntries > 0) {
+			insights.push(
+				`${processedResults.validation.invalidEntries} invalid journal entries were found and excluded`,
+			);
+		}
+
+		if (processedResults.validation.warnings > 0) {
+			insights.push(`${processedResults.validation.warnings} entries had validation warnings`);
+		}
+
+		// Equilibrium insights
+		if (analysis.equilibrium) {
+			const equilibriumVars = Object.entries(analysis.equilibrium)
+				.filter(([, isEquilibrium]) => isEquilibrium)
+				.map(([key]) => key);
+
+			if (equilibriumVars.length > 0) {
+				insights.push(`Variables reaching equilibrium: ${equilibriumVars.join(", ")}`);
+			}
+		}
+
+		// Trend insights
+		if (analysis.trends) {
+			for (const [key, trend] of Object.entries(analysis.trends)) {
+				const t = trend as any;
+				if (Math.abs(t.percentChange) > 50) {
+					insights.push(
+						`${key} ${t.direction} significantly: ${t.percentChange.toFixed(1)}% change`,
+					);
+				}
+			}
+		}
+
+		// Type-specific insights
+		switch (simulationType) {
+			case "system-dynamics":
+				insights.push("System dynamics simulation tracks continuous variable evolution over time");
+				if (analysis.ratesOfChange) {
+					const accelerating = Object.entries(analysis.ratesOfChange)
+						.filter(([, r]: [string, any]) => r.accelerating)
+						.map(([key]) => key);
+					if (accelerating.length > 0) {
+						insights.push(`Accelerating growth detected in: ${accelerating.join(", ")}`);
+					}
+				}
+				break;
+
+			case "agent-based":
+				insights.push("Agent-based simulation reveals emergent collective behavior");
+				break;
+
+			case "monte-carlo":
+				insights.push("Monte Carlo simulation provides statistical distributions");
+				break;
+
+			case "discrete-event":
+				insights.push("Discrete-event simulation shows state changes at event boundaries");
+				break;
+
+			case "cellular-automata":
+				insights.push("Cellular automata simulation shows spatial pattern evolution");
+				break;
+		}
+
+		return insights;
+	}
+
+	/**
+	 * Generate recommendations based on results
+	 */
+	private generateRecommendations(
+		result: SimulationResult,
+		simulationType: string,
+		processedResults: any,
+	): string[] {
+		const recommendations: string[] = [];
+
+		// Data quality recommendations
+		if (processedResults.validation.invalidEntries > 0) {
+			recommendations.push(
+				"Review and correct invalid journal entries to improve simulation accuracy",
+			);
+		}
+
+		if (processedResults.validation.warnings > 0) {
+			recommendations.push(
+				"Investigate validation warnings - they may indicate inconsistencies in reasoning",
+			);
+		}
+
+		// General recommendations
+		recommendations.push("Validate simulation results against real-world data if available");
+		recommendations.push("Consider sensitivity analysis by varying key parameters");
+
+		if (result.steps < 50) {
+			recommendations.push(
+				"Consider running longer simulations to observe long-term behavior and equilibrium states",
+			);
+		}
+
+		// Type-specific recommendations
+		switch (simulationType) {
+			case "system-dynamics":
+				recommendations.push("Examine feedback loops and their stability");
+				recommendations.push("Check for conservation laws (energy, mass, etc.)");
+				break;
+
+			case "agent-based":
+				recommendations.push("Experiment with different agent behaviors and interaction rules");
+				recommendations.push("Analyze emergent patterns at different scales");
+				break;
+
+			case "monte-carlo":
+				if (result.steps < 1000) {
+					recommendations.push(
+						"Increase number of iterations for more stable statistical estimates",
+					);
+				}
+				recommendations.push("Report confidence intervals with all estimates");
+				break;
+
+			case "discrete-event":
+				recommendations.push("Verify event ordering and causality");
+				recommendations.push("Check for race conditions between concurrent events");
+				break;
+
+			case "cellular-automata":
+				recommendations.push("Explore different initial conditions");
+				recommendations.push("Analyze pattern stability and periodicity");
+				break;
+		}
+
+		return recommendations;
+	}
 }
 
 export default new SimulationOperation();

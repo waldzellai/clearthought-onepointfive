@@ -9,9 +9,7 @@ export async function executePython(
 	pythonCommand: string,
 	timeoutMs: number,
 ): Promise<CodeExecutionResult> {
-	const tempDir = await fs.promises.mkdtemp(
-		path.join(os.tmpdir(), "ct-python-"),
-	);
+	const tempDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), "ct-python-"));
 	const scriptPath = path.join(tempDir, "snippet.py");
 	await fs.promises.writeFile(scriptPath, code, "utf-8");
 

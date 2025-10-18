@@ -104,12 +104,11 @@ export class UnifiedStore {
 	/**
 	 * Get all items of a specific type
 	 */
-	getByType<T extends ClearThoughtData["type"]>(
-		type: T,
-	): Extract<ClearThoughtData, { type: T }>[] {
-		return Array.from(this.data.values()).filter(
-			(item) => item.type === type,
-		) as Extract<ClearThoughtData, { type: T }>[];
+	getByType<T extends ClearThoughtData["type"]>(type: T): Extract<ClearThoughtData, { type: T }>[] {
+		return Array.from(this.data.values()).filter((item) => item.type === type) as Extract<
+			ClearThoughtData,
+			{ type: T }
+		>[];
 	}
 
 	/**
@@ -189,12 +188,7 @@ export class UnifiedStore {
 	/**
 	 * Adds or updates a relation in the knowledge graph
 	 */
-	relate(
-		fromId: string,
-		toId: string,
-		relation: string,
-		properties?: Record<string, any>,
-	) {
+	relate(fromId: string, toId: string, relation: string, properties?: Record<string, any>) {
 		const id = `${fromId}::${relation}::${toId}`;
 		const existing = this.knowledgeGraph.edges.find((e) => e.id === id);
 		if (existing) {
@@ -240,10 +234,7 @@ export class UnifiedStore {
 			this.knowledgeGraphFile || "knowledge-graph.json",
 		);
 		try {
-			fs.writeFileSync(
-				dataPath,
-				JSON.stringify([...this.data.entries()], null, 2),
-			);
+			fs.writeFileSync(dataPath, JSON.stringify([...this.data.entries()], null, 2));
 		} catch {}
 		try {
 			this.saveKnowledgeGraph(graphPath);
@@ -254,10 +245,7 @@ export class UnifiedStore {
 		if (!this.persistenceDir) return;
 		const graphPath =
 			customPath ||
-			path.join(
-				this.persistenceDir,
-				this.knowledgeGraphFile || "knowledge-graph.json",
-			);
+			path.join(this.persistenceDir, this.knowledgeGraphFile || "knowledge-graph.json");
 		this.knowledgeGraph.updatedAt = new Date().toISOString();
 		try {
 			fs.writeFileSync(graphPath, JSON.stringify(this.knowledgeGraph, null, 2));

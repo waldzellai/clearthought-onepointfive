@@ -14,7 +14,7 @@ This server exposes a single tool `clear_thought` with many operations. Each cal
 - mental_model: Apply a mental model. Params: model, steps, reasoning, conclusion.
 - debugging_approach: Structured debugging. Params: approach, steps, findings, resolution.
 - creative_thinking: Idea generation. Params: ideas, techniques, connections, insights, iteration, nextIdeaNeeded.
-- visual_reasoning: Diagram ops. Params: diagramId, diagramType, iteration, nextOperationNeeded.
+- visual_reasoning: **Structured visual and spatial reasoning** through systematic analysis. Use this for analyzing spatial relationships, patterns, and transformations step by step. Params: entry (string - your visual analysis), entryNumber (number), totalEntries (number), nextEntryNeeded (boolean), optional: spatialRelations (string[]), patterns (string[]), transformations (string[]), isRevision (boolean), revisesEntry (number), branchFromEntry (number), branchId (string). **Returns minimal metadata only** - no prompt echo.
 - metacognitive_monitoring: Monitor reasoning. Params: stage, overallConfidence, uncertaintyAreas, recommendedApproach, iteration, nextAssessmentNeeded.
 - scientific_method: Inquiry workflow. Params: stage, iteration, nextStageNeeded.
 - collaborative_reasoning: Multi-persona. Params: personas, contributions, stage, activePersonaId, iteration, nextContributionNeeded.

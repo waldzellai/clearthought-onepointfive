@@ -118,14 +118,7 @@ export interface UnifiedReasoningArgs {
 	pattern: ReasoningPatternType;
 
 	/** Operation to perform */
-	operation:
-		| "create"
-		| "continue"
-		| "evaluate"
-		| "branch"
-		| "merge"
-		| "prune"
-		| "analyze";
+	operation: "create" | "continue" | "evaluate" | "branch" | "merge" | "prune" | "analyze";
 
 	/** Content for create operations */
 	content?: string;
