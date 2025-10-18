@@ -152,6 +152,135 @@ export class SequentialThinkingOperation extends BaseOperation {
 			});
 		}
 	}
+
+	/**
+	 * Tool description that guides AI behavior
+	 */
+	getToolDescription() {
+		return {
+			name: this.name,
+			description: `A detailed tool for dynamic and reflective problem-solving through thoughts.
+This tool helps analyze problems through a flexible thinking process that can adapt and evolve.
+Each thought can build on, question, or revise previous insights as understanding deepens.
+
+This tool provides scaffolding for methodical thinking, enforcing discipline through required
+parameters while allowing flexibility in approach. It does NOT perform computational reasoning -
+it provides structure for the AI to think step-by-step through complex problems.
+
+When to use this tool:
+- Breaking down complex problems into steps
+- Planning and design with room for revision
+- Analysis that might need course correction
+- Problems where the full scope might not be clear initially
+- Problems that require a multi-step solution
+- Tasks that need to maintain context over multiple steps
+- Situations where irrelevant information needs to be filtered out
+
+Key features:
+- You can adjust totalEntries up or down as you progress
+- You can question or revise previous thoughts
+- You can add more thoughts even after reaching what seemed like the end
+- You can express uncertainty and explore alternative approaches
+- Not every thought needs to build linearly - you can branch or backtrack
+- Generate and verify solution hypotheses
+- Repeat the process until satisfied with the solution
+
+Parameters explained:
+- entry (or thought): Your current thinking step, which can include regular analytical steps,
+  revisions of previous thoughts, questions about previous decisions, realizations about needing
+  more analysis, changes in approach, hypothesis generation, or hypothesis verification
+- nextEntryNeeded (or nextThoughtNeeded): True if you need more thinking, even if at what seemed like the end
+- entryNumber (or thoughtNumber): Current number in sequence (can go beyond initial total if needed)
+- totalEntries (or totalThoughts): Current estimate of thoughts needed (can be adjusted up/down)
+- isRevision: A boolean indicating if this thought revises previous thinking
+- revisesEntry (or revisesThought): If isRevision is true, which thought number is being reconsidered
+- branchFromEntry (or branchFromThought): If branching, which thought number is the branching point
+- branchId: Identifier for the current branch (if any)
+
+You should:
+1. Start with an initial estimate of needed thoughts, but be ready to adjust
+2. Feel free to question or revise previous thoughts
+3. Don't hesitate to add more thoughts if needed, even at the "end"
+4. Express uncertainty when present
+5. Mark thoughts that revise previous thinking or branch into new paths
+6. Ignore information that is irrelevant to the current step
+7. Generate a solution hypothesis when appropriate
+8. Verify the hypothesis based on the Chain of Thought steps
+9. Repeat the process until satisfied with the solution
+10. Provide a single, ideally correct answer as the final output
+11. Only set nextEntryNeeded to false when truly done and a satisfactory answer is reached`,
+			inputSchema: {
+				type: "object" as const,
+				properties: {
+					entry: {
+						type: "string",
+						description: "Your current thinking step (can also use 'thought')",
+					},
+					thought: {
+						type: "string",
+						description: "Alias for 'entry' - your current thinking step",
+					},
+					nextEntryNeeded: {
+						type: "boolean",
+						description: "Whether another thought step is needed (can also use 'nextThoughtNeeded')",
+					},
+					nextThoughtNeeded: {
+						type: "boolean",
+						description: "Alias for 'nextEntryNeeded' - whether another thought is needed",
+					},
+					entryNumber: {
+						type: "integer",
+						description: "Current thought number (can also use 'thoughtNumber')",
+						minimum: 1,
+					},
+					thoughtNumber: {
+						type: "integer",
+						description: "Alias for 'entryNumber' - current thought number",
+						minimum: 1,
+					},
+					totalEntries: {
+						type: "integer",
+						description: "Estimated total thoughts needed (can also use 'totalThoughts')",
+						minimum: 1,
+					},
+					totalThoughts: {
+						type: "integer",
+						description: "Alias for 'totalEntries' - estimated total thoughts needed",
+						minimum: 1,
+					},
+					isRevision: {
+						type: "boolean",
+						description: "Whether this revises previous thinking",
+					},
+					revisesEntry: {
+						type: "integer",
+						description: "Which thought is being reconsidered (can also use 'revisesThought')",
+						minimum: 1,
+					},
+					revisesThought: {
+						type: "integer",
+						description: "Alias for 'revisesEntry' - which thought is being reconsidered",
+						minimum: 1,
+					},
+					branchFromEntry: {
+						type: "integer",
+						description: "Branching point thought number (can also use 'branchFromThought')",
+						minimum: 1,
+					},
+					branchFromThought: {
+						type: "integer",
+						description: "Alias for 'branchFromEntry' - branching point thought number",
+						minimum: 1,
+					},
+					branchId: {
+						type: "string",
+						description: "Branch identifier",
+					},
+				},
+				required: ["nextEntryNeeded", "entryNumber", "totalEntries"],
+			},
+		};
+	}
 }
 
 // Export singleton instance
