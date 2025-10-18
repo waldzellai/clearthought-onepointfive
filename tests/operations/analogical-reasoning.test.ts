@@ -3,18 +3,28 @@
  */
 
 import { beforeEach, describe, expect, it } from "vitest";
-import { SessionStateManager } from "../../src/state/SessionState.js";
+import { SessionState } from "../../src/state/SessionState.js";
 import { AnalogicalReasoningOperation } from "../../src/tools/operations/analysis/analogical-reasoning.js";
 import type { OperationContext } from "../../src/tools/operations/base.js";
+import type { ServerConfig } from "../../src/config.js";
 
-describe("AnologicalReasoningOperation - Structured Journal Pattern", () => {
-	let operation: AnologicalReasoningOperation;
-	let sessionState: SessionStateManager;
+describe("AnalogicalReasoningOperation - Structured Journal Pattern", () => {
+	let operation: AnalogicalReasoningOperation;
+	let sessionState: SessionState;
 	let context: OperationContext;
+	let config: ServerConfig;
 
 	beforeEach(() => {
-		operation = new AnologicalReasoningOperation();
-		sessionState = new SessionStateManager();
+		operation = new AnalogicalReasoningOperation();
+		config = {
+			sessionTimeout: 600000,
+			maxThoughtsPerSession: 100,
+			persistenceEnabled: false,
+			persistenceDir: ".test-persistence",
+			knowledgeGraphFile: "test-graph.json",
+			logLevel: "silent",
+		};
+		sessionState = new SessionState("test-session", config);
 		context = {
 			sessionState,
 			parameters: {},

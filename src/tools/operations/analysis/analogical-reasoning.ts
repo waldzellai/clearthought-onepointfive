@@ -35,7 +35,6 @@ export class AnalogicalReasoningOperation extends BaseOperation {
 	name = "analogical_reasoning";
 	category = "analysis";
 
-	private entryHistory: AnalogyEntry[] = [];
 	private disableLogging = false;
 
 	constructor() {
@@ -320,6 +319,7 @@ export class AnalogicalReasoningOperation extends BaseOperation {
 
 	async execute(context: OperationContext): Promise<OperationResult> {
 		const { parameters, sessionState } = context;
+		const store = sessionState.getStore();
 
 		try {
 			// Validate input data
@@ -338,8 +338,12 @@ export class AnalogicalReasoningOperation extends BaseOperation {
 				validatedInput.totalEntries = validatedInput.entryNumber;
 			}
 
-			// Store in history
-			this.entryHistory.push(validatedInput);
+			// Retrieve history from session, update it, and store it back
+			const historyItems = store.getByType("analogy_entry");
+			const entryHistory = historyItems.map((item) => item.data as AnalogyEntry);
+			entryHistory.push(validatedInput);
+			const entryId = `analogy-${validatedInput.entryNumber}-${sessionState.sessionId}`;
+			store.add(entryId, { type: "analogy_entry", data: validatedInput });
 
 			// Terminal logging (stderr)
 			if (!this.disableLogging) {
@@ -350,17 +354,17 @@ export class AnalogicalReasoningOperation extends BaseOperation {
 			// Calculate metrics
 			const metrics = this.calculateAnalygyMetrics(validatedInput);
 			const insights = this.generateInsights(validatedInput);
-			const nextSteps = this.generateNextSteps(validatedInput, this.entryHistory);
+			const nextSteps = this.generateNextSteps(validatedInput, entryHistory);
 
 			// Convert to legacy format for compatibility
-			const legacyMappings = this.convertToLegacyFormat(this.entryHistory);
+			const legacyMappings = this.convertToLegacyFormat(entryHistory);
 
 			// Return minimal metadata - NEVER echo the full entry
 			return this.createResult({
 				entryNumber: validatedInput.entryNumber,
 				totalEntries: validatedInput.totalEntries,
 				nextEntryNeeded: validatedInput.nextEntryNeeded,
-				historyLength: this.entryHistory.length,
+				historyLength: entryHistory.length,
 				metrics,
 				insights,
 				nextSteps,
