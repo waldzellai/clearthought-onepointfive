@@ -10,20 +10,13 @@ import {
 	McpError,
 	ReadResourceRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
+import { instrumentServer } from "@shinzolabs/instrumentation-mcp";
 import type { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import type { ServerConfigSchema } from "./config.js";
 import { SessionState } from "./state/SessionState.js";
-import {
-	ClearThoughtParamsSchema,
-	handleClearThoughtTool,
-} from "./tools/index.js";
-import {
-	parseSrcbook,
-	type SrcbookResource,
-	srcbookToResource,
-} from "./utils/srcbookParser.js";
-import { instrumentServer } from "@shinzolabs/instrumentation-mcp";
+import { ClearThoughtParamsSchema, handleClearThoughtTool } from "./tools/index-refactored.js";
+import { parseSrcbook, type SrcbookResource, srcbookToResource } from "./utils/srcbookParser.js";
 
 /**
  * Creates a Clear Thought MCP server instance for a specific session
@@ -55,7 +48,8 @@ export default function createClearThoughtServer({
 	// Wire telemetry (Shinzo) per configuration/env
 	try {
 		if (config.telemetryProvider === "shinzo") {
-			const endpoint = process.env[config.telemetryEndpointEnv] ||
+			const endpoint =
+				process.env[config.telemetryEndpointEnv] ||
 				process.env.SHINZO_ENDPOINT ||
 				"https://api.app.shinzo.ai/telemetry/ingest_http";
 			const token = process.env[config.telemetryTokenEnv] || process.env.SHINZO_TOKEN;
@@ -92,8 +86,32 @@ export default function createClearThoughtServer({
 			{
 				name: "clear_thought",
 				title: "Clear Thought",
-				description:
-					"Unified Clear Thought reasoning tool. Operations: sequential_thinking (chain or patterns via pattern/patternParams), mental_model, debugging_approach, creative_thinking, visual_reasoning, metacognitive_monitoring, scientific_method, collaborative_reasoning, decision_framework, socratic_method, structured_argumentation, systems_thinking, research, analogical_reasoning, causal_analysis, statistical_reasoning, simulation, optimization, ethical_analysis, visual_dashboard, custom_framework, code_execution, tree_of_thought, beam_search, mcts, graph_of_thought, orchestration_suggest. See resource guide://clear-thought-operations for details.",
+				description: `Unified Clear Thought reasoning tool with structured journal operations.
+
+Primary operation - sequential_thinking:
+A detailed tool for dynamic and reflective problem-solving through thoughts.
+This tool helps analyze problems through a flexible thinking process that can adapt and evolve.
+Each thought can build on, question, or revise previous insights as understanding deepens.
+
+When to use sequential_thinking:
+- Breaking down complex problems into steps
+- Planning and design with room for revision
+- Analysis that might need course correction
+- Problems where the full scope might not be clear initially
+- Tasks that need to maintain context over multiple steps
+- Situations where irrelevant information needs to be filtered out
+
+Key features:
+- Adjust total_thoughts up or down as you progress
+- Question or revise previous thoughts
+- Add more thoughts even after reaching what seemed like the end
+- Express uncertainty and explore alternative approaches
+- Branch or backtrack - not every thought needs to build linearly
+- Generate and verify solution hypotheses
+
+Other operations: mental_model, debugging_approach, creative_thinking, visual_reasoning, metacognitive_monitoring, scientific_method, collaborative_reasoning, decision_framework, socratic_method, structured_argumentation, systems_thinking, research, analogical_reasoning, causal_analysis, statistical_reasoning, simulation, optimization, ethical_analysis, visual_dashboard, custom_framework, code_execution, tree_of_thought, beam_search, mcts, graph_of_thought, orchestration_suggest.
+
+See resource guide://clear-thought-operations for complete details.`,
 				inputSchema: zodToJsonSchema(ClearThoughtParamsSchema, {
 					strictUnions: true,
 				}) as any,
@@ -153,11 +171,8 @@ export default function createClearThoughtServer({
 	// Expose operation documentation as a resource for transparency
 	const operationsGuideUri = "guide://clear-thought-operations";
 	// Prefer external markdown file if present; fall back to embedded guide
-	const docsPath = path.resolve(
-		process.cwd(),
-		"docs/clear-thought-operations.md",
-	);
-	let operationsGuideMarkdown = `# Clear Thought Operations Guide\n\nThis server exposes a single tool 'clear_thought' with many operations.\n\n- sequential_thinking: Chain-of-thought. Optional pattern selection via parameters.pattern ('chain'|'tree'|'beam'|'mcts'|'graph'|'auto') and parameters.patternParams (pattern-specific settings).\n- mental_model: Apply a mental model (parameters: model, steps, reasoning, conclusion).\n- debugging_approach: Structured debugging (parameters: approach, steps, findings, resolution).\n- creative_thinking: Idea generation (parameters: ideas, techniques, connections, insights, iteration, nextIdeaNeeded).\n- visual_reasoning: Diagram operations (parameters: diagramId, diagramType, iteration, nextOperationNeeded).\n- metacognitive_monitoring: Monitor reasoning (parameters: stage, overallConfidence, uncertaintyAreas, recommendedApproach, iteration, nextAssessmentNeeded).\n- scientific_method: Inquiry workflow (parameters: stage, iteration, nextStageNeeded).\n- collaborative_reasoning: Multi-persona thinking (parameters: personas, contributions, stage, activePersonaId, iteration, nextContributionNeeded).\n- decision_framework: Options, criteria, outcomes (parameters: options, criteria, stakeholders, constraints, analysisType, stage, iteration, nextStageNeeded).\n- socratic_method: Question-driven argumentation (parameters: claim, premises, conclusion, argumentType, confidence, stage, iteration, nextArgumentNeeded).\n- structured_argumentation: Formal arguments (parameters: premises, conclusion, argumentType, confidence, respondsTo, supports, contradicts, strengths, weaknesses, relevance, iteration, nextArgumentNeeded).\n- systems_thinking: System mapping (parameters: components, relationships, feedbackLoops, emergentProperties, leveragePoints, iteration, nextAnalysisNeeded).\n- research: Returns structured placeholders for findings/citations (parameters: none defined).\n- analogical_reasoning: Map between domains (parameters: sourceDomain, targetDomain, mappings, inferredInsights).\n- causal_analysis: Causal graphs and interventions (parameters: graph, intervention, predictedEffects, counterfactual, notes).\n- statistical_reasoning: modes: summary|bayes|hypothesis_test|monte_carlo (parameters vary by mode).\n- simulation: Simple simulation shell (parameters: steps).\n- optimization: Simple optimization shell (parameters: none defined).\n- ethical_analysis: Evaluate with a framework (parameters: framework, score?).\n- visual_dashboard: Dashboard skeleton (parameters: panels, layout, refreshRate).\n- custom_framework: Define custom stages/rules/metrics (parameters: stages, rules, metrics).\n- code_execution: Restricted; only Python when enabled (parameters: language, code).\n- tree_of_thought | beam_search | mcts | graph_of_thought: Pattern-specific structures for exploration (parameters are pattern-specific).\n- orchestration_suggest: Suggests tool combinations (parameters: none defined).\n\nNote: Many operations accept a generic 'parameters' object; see field names above. For 'sequential_thinking', you can choose patterns or set pattern: 'auto' to let the server select based on prompt/params.`;
+	const docsPath = path.resolve(process.cwd(), "docs/clear-thought-operations.md");
+	let operationsGuideMarkdown = `# Clear Thought Operations Guide\n\nThis server exposes a single tool 'clear_thought' with many operations.\n\n- sequential_thinking: Chain-of-thought. Optional pattern selection via parameters.pattern ('chain'|'tree'|'beam'|'mcts'|'graph'|'auto') and parameters.patternParams (pattern-specific settings).\n- mental_model: Apply a mental model (parameters: model, steps, reasoning, conclusion).\n- debugging_approach: Structured debugging (parameters: approach, steps, findings, resolution).\n- creative_thinking: Idea generation (parameters: ideas, techniques, connections, insights, iteration, nextIdeaNeeded).\n- visual_reasoning: Structured visual and spatial reasoning through systematic analysis. Use this for analyzing spatial relationships, patterns, and transformations step by step (parameters: entry [string], entryNumber [number], totalEntries [number], nextEntryNeeded [boolean], optional: spatialRelations [string[]], patterns [string[]], transformations [string[]], isRevision [boolean], revisesEntry [number], branchFromEntry [number], branchId [string]). Returns minimal metadata only.\n- metacognitive_monitoring: Monitor reasoning (parameters: stage, overallConfidence, uncertaintyAreas, recommendedApproach, iteration, nextAssessmentNeeded).\n- scientific_method: Inquiry workflow (parameters: stage, iteration, nextStageNeeded).\n- collaborative_reasoning: Multi-persona thinking (parameters: personas, contributions, stage, activePersonaId, iteration, nextContributionNeeded).\n- decision_framework: Options, criteria, outcomes (parameters: options, criteria, stakeholders, constraints, analysisType, stage, iteration, nextStageNeeded).\n- socratic_method: Question-driven argumentation (parameters: claim, premises, conclusion, argumentType, confidence, stage, iteration, nextArgumentNeeded).\n- structured_argumentation: Formal arguments (parameters: premises, conclusion, argumentType, confidence, respondsTo, supports, contradicts, strengths, weaknesses, relevance, iteration, nextArgumentNeeded).\n- systems_thinking: System mapping (parameters: components, relationships, feedbackLoops, emergentProperties, leveragePoints, iteration, nextAnalysisNeeded).\n- research: Returns structured placeholders for findings/citations (parameters: none defined).\n- analogical_reasoning: Map between domains (parameters: sourceDomain, targetDomain, mappings, inferredInsights).\n- causal_analysis: Causal graphs and interventions (parameters: graph, intervention, predictedEffects, counterfactual, notes).\n- statistical_reasoning: modes: summary|bayes|hypothesis_test|monte_carlo (parameters vary by mode).\n- simulation: Simple simulation shell (parameters: steps).\n- optimization: Simple optimization shell (parameters: none defined).\n- ethical_analysis: Evaluate with a framework (parameters: framework, score?).\n- visual_dashboard: Dashboard skeleton (parameters: panels, layout, refreshRate).\n- custom_framework: Define custom stages/rules/metrics (parameters: stages, rules, metrics).\n- code_execution: Restricted; only Python when enabled (parameters: language, code).\n- tree_of_thought | beam_search | mcts | graph_of_thought: Pattern-specific structures for exploration (parameters are pattern-specific).\n- orchestration_suggest: Suggests tool combinations (parameters: none defined).\n\nNote: Many operations accept a generic 'parameters' object; see field names above. For 'sequential_thinking', you can choose patterns or set pattern: 'auto' to let the server select based on prompt/params.`;
 	try {
 		if (fs.existsSync(docsPath)) {
 			operationsGuideMarkdown = fs.readFileSync(docsPath, "utf-8");
@@ -169,8 +184,7 @@ export default function createClearThoughtServer({
 			{
 				uri: operationsGuideUri,
 				name: "Clear Thought Operations",
-				description:
-					"Documentation for all clear_thought operations and parameters",
+				description: "Documentation for all clear_thought operations and parameters",
 				mimeType: "text/markdown",
 			},
 			...notebooks,
@@ -306,42 +320,46 @@ export default function createClearThoughtServer({
 		// Handle operations guide
 		if (uri === operationsGuideUri) {
 			return {
-				contents: [{ 
-					uri: operationsGuideUri,
-					mimeType: "text/markdown",
-					text: operationsGuideMarkdown 
-				}],
+				contents: [
+					{
+						uri: operationsGuideUri,
+						mimeType: "text/markdown",
+						text: operationsGuideMarkdown,
+					},
+				],
 			};
 		}
 
 		// Handle example resources
 		if (uri.startsWith("examples://")) {
 			const exampleType = uri.replace("examples://", "");
-			
+
 			// Try multiple possible locations for the resources
 			const possiblePaths = [
 				path.join(process.cwd(), `dist/resources/examples/${exampleType}.md`), // dist from cwd
 				path.join(process.cwd(), `src/resources/examples/${exampleType}.md`), // src from cwd
 				path.join(process.cwd(), `resources/examples/${exampleType}.md`), // resources from cwd
 			];
-			
+
 			for (const examplePath of possiblePaths) {
 				try {
 					if (fs.existsSync(examplePath)) {
 						const content = fs.readFileSync(examplePath, "utf-8");
 						return {
-							contents: [{ 
-								uri: uri,
-								mimeType: "text/markdown",
-								text: content 
-							}],
+							contents: [
+								{
+									uri: uri,
+									mimeType: "text/markdown",
+									text: content,
+								},
+							],
 						};
 					}
 				} catch (error) {
 					// Continue to next path
 				}
 			}
-			
+
 			throw new McpError(
 				ErrorCode.InvalidParams,
 				`Example resource not found: ${uri}. Tried paths: ${possiblePaths.join(", ")}`,
@@ -401,11 +419,13 @@ ${notebooks.map((n) => `- **${n.name}** (${n.uri}): ${n.description}`).join("\n"
 `;
 
 			return {
-				contents: [{ 
-					uri: uri,
-					mimeType: "text/markdown",
-					text: interactionGuide 
-				}],
+				contents: [
+					{
+						uri: uri,
+						mimeType: "text/markdown",
+						text: interactionGuide,
+					},
+				],
 			};
 		}
 
@@ -415,18 +435,17 @@ ${notebooks.map((n) => `- **${n.name}** (${n.uri}): ${n.description}`).join("\n"
 			const content = notebookContents.get(notebookName);
 
 			if (!content) {
-				throw new McpError(
-					ErrorCode.InvalidParams,
-					`Notebook not found: ${uri}`,
-				);
+				throw new McpError(ErrorCode.InvalidParams, `Notebook not found: ${uri}`);
 			}
 
 			return {
-				contents: [{ 
-					uri: uri,
-					mimeType: "text/markdown",
-					text: content 
-				}],
+				contents: [
+					{
+						uri: uri,
+						mimeType: "text/markdown",
+						text: content,
+					},
+				],
 			};
 		}
 

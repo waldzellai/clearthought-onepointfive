@@ -170,11 +170,7 @@ export function createUlyssesSession(config?: {
 			title: "Reconnaissance",
 			status: "open",
 			entryCriteria: ["problem_defined", "context_gathered"],
-			exitCriteria: [
-				"scope_understood",
-				"risks_identified",
-				"success_criteria_defined",
-			],
+			exitCriteria: ["scope_understood", "risks_identified", "success_criteria_defined"],
 			entryMet: false,
 			exitMet: false,
 		},
@@ -184,11 +180,7 @@ export function createUlyssesSession(config?: {
 			title: "Strategic Planning",
 			status: "locked",
 			entryCriteria: ["reconnaissance_complete", "resources_available"],
-			exitCriteria: [
-				"approach_defined",
-				"milestones_set",
-				"contingencies_planned",
-			],
+			exitCriteria: ["approach_defined", "milestones_set", "contingencies_planned"],
 			entryMet: false,
 			exitMet: false,
 		},
@@ -198,11 +190,7 @@ export function createUlyssesSession(config?: {
 			title: "Implementation (≤3 iterations)",
 			status: "locked",
 			entryCriteria: ["plan_approved", "tools_ready"],
-			exitCriteria: [
-				"solution_working",
-				"tests_passing",
-				"iteration_limit_respected",
-			],
+			exitCriteria: ["solution_working", "tests_passing", "iteration_limit_respected"],
 			entryMet: false,
 			exitMet: false,
 		},
@@ -212,11 +200,7 @@ export function createUlyssesSession(config?: {
 			title: "Validation",
 			status: "locked",
 			entryCriteria: ["implementation_complete", "test_suite_ready"],
-			exitCriteria: [
-				"all_tests_pass",
-				"requirements_met",
-				"performance_acceptable",
-			],
+			exitCriteria: ["all_tests_pass", "requirements_met", "performance_acceptable"],
 			entryMet: false,
 			exitMet: false,
 		},
@@ -226,11 +210,7 @@ export function createUlyssesSession(config?: {
 			title: "Ship or Abort Decision",
 			status: "locked",
 			entryCriteria: ["validation_complete", "stakeholder_review"],
-			exitCriteria: [
-				"decision_made",
-				"rationale_documented",
-				"next_steps_clear",
-			],
+			exitCriteria: ["decision_made", "rationale_documented", "next_steps_clear"],
 			entryMet: false,
 			exitMet: false,
 		},
@@ -277,10 +257,7 @@ export function createUlyssesSession(config?: {
 /**
  * Checks if entry criteria are met for a gate
  */
-export function checkEntryCriteria(
-	gate: UlyssesGate,
-	evidence: string[],
-): boolean {
+export function checkEntryCriteria(gate: UlyssesGate, evidence: string[]): boolean {
 	// Simple check: all criteria must have some evidence
 	return gate.entryCriteria.every((criterion) =>
 		evidence.some((e) => e.toLowerCase().includes(criterion.replace("_", " "))),
@@ -290,10 +267,7 @@ export function checkEntryCriteria(
 /**
  * Checks if exit criteria are met for a gate
  */
-export function checkExitCriteria(
-	gate: UlyssesGate,
-	evidence: string[],
-): boolean {
+export function checkExitCriteria(gate: UlyssesGate, evidence: string[]): boolean {
 	// Simple check: all criteria must have some evidence
 	return gate.exitCriteria.every((criterion) =>
 		evidence.some((e) => e.toLowerCase().includes(criterion.replace("_", " "))),
@@ -354,9 +328,7 @@ export function advancePhase(
 	session: UlyssesSession,
 	evidence: string[],
 ): { success: boolean; newPhase?: UlyssesPhase; reason?: string } {
-	const currentGate = session.gates.find(
-		(g) => g.phase === session.currentPhase,
-	);
+	const currentGate = session.gates.find((g) => g.phase === session.currentPhase);
 	if (!currentGate) return { success: false, reason: "Current gate not found" };
 
 	const passage = attemptGatePassage(session, currentGate.id, evidence);
@@ -429,14 +401,12 @@ export function calculateConfidence(session: UlyssesSession): number {
 	if (recentNodes.length === 0) return 0;
 
 	const avgConfidence =
-		recentNodes.reduce((sum, node) => sum + node.confidence, 0) /
-		recentNodes.length;
+		recentNodes.reduce((sum, node) => sum + node.confidence, 0) / recentNodes.length;
 
 	// Adjust for iteration count (confidence decreases with more iterations)
 	const iterationPenalty =
 		session.implementationIteration > session.constraints.maxIterations
-			? 0.2 *
-				(session.implementationIteration - session.constraints.maxIterations)
+			? 0.2 * (session.implementationIteration - session.constraints.maxIterations)
 			: 0;
 
 	return Math.max(0, avgConfidence - iterationPenalty);
@@ -446,9 +416,7 @@ export function calculateConfidence(session: UlyssesSession): number {
  * Detects scope drift by analyzing scope changes
  */
 export function detectScopeDrift(session: UlyssesSession): number {
-	const scopeChanges = session.nodes.filter(
-		(n) => n.scopeChange && !n.scopeChange.approved,
-	);
+	const scopeChanges = session.nodes.filter((n) => n.scopeChange && !n.scopeChange.approved);
 
 	let driftScore = 0;
 	for (const change of scopeChanges.map((n) => n.scopeChange!)) {
@@ -504,10 +472,7 @@ export function checkConstraints(session: UlyssesSession): {
 	}
 
 	// Check confidence constraint
-	if (
-		session.metrics.confidence < session.constraints.minConfidence &&
-		session.nodes.length > 5
-	) {
+	if (session.metrics.confidence < session.constraints.minConfidence && session.nodes.length > 5) {
 		violations.push(
 			`Confidence below threshold (${(session.metrics.confidence * 100).toFixed(0)}% < ${(session.constraints.minConfidence * 100).toFixed(0)}%)`,
 		);
@@ -523,11 +488,7 @@ export function checkConstraints(session: UlyssesSession): {
 	// Determine escalation action
 	let escalation: UlyssesNode["escalated"] | undefined;
 	if (violations.length > 0 && session.policy.autoEscalate) {
-		if (
-			violations.some(
-				(v) => v.includes("Time limit") || v.includes("Iteration limit"),
-			)
-		) {
+		if (violations.some((v) => v.includes("Time limit") || v.includes("Iteration limit"))) {
 			escalation = {
 				reason: violations.join("; "),
 				action: "abort",
@@ -567,9 +528,7 @@ export function suggestNextActions(session: UlyssesSession): string[] {
 		constraintCheck.violations.forEach((v) => suggestions.push(`  - ${v}`));
 
 		if (constraintCheck.escalation) {
-			suggestions.push(
-				`🚨 AUTO-ESCALATION: ${constraintCheck.escalation.action}`,
-			);
+			suggestions.push(`🚨 AUTO-ESCALATION: ${constraintCheck.escalation.action}`);
 		}
 	}
 
@@ -588,8 +547,7 @@ export function suggestNextActions(session: UlyssesSession): string[] {
 			break;
 
 		case "implementation": {
-			const iterationsLeft =
-				session.constraints.maxIterations - session.implementationIteration;
+			const iterationsLeft = session.constraints.maxIterations - session.implementationIteration;
 			suggestions.push(
 				`Iteration ${session.implementationIteration} of ${session.constraints.maxIterations} (${iterationsLeft} remaining)`,
 			);
@@ -597,9 +555,7 @@ export function suggestNextActions(session: UlyssesSession): string[] {
 				suggestions.push("⚠️ Last iteration - ensure core requirements are met");
 			}
 			if (iterationsLeft === 0) {
-				suggestions.push(
-					"🛑 Iteration limit reached - move to validation or abort",
-				);
+				suggestions.push("🛑 Iteration limit reached - move to validation or abort");
 			}
 			break;
 		}
@@ -614,21 +570,15 @@ export function suggestNextActions(session: UlyssesSession): string[] {
 			if (session.metrics.confidence >= session.constraints.minConfidence) {
 				suggestions.push("✅ Confidence threshold met - consider shipping");
 			} else {
-				suggestions.push(
-					"❌ Confidence below threshold - consider abort or pivot",
-				);
+				suggestions.push("❌ Confidence below threshold - consider abort or pivot");
 			}
 			break;
 	}
 
 	// Time-based suggestions
-	const timeLeftMinutes = Math.round(
-		session.metrics.timeRemainingMs / 1000 / 60,
-	);
+	const timeLeftMinutes = Math.round(session.metrics.timeRemainingMs / 1000 / 60);
 	if (timeLeftMinutes < 30) {
-		suggestions.push(
-			`⏰ Only ${timeLeftMinutes} minutes remaining - prioritize critical items`,
-		);
+		suggestions.push(`⏰ Only ${timeLeftMinutes} minutes remaining - prioritize critical items`);
 	}
 
 	return suggestions;
@@ -717,9 +667,7 @@ export function exportToMarkdown(session: UlyssesSession): string {
 			lines.push(`\n### ${currentPhase.replace("_", " ").toUpperCase()}`);
 		}
 
-		lines.push(
-			`\n**[${node.timestamp}] Confidence: ${(node.confidence * 100).toFixed(0)}%**`,
-		);
+		lines.push(`\n**[${node.timestamp}] Confidence: ${(node.confidence * 100).toFixed(0)}%**`);
 		if (node.iteration) {
 			lines.push(`Iteration ${node.iteration}`);
 		}
@@ -731,9 +679,7 @@ export function exportToMarkdown(session: UlyssesSession): string {
 		}
 
 		if (node.scopeChange) {
-			lines.push(
-				`\n⚠️ Scope Change (${node.scopeChange.impact}): ${node.scopeChange.description}`,
-			);
+			lines.push(`\n⚠️ Scope Change (${node.scopeChange.impact}): ${node.scopeChange.description}`);
 			lines.push(`Approved: ${node.scopeChange.approved ? "Yes" : "No"}`);
 		}
 

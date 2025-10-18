@@ -70,10 +70,7 @@ const SRCBOOK_METADATA_RE = /^<!--\s*srcbook:(.+)\s*-->$/;
 /**
  * Parse a .src.md file into a structured Srcbook format
  */
-export function parseSrcbook(
-	contents: string,
-	filename: string,
-): ParsedSrcbook {
+export function parseSrcbook(contents: string, filename: string): ParsedSrcbook {
 	// Parse markdown tokens
 	const tokens = marked.lexer(contents);
 
@@ -118,10 +115,7 @@ function extractMetadata(tokens: Token[]): SrcbookMetadata {
 /**
  * Extract cells from markdown tokens
  */
-function extractCells(
-	tokens: Token[],
-	language: "javascript" | "typescript",
-): Cell[] {
+function extractCells(tokens: Token[], language: "javascript" | "typescript"): Cell[] {
 	const cells: Cell[] = [];
 	let currentMarkdown = "";
 
@@ -204,18 +198,12 @@ function extractCells(
 			}
 
 			// Only create a code cell if it's JS/TS code
-			if (
-				!token.lang ||
-				["javascript", "typescript", "js", "ts"].includes(token.lang)
-			) {
+			if (!token.lang || ["javascript", "typescript", "js", "ts"].includes(token.lang)) {
 				cells.push({
 					id: randomUUID(),
 					type: "code",
 					source: token.text,
-					language:
-						token.lang === "typescript" || token.lang === "ts"
-							? "typescript"
-							: language,
+					language: token.lang === "typescript" || token.lang === "ts" ? "typescript" : language,
 					filename: `cell-${cells.length}.${language === "typescript" ? "ts" : "js"}`,
 				});
 			} else {
@@ -244,10 +232,7 @@ function extractCells(
 /**
  * Convert a parsed Srcbook into MCP resource format
  */
-export function srcbookToResource(
-	srcbook: ParsedSrcbook,
-	notebookName: string,
-): SrcbookResource {
+export function srcbookToResource(srcbook: ParsedSrcbook, notebookName: string): SrcbookResource {
 	const codeLanguage = srcbook.metadata.language;
 	const cellCount = srcbook.cells.length;
 	const codeCellCount = srcbook.cells.filter((c) => c.type === "code").length;
@@ -261,16 +246,11 @@ export function srcbookToResource(
 		annotations: {
 			audience: ["assistant"],
 			priority: 0.8,
-			capabilities: [
-				codeLanguage,
-				"interactive-execution",
-				"literate-programming",
-			],
+			capabilities: [codeLanguage, "interactive-execution", "literate-programming"],
 			instructions: {
 				execution: "Use mcp__ide__executeCode to run code cells",
 				navigation: "Process cells sequentially for learning flow",
-				cellExtraction:
-					"Code cells are marked with ###### filename or are standalone code blocks",
+				cellExtraction: "Code cells are marked with ###### filename or are standalone code blocks",
 				interaction: `Extract ${codeLanguage} code and execute with appropriate tool`,
 			},
 			metadata: {
@@ -287,11 +267,7 @@ export function srcbookToResource(
 /**
  * Generate embedded resource for a specific cell
  */
-export function cellToEmbeddedResource(
-	cell: Cell,
-	notebookName: string,
-	cellIndex: number,
-): any {
+export function cellToEmbeddedResource(cell: Cell, notebookName: string, cellIndex: number): any {
 	if (cell.type === "code") {
 		return {
 			type: "resource",

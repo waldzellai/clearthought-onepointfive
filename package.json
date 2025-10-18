@@ -16,27 +16,39 @@
 		"LICENSE",
 		"package.json"
 	],
-	"main": "dist/src/index.js",
-	"types": "dist/src/index.d.ts",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
 	"exports": {
 		".": {
-			"import": "./dist/src/index.js",
-			"types": "./dist/src/index.d.ts"
+			"import": "./dist/index.js",
+			"types": "./dist/index.d.ts"
 		}
 	},
 	"bin": {
-		"clear-thought": "./dist/cli/stdio-server.js"
+		"clear-thought": "./dist/server.js"
 	},
 	"scripts": {
-		"build:stdio": "tsc cli/stdio-server.ts --outDir dist --module esnext --target es2020 --moduleResolution node --esModuleInterop true",
+		"build:stdio": "tsc",
 		"build:http": "npx @smithery/cli build",
 		"copy-resources": "mkdir -p dist/resources && cp -r src/resources/* dist/resources/",
 		"build": "npm run build:stdio && npm run build:http && npm run copy-resources",
 		"dev": "npx @smithery/cli dev",
 		"typecheck": "tsc --noEmit",
+		"lint": "npx @biomejs/biome check --write",
 		"check": "npx @biomejs/biome check --write --unsafe",
-		"test": "vitest",
-		"prepublishOnly": "npm run build && npm run typecheck",
+		"format": "npx @biomejs/biome format --write",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"test:unit": "vitest run tests/unit",
+		"test:integration": "vitest run tests/integration",
+		"test:coverage": "vitest run --coverage",
+		"test:ci": "vitest run --coverage --reporter=verbose --reporter=junit --outputFile=test-results/junit.xml",
+		"check:secrets": "npx detect-secrets-launcher --baseline .secrets.baseline",
+		"security:audit": "npm audit --audit-level=moderate",
+		"security:all": "npm run check:secrets && npm run security:audit",
+		"ci": "npm run lint && npm run typecheck && npm run test:coverage && npm run build",
+		"prepare": "husky",
+		"prepublishOnly": "npm run ci",
 		"version": "npm run check && git add -A",
 		"postversion": "git push && git push --tags"
 	},
@@ -50,15 +62,22 @@
 		"@shinzolabs/instrumentation-mcp": "^1.0.8",
 		"@smithery/sdk": "^1.5.5",
 		"@types/marked": "^5.0.2",
+		"chalk": "^5.6.2",
 		"json-schema": "^0.4.0",
 		"marked": "^15.0.12",
 		"zod": "^3.23.8"
 	},
 	"devDependencies": {
+		"@anthropic-ai/claude-agent-sdk": "^0.1.0",
 		"@smithery/cli": "^1.2.4",
+		"@types/json-schema": "^7.0.15",
 		"@types/node": "^22",
+		"@vitest/coverage-v8": "^3.2.4",
+		"detect-secrets": "^1.0.6",
+		"husky": "^9.1.7",
 		"tsx": "^4.20.5",
-		"typescript": "^5.3.3"
+		"typescript": "^5.3.3",
+		"vitest": "^3.2.4"
 	},
 	"keywords": [
 		"mcp",

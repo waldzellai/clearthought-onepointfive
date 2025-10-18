@@ -1,642 +1,385 @@
 /**
- * Optimization Operation
- * 
- * Applies optimization strategies and algorithms to find optimal solutions
+ * Optimization Operation - Structured Journal Pattern
+ *
+ * A structured tool for tracking optimization attempts through journal entries.
+ * The AI provides optimization iterations with parameters, objective values, and reasoning.
+ * The server tracks the optimization history without performing the optimization algorithms.
+ *
+ * This follows the structured journal pattern where the AI is responsible for the
+ * computational reasoning, and the server provides structure and persistence.
  */
 
-import { BaseOperation, type OperationContext, type OperationResult } from '../base.js';
-import type { OptimizationResult } from '../../../types/index.js';
+import { BaseOperation, type OperationContext, type OperationResult } from "../base.js";
 
-export class OptimizationOperation extends BaseOperation {
-  name = 'optimization';
-  category = 'analysis';
-  
-  async execute(context: OperationContext): Promise<OperationResult> {
-    const { sessionState, prompt, parameters } = context;
-    
-    const optimizationType = this.getParam(parameters, 'optimizationType', 'gradient-descent') as 'gradient-descent' | 'genetic-algorithm' | 'simulated-annealing' | 'linear-programming' | 'particle-swarm' | 'grid-search';
-    const objective = this.getParam(parameters, 'objective', 'maximize');
-    const variables = (parameters.variables as string[]) || this.extractVariables(prompt);
-    const constraints = (parameters.constraints as string[]) || this.extractConstraints(prompt);
-    const bounds = (parameters.bounds as Record<string, [number, number]>) || {};
-    const maxIterations = this.getParam(parameters, 'maxIterations', 100);
-    
-    let result: OptimizationResult;
-    
-    switch (optimizationType) {
-      case 'gradient-descent':
-        result = this.gradientDescentOptimization(variables, objective, bounds, maxIterations);
-        break;
-      case 'genetic-algorithm':
-        const populationSize = this.getParam(parameters, 'populationSize', 50);
-        result = this.geneticAlgorithmOptimization(variables, objective, bounds, populationSize, maxIterations);
-        break;
-      case 'simulated-annealing':
-        const temperature = this.getParam(parameters, 'temperature', 1000);
-        result = this.simulatedAnnealingOptimization(variables, objective, bounds, temperature, maxIterations);
-        break;
-      case 'linear-programming':
-        result = this.linearProgrammingOptimization(variables, constraints, objective, bounds);
-        break;
-      case 'particle-swarm':
-        const swarmSize = this.getParam(parameters, 'swarmSize', 30);
-        result = this.particleSwarmOptimization(variables, objective, bounds, swarmSize, maxIterations);
-        break;
-      case 'grid-search':
-        const gridResolution = this.getParam(parameters, 'gridResolution', 10);
-        result = this.gridSearchOptimization(variables, objective, bounds, gridResolution);
-        break;
-      default:
-        result = this.gradientDescentOptimization(variables, objective, bounds, maxIterations);
-    }
-    
-    return this.createResult({
-      optimizationType,
-      objective,
-      variables,
-      constraints,
-      result,
-      analysis: this.analyzeOptimizationResult(result, optimizationType),
-      recommendations: this.generateRecommendations(result, optimizationType),
-      sensitivityAnalysis: this.performSensitivityAnalysis(result, variables),
-      sessionContext: {
-        sessionId: sessionState.sessionId,
-        stats: sessionState.getStats(),
-      },
-    });
-  }
-  
-  private extractVariables(prompt: string): string[] {
-    const variables: string[] = [];
-    
-    // Look for optimization keywords and associated variables
-    const optimizeKeywords = ['optimize', 'maximize', 'minimize', 'best', 'optimal'];
-    const sentences = prompt.split(/[.!?]+/);
-    
-    for (const sentence of sentences) {
-      if (optimizeKeywords.some(keyword => sentence.toLowerCase().includes(keyword))) {
-        // Extract potential variables (nouns following keywords)
-        const words = sentence.split(/\s+/);
-        for (let i = 0; i < words.length - 1; i++) {
-          if (optimizeKeywords.includes(words[i].toLowerCase())) {
-            const nextWord = words[i + 1];
-            if (nextWord && nextWord.length > 2) {
-              variables.push(nextWord.toLowerCase());
-            }
-          }
-        }
-      }
-    }
-    
-    // Default variables if none found
-    if (variables.length === 0) {
-      variables.push('x', 'y');
-    }
-    
-    return [...new Set(variables)].slice(0, 5); // Remove duplicates, limit to 5
-  }
-  
-  private extractConstraints(prompt: string): string[] {
-    const constraints: string[] = [];
-    const sentences = prompt.split(/[.!?]+/);
-    
-    for (const sentence of sentences) {
-      const lower = sentence.toLowerCase();
-      if (lower.includes('constraint') || lower.includes('limit') || 
-          lower.includes('must') || lower.includes('cannot') ||
-          lower.includes('<=') || lower.includes('>=') || lower.includes('<') || lower.includes('>')) {
-        constraints.push(sentence.trim());
-      }
-    }
-    
-    return constraints;
-  }
-  
-  private gradientDescentOptimization(
-    variables: string[],
-    objective: string,
-    bounds: Record<string, [number, number]>,
-    maxIterations: number
-  ): OptimizationResult {
-    const dim = variables.length;
-    let solution = new Array(dim).fill(0).map(() => Math.random() * 10 - 5);
-    const learningRate = 0.01;
-    
-    for (let iter = 0; iter < maxIterations; iter++) {
-      const gradient = this.calculateNumericalGradient(solution, objective);
-      
-      // Update solution
-      for (let i = 0; i < dim; i++) {
-        if (objective === 'maximize') {
-          solution[i] += learningRate * gradient[i];
-        } else {
-          solution[i] -= learningRate * gradient[i];
-        }
-        
-        // Apply bounds
-        const varName = variables[i];
-        if (bounds[varName]) {
-          solution[i] = Math.max(bounds[varName][0], Math.min(bounds[varName][1], solution[i]));
-        }
-      }
-    }
-    
-    const finalObjective = this.evaluateObjectiveFunction(solution, objective);
-    
-    return {
-      bestDecisionVector: solution,
-      bestObjective: finalObjective,
-      iterations: maxIterations,
-      constraintsSatisfied: this.checkConstraints(solution, bounds)
-    };
-  }
-  
-  private geneticAlgorithmOptimization(
-    variables: string[],
-    objective: string,
-    bounds: Record<string, [number, number]>,
-    populationSize: number,
-    maxIterations: number
-  ): OptimizationResult {
-    const dim = variables.length;
-    let population = this.initializePopulation(populationSize, dim, bounds, variables);
-    
-    for (let generation = 0; generation < maxIterations; generation++) {
-      // Evaluate fitness
-      const fitness = population.map(individual => 
-        this.evaluateObjectiveFunction(individual, objective)
-      );
-      
-      // Selection (tournament selection)
-      const newPopulation: number[][] = [];
-      for (let i = 0; i < populationSize; i++) {
-        const parent1 = this.tournamentSelection(population, fitness, objective);
-        const parent2 = this.tournamentSelection(population, fitness, objective);
-        
-        // Crossover
-        const offspring = this.crossover(parent1, parent2);
-        
-        // Mutation
-        this.mutate(offspring, bounds, variables, 0.1);
-        
-        newPopulation.push(offspring);
-      }
-      
-      population = newPopulation;
-    }
-    
-    // Find best solution
-    const finalFitness = population.map(individual => 
-      this.evaluateObjectiveFunction(individual, objective)
-    );
-    
-    const bestIndex = objective === 'maximize' 
-      ? finalFitness.indexOf(Math.max(...finalFitness))
-      : finalFitness.indexOf(Math.min(...finalFitness));
-    
-    return {
-      bestDecisionVector: population[bestIndex],
-      bestObjective: finalFitness[bestIndex],
-      iterations: maxIterations,
-      constraintsSatisfied: this.checkConstraints(population[bestIndex], bounds)
-    };
-  }
-  
-  private simulatedAnnealingOptimization(
-    variables: string[],
-    objective: string,
-    bounds: Record<string, [number, number]>,
-    initialTemperature: number,
-    maxIterations: number
-  ): OptimizationResult {
-    const dim = variables.length;
-    let currentSolution = new Array(dim).fill(0).map(() => Math.random() * 10 - 5);
-    let currentObjective = this.evaluateObjectiveFunction(currentSolution, objective);
-    
-    let bestSolution = [...currentSolution];
-    let bestObjective = currentObjective;
-    
-    for (let iter = 0; iter < maxIterations; iter++) {
-      const temperature = initialTemperature * (1 - iter / maxIterations);
-      
-      // Generate neighbor solution
-      const neighborSolution = currentSolution.map(x => x + (Math.random() - 0.5) * 2);
-      
-      // Apply bounds
-      for (let i = 0; i < dim; i++) {
-        const varName = variables[i];
-        if (bounds[varName]) {
-          neighborSolution[i] = Math.max(bounds[varName][0], Math.min(bounds[varName][1], neighborSolution[i]));
-        }
-      }
-      
-      const neighborObjective = this.evaluateObjectiveFunction(neighborSolution, objective);
-      
-      // Accept or reject neighbor
-      const delta = objective === 'maximize' 
-        ? neighborObjective - currentObjective
-        : currentObjective - neighborObjective;
-      
-      if (delta > 0 || Math.exp(delta / temperature) > Math.random()) {
-        currentSolution = neighborSolution;
-        currentObjective = neighborObjective;
-        
-        // Update best solution
-        const isBetter = objective === 'maximize' 
-          ? neighborObjective > bestObjective
-          : neighborObjective < bestObjective;
-        
-        if (isBetter) {
-          bestSolution = [...neighborSolution];
-          bestObjective = neighborObjective;
-        }
-      }
-    }
-    
-    return {
-      bestDecisionVector: bestSolution,
-      bestObjective: bestObjective,
-      iterations: maxIterations,
-      constraintsSatisfied: this.checkConstraints(bestSolution, bounds)
-    };
-  }
-  
-  private linearProgrammingOptimization(
-    variables: string[],
-    constraints: string[],
-    objective: string,
-    bounds: Record<string, [number, number]>
-  ): OptimizationResult {
-    // Simplified linear programming using trial points
-    const dim = variables.length;
-    const numTrialPoints = 1000;
-    let bestSolution: number[] = [];
-    let bestObjective = objective === 'maximize' ? -Infinity : Infinity;
-    
-    for (let trial = 0; trial < numTrialPoints; trial++) {
-      const solution = new Array(dim).fill(0).map(() => Math.random() * 20 - 10);
-      
-      // Apply bounds
-      for (let i = 0; i < dim; i++) {
-        const varName = variables[i];
-        if (bounds[varName]) {
-          solution[i] = Math.max(bounds[varName][0], Math.min(bounds[varName][1], solution[i]));
-        }
-      }
-      
-      // Check if solution satisfies constraints (simplified)
-      if (this.satisfiesLinearConstraints(solution, constraints)) {
-        const objectiveValue = this.evaluateLinearObjective(solution, objective);
-        
-        const isBetter = objective === 'maximize' 
-          ? objectiveValue > bestObjective
-          : objectiveValue < bestObjective;
-        
-        if (isBetter) {
-          bestSolution = [...solution];
-          bestObjective = objectiveValue;
-        }
-      }
-    }
-    
-    return {
-      bestDecisionVector: bestSolution,
-      bestObjective: bestObjective,
-      iterations: numTrialPoints,
-      constraintsSatisfied: bestSolution.length > 0
-    };
-  }
-  
-  private particleSwarmOptimization(
-    variables: string[],
-    objective: string,
-    bounds: Record<string, [number, number]>,
-    swarmSize: number,
-    maxIterations: number
-  ): OptimizationResult {
-    const dim = variables.length;
-    
-    // Initialize particles
-    const particles = Array.from({ length: swarmSize }, () => ({
-      position: new Array(dim).fill(0).map(() => Math.random() * 10 - 5),
-      velocity: new Array(dim).fill(0).map(() => (Math.random() - 0.5) * 2),
-      bestPosition: new Array(dim).fill(0),
-      bestFitness: objective === 'maximize' ? -Infinity : Infinity
-    }));
-    
-    let globalBestPosition = new Array(dim).fill(0);
-    let globalBestFitness = objective === 'maximize' ? -Infinity : Infinity;
-    
-    // Initialize personal and global bests
-    for (const particle of particles) {
-      const fitness = this.evaluateObjectiveFunction(particle.position, objective);
-      particle.bestPosition = [...particle.position];
-      particle.bestFitness = fitness;
-      
-      const isBetter = objective === 'maximize' ? fitness > globalBestFitness : fitness < globalBestFitness;
-      if (isBetter) {
-        globalBestPosition = [...particle.position];
-        globalBestFitness = fitness;
-      }
-    }
-    
-    const w = 0.729; // Inertia weight
-    const c1 = 1.49445; // Cognitive component
-    const c2 = 1.49445; // Social component
-    
-    for (let iter = 0; iter < maxIterations; iter++) {
-      for (const particle of particles) {
-        // Update velocity
-        for (let d = 0; d < dim; d++) {
-          const r1 = Math.random();
-          const r2 = Math.random();
-          
-          particle.velocity[d] = w * particle.velocity[d] +
-            c1 * r1 * (particle.bestPosition[d] - particle.position[d]) +
-            c2 * r2 * (globalBestPosition[d] - particle.position[d]);
-        }
-        
-        // Update position
-        for (let d = 0; d < dim; d++) {
-          particle.position[d] += particle.velocity[d];
-          
-          // Apply bounds
-          const varName = variables[d];
-          if (bounds[varName]) {
-            particle.position[d] = Math.max(bounds[varName][0], Math.min(bounds[varName][1], particle.position[d]));
-          }
-        }
-        
-        // Evaluate fitness
-        const fitness = this.evaluateObjectiveFunction(particle.position, objective);
-        
-        // Update personal best
-        const isBetterPersonal = objective === 'maximize' 
-          ? fitness > particle.bestFitness 
-          : fitness < particle.bestFitness;
-        
-        if (isBetterPersonal) {
-          particle.bestPosition = [...particle.position];
-          particle.bestFitness = fitness;
-          
-          // Update global best
-          const isBetterGlobal = objective === 'maximize' 
-            ? fitness > globalBestFitness 
-            : fitness < globalBestFitness;
-          
-          if (isBetterGlobal) {
-            globalBestPosition = [...particle.position];
-            globalBestFitness = fitness;
-          }
-        }
-      }
-    }
-    
-    return {
-      bestDecisionVector: globalBestPosition,
-      bestObjective: globalBestFitness,
-      iterations: maxIterations,
-      constraintsSatisfied: this.checkConstraints(globalBestPosition, bounds)
-    };
-  }
-  
-  private gridSearchOptimization(
-    variables: string[],
-    objective: string,
-    bounds: Record<string, [number, number]>,
-    gridResolution: number
-  ): OptimizationResult {
-    const dim = variables.length;
-    let bestSolution: number[] = [];
-    let bestObjective = objective === 'maximize' ? -Infinity : Infinity;
-    let totalEvaluations = 0;
-    
-    const generateGridPoints = (dimension: number, currentPoint: number[]): void => {
-      if (dimension === dim) {
-        const objectiveValue = this.evaluateObjectiveFunction(currentPoint, objective);
-        totalEvaluations++;
-        
-        const isBetter = objective === 'maximize' 
-          ? objectiveValue > bestObjective
-          : objectiveValue < bestObjective;
-        
-        if (isBetter) {
-          bestSolution = [...currentPoint];
-          bestObjective = objectiveValue;
-        }
-        return;
-      }
-      
-      const varName = variables[dimension];
-      const [min, max] = bounds[varName] || [-10, 10];
-      
-      for (let i = 0; i < gridResolution; i++) {
-        const value = min + (max - min) * i / (gridResolution - 1);
-        currentPoint[dimension] = value;
-        generateGridPoints(dimension + 1, currentPoint);
-      }
-    };
-    
-    generateGridPoints(0, new Array(dim));
-    
-    return {
-      bestDecisionVector: bestSolution,
-      bestObjective: bestObjective,
-      iterations: totalEvaluations,
-      constraintsSatisfied: true
-    };
-  }
-  
-  // Helper methods
-  private evaluateObjectiveFunction(solution: number[], objective: string): number {
-    // Simple test function (sphere function)
-    const value = solution.reduce((sum, x) => sum + x * x, 0);
-    return objective === 'maximize' ? -value : value;
-  }
-  
-  private evaluateLinearObjective(solution: number[], objective: string): number {
-    // Simple linear objective: sum of variables
-    const value = solution.reduce((sum, x) => sum + x, 0);
-    return objective === 'maximize' ? value : -value;
-  }
-  
-  private calculateNumericalGradient(solution: number[], objective: string): number[] {
-    const gradient: number[] = [];
-    const h = 1e-5;
-    
-    for (let i = 0; i < solution.length; i++) {
-      const solutionPlus = [...solution];
-      const solutionMinus = [...solution];
-      
-      solutionPlus[i] += h;
-      solutionMinus[i] -= h;
-      
-      const fPlus = this.evaluateObjectiveFunction(solutionPlus, objective);
-      const fMinus = this.evaluateObjectiveFunction(solutionMinus, objective);
-      
-      gradient[i] = (fPlus - fMinus) / (2 * h);
-    }
-    
-    return gradient;
-  }
-  
-  private initializePopulation(
-    populationSize: number,
-    dim: number,
-    bounds: Record<string, [number, number]>,
-    variables: string[]
-  ): number[][] {
-    const population: number[][] = [];
-    
-    for (let i = 0; i < populationSize; i++) {
-      const individual: number[] = [];
-      for (let j = 0; j < dim; j++) {
-        const varName = variables[j];
-        const [min, max] = bounds[varName] || [-10, 10];
-        individual.push(Math.random() * (max - min) + min);
-      }
-      population.push(individual);
-    }
-    
-    return population;
-  }
-  
-  private tournamentSelection(population: number[][], fitness: number[], objective: string): number[] {
-    const tournamentSize = 3;
-    let bestIndex = Math.floor(Math.random() * population.length);
-    
-    for (let i = 1; i < tournamentSize; i++) {
-      const candidateIndex = Math.floor(Math.random() * population.length);
-      const isBetter = objective === 'maximize' 
-        ? fitness[candidateIndex] > fitness[bestIndex]
-        : fitness[candidateIndex] < fitness[bestIndex];
-      
-      if (isBetter) {
-        bestIndex = candidateIndex;
-      }
-    }
-    
-    return [...population[bestIndex]];
-  }
-  
-  private crossover(parent1: number[], parent2: number[]): number[] {
-    const offspring: number[] = [];
-    for (let i = 0; i < parent1.length; i++) {
-      offspring.push(Math.random() < 0.5 ? parent1[i] : parent2[i]);
-    }
-    return offspring;
-  }
-  
-  private mutate(
-    individual: number[],
-    bounds: Record<string, [number, number]>,
-    variables: string[],
-    mutationRate: number
-  ): void {
-    for (let i = 0; i < individual.length; i++) {
-      if (Math.random() < mutationRate) {
-        const varName = variables[i];
-        const [min, max] = bounds[varName] || [-10, 10];
-        individual[i] += (Math.random() - 0.5) * (max - min) * 0.1;
-        individual[i] = Math.max(min, Math.min(max, individual[i]));
-      }
-    }
-  }
-  
-  private checkConstraints(solution: number[], bounds: Record<string, [number, number]>): boolean {
-    // Check if solution satisfies bounds
-    for (const [varName, [min, max]] of Object.entries(bounds)) {
-      const varIndex = Object.keys(bounds).indexOf(varName);
-      if (varIndex >= 0 && varIndex < solution.length) {
-        if (solution[varIndex] < min || solution[varIndex] > max) {
-          return false;
-        }
-      }
-    }
-    return true;
-  }
-  
-  private satisfiesLinearConstraints(solution: number[], constraints: string[]): boolean {
-    // Simplified constraint checking
-    // In a real implementation, this would parse and evaluate constraint expressions
-    return true;
-  }
-  
-  private analyzeOptimizationResult(result: OptimizationResult, optimizationType: string): Record<string, any> {
-    const analysis: Record<string, any> = {};
-    
-    analysis.convergence = {
-      iterations: result.iterations,
-      constraintsSatisfied: result.constraintsSatisfied,
-      objectiveValue: result.bestObjective
-    };
-    
-    analysis.solutionQuality = this.assessSolutionQuality(result, optimizationType);
-    
-    return analysis;
-  }
-  
-  private assessSolutionQuality(result: OptimizationResult, optimizationType: string): string {
-    if (!result.constraintsSatisfied) {
-      return 'Poor - constraints violated';
-    }
-    
-    // Simple quality assessment based on objective value
-    const objectiveValue = Math.abs(result.bestObjective);
-    if (objectiveValue < 1) return 'Excellent';
-    if (objectiveValue < 10) return 'Good';
-    if (objectiveValue < 100) return 'Fair';
-    return 'Poor';
-  }
-  
-  private performSensitivityAnalysis(result: OptimizationResult, variables: string[]): Record<string, number> {
-    const sensitivity: Record<string, number> = {};
-    const baseObjective = result.bestObjective;
-    const perturbation = 0.01;
-    
-    for (let i = 0; i < variables.length && i < result.bestDecisionVector.length; i++) {
-      const perturbedSolution = [...result.bestDecisionVector];
-      perturbedSolution[i] += perturbation;
-      
-      const perturbedObjective = this.evaluateObjectiveFunction(perturbedSolution, 'minimize');
-      sensitivity[variables[i]] = Math.abs(perturbedObjective - baseObjective) / perturbation;
-    }
-    
-    return sensitivity;
-  }
-  
-  private generateRecommendations(result: OptimizationResult, optimizationType: string): string[] {
-    const recommendations: string[] = [];
-    
-    if (!result.constraintsSatisfied) {
-      recommendations.push('Review and relax constraints if possible');
-      recommendations.push('Consider penalty methods to handle constraint violations');
-    }
-    
-    if (result.iterations >= 100) {
-      recommendations.push('Consider increasing iteration limit for potentially better solutions');
-    }
-    
-    switch (optimizationType) {
-      case 'gradient-descent':
-        recommendations.push('Try different learning rates or adaptive learning rate schedules');
-        break;
-      case 'genetic-algorithm':
-        recommendations.push('Experiment with different crossover and mutation operators');
-        break;
-      case 'simulated-annealing':
-        recommendations.push('Adjust cooling schedule for better exploration-exploitation balance');
-        break;
-      case 'particle-swarm':
-        recommendations.push('Tune inertia weight and acceleration coefficients');
-        break;
-    }
-    
-    recommendations.push('Validate solution with domain experts');
-    recommendations.push('Consider multi-objective optimization if trade-offs exist');
-    
-    return recommendations;
-  }
+export interface OptimizationIteration {
+	parameters: Record<string, number>; // Parameter values for this iteration
+	objectiveValue: number; // Objective function value
+	improvement: number; // Improvement from previous iteration
+	reasoning: string; // Explanation of why these parameters were chosen
+	constraintsSatisfied?: boolean; // Whether constraints are satisfied
+	gradientInfo?: Record<string, number>; // Optional gradient information
+	metadata?: Record<string, unknown>; // Additional algorithm-specific data
 }
 
+export interface OptimizationEntry {
+	entry: string; // Description of this optimization attempt
+	entryNumber: number;
+	iteration: OptimizationIteration;
+	nextEntryNeeded?: boolean;
+	totalEntries?: number;
+}
+
+export class OptimizationOperation extends BaseOperation {
+	name = "optimization";
+	category = "analysis";
+
+	private optimizationHistory: OptimizationEntry[] = [];
+	private bestIteration: OptimizationIteration | null = null;
+	private disableLogging = false;
+
+	constructor() {
+		super();
+		// Check environment variable for logging control
+		this.disableLogging = (process.env.DISABLE_OPTIMIZATION_LOGGING || "").toLowerCase() === "true";
+	}
+
+	/**
+	 * Validate input data with strict type checking
+	 */
+	private validateData(input: unknown): OptimizationEntry {
+		const data = input as Record<string, unknown>;
+
+		if (!data.entry || typeof data.entry !== "string") {
+			throw new Error("Invalid entry: must be a string describing the optimization attempt");
+		}
+		if (!data.entryNumber || typeof data.entryNumber !== "number") {
+			throw new Error("Invalid entryNumber: must be a number indicating current iteration");
+		}
+		if (!data.iteration || typeof data.iteration !== "object") {
+			throw new Error("Invalid iteration: must be an object containing optimization data");
+		}
+
+		const iteration = data.iteration as Record<string, unknown>;
+		if (!iteration.parameters || typeof iteration.parameters !== "object") {
+			throw new Error("Invalid iteration.parameters: must be an object with parameter values");
+		}
+		if (typeof iteration.objectiveValue !== "number") {
+			throw new Error("Invalid iteration.objectiveValue: must be a number");
+		}
+		if (typeof iteration.improvement !== "number") {
+			throw new Error("Invalid iteration.improvement: must be a number");
+		}
+		if (!iteration.reasoning || typeof iteration.reasoning !== "string") {
+			throw new Error("Invalid iteration.reasoning: must be a string explaining the iteration");
+		}
+
+		return {
+			entry: data.entry,
+			entryNumber: data.entryNumber,
+			iteration: {
+				parameters: iteration.parameters as Record<string, number>,
+				objectiveValue: iteration.objectiveValue,
+				improvement: iteration.improvement,
+				reasoning: iteration.reasoning,
+				constraintsSatisfied: iteration.constraintsSatisfied as boolean | undefined,
+				gradientInfo: iteration.gradientInfo as Record<string, number> | undefined,
+				metadata: iteration.metadata as Record<string, unknown> | undefined,
+			},
+			nextEntryNeeded: data.nextEntryNeeded as boolean | undefined,
+			totalEntries: data.totalEntries as number | undefined,
+		};
+	}
+
+	/**
+	 * Format optimization entry for terminal logging
+	 */
+	private formatEntry(data: OptimizationEntry): string {
+		const { entryNumber, entry, iteration } = data;
+
+		const paramStr = Object.entries(iteration.parameters)
+			.map(([key, value]) => `${key}: ${value.toFixed(4)}`)
+			.join(", ");
+
+		const improvementStr =
+			iteration.improvement >= 0
+				? `+${iteration.improvement.toFixed(6)}`
+				: iteration.improvement.toFixed(6);
+
+		const gradientStr = iteration.gradientInfo
+			? "\n│ Gradient: " +
+				Object.entries(iteration.gradientInfo)
+					.map(([key, value]) => `${key}: ${value.toFixed(4)}`)
+					.join(", ")
+			: "";
+
+		const constraintsStr =
+			iteration.constraintsSatisfied !== undefined
+				? `\n│ Constraints: ${iteration.constraintsSatisfied ? "✓ Satisfied" : "✗ Violated"}`
+				: "";
+
+		const border = "─".repeat(80);
+
+		return `
+┌${border}┐
+│ 🎯 Optimization Iteration ${entryNumber} │
+├${border}┤
+│ ${entry.padEnd(78)} │
+├${border}┤
+│ Parameters: ${paramStr.padEnd(66)} │
+│ Objective:  ${iteration.objectiveValue.toFixed(6).padEnd(66)} │
+│ Improvement: ${improvementStr.padEnd(65)} │${gradientStr}${constraintsStr}
+├${border}┤
+│ Reasoning: ${iteration.reasoning.padEnd(67)} │
+└${border}┘`;
+	}
+
+	/**
+	 * Update best iteration tracking
+	 */
+	private updateBestIteration(
+		iteration: OptimizationIteration,
+		objective: "maximize" | "minimize",
+	): void {
+		if (!this.bestIteration) {
+			this.bestIteration = iteration;
+			return;
+		}
+
+		const isBetter =
+			objective === "maximize"
+				? iteration.objectiveValue > this.bestIteration.objectiveValue
+				: iteration.objectiveValue < this.bestIteration.objectiveValue;
+
+		if (isBetter) {
+			this.bestIteration = iteration;
+		}
+	}
+
+	/**
+	 * Generate optimization summary
+	 */
+	private generateSummary(objective: "maximize" | "minimize"): Record<string, unknown> {
+		if (this.optimizationHistory.length === 0) {
+			return {
+				status: "no_data",
+				message: "No optimization iterations recorded",
+			};
+		}
+
+		const totalIterations = this.optimizationHistory.length;
+		const totalImprovement = this.optimizationHistory.reduce(
+			(sum, entry) => sum + entry.iteration.improvement,
+			0,
+		);
+
+		const convergenceRate = totalIterations > 1 ? totalImprovement / totalIterations : 0;
+
+		const constraintsSatisfied = this.optimizationHistory.every(
+			(entry) => entry.iteration.constraintsSatisfied !== false,
+		);
+
+		return {
+			totalIterations,
+			totalImprovement,
+			convergenceRate,
+			constraintsSatisfied,
+			bestIteration: this.bestIteration,
+			optimizationPath: this.optimizationHistory.map((entry) => ({
+				iteration: entry.entryNumber,
+				objectiveValue: entry.iteration.objectiveValue,
+				improvement: entry.iteration.improvement,
+			})),
+		};
+	}
+
+	async execute(context: OperationContext): Promise<OperationResult> {
+		const { parameters } = context;
+
+		try {
+			// Extract objective type (default to minimize)
+			const objective = (parameters.objective as "maximize" | "minimize") || "minimize";
+
+			// Validate input data
+			const validatedInput = this.validateData({
+				entry: parameters.entry,
+				entryNumber: parameters.entryNumber,
+				iteration: parameters.iteration,
+				nextEntryNeeded: parameters.nextEntryNeeded,
+				totalEntries: parameters.totalEntries,
+			});
+
+			// Store in history
+			this.optimizationHistory.push(validatedInput);
+
+			// Update best iteration
+			this.updateBestIteration(validatedInput.iteration, objective);
+
+			// Terminal logging (stderr)
+			if (!this.disableLogging) {
+				const formattedEntry = this.formatEntry(validatedInput);
+				console.error(formattedEntry);
+			}
+
+			// Generate summary if this is the last entry
+			const summary = !validatedInput.nextEntryNeeded ? this.generateSummary(objective) : null;
+
+			// Return minimal metadata - NEVER echo the prompt
+			return this.createResult({
+				entryNumber: validatedInput.entryNumber,
+				objectiveValue: validatedInput.iteration.objectiveValue,
+				improvement: validatedInput.iteration.improvement,
+				isBestSoFar: this.bestIteration === validatedInput.iteration,
+				historyLength: this.optimizationHistory.length,
+				...(summary && { summary }),
+			});
+		} catch (error) {
+			return this.createResult({
+				error: error instanceof Error ? error.message : String(error),
+				status: "failed",
+			});
+		}
+	}
+
+	/**
+	 * Tool description that guides AI behavior
+	 */
+	getToolDescription() {
+		return {
+			name: this.name,
+			description: `A structured tool for tracking optimization attempts through journal entries.
+This tool provides a framework for the AI to perform optimization by documenting each iteration
+with parameters, objective values, improvements, and reasoning.
+
+The AI is responsible for:
+- Choosing optimization algorithms (gradient descent, genetic algorithms, simulated annealing, etc.)
+- Calculating objective function values
+- Computing gradients and improvements
+- Determining parameter updates
+- Evaluating constraint satisfaction
+- Deciding when to stop optimization
+
+The server is responsible for:
+- Tracking optimization history
+- Maintaining best iteration
+- Providing structured feedback
+- Generating summaries
+
+When to use this tool:
+- Finding optimal parameter values for a function
+- Minimizing or maximizing objective functions
+- Solving constrained optimization problems
+- Hyperparameter tuning
+- Resource allocation problems
+- Any problem requiring iterative improvement
+
+Input format:
+- entry: Description of what you're doing in this iteration (e.g., "Testing gradient descent with learning rate 0.01")
+- entryNumber: Current iteration number (1, 2, 3, ...)
+- iteration: Object containing:
+  - parameters: Object with parameter names and values (e.g., {x: 1.5, y: 2.0, learning_rate: 0.01})
+  - objectiveValue: Computed objective function value
+  - improvement: Change from previous iteration (positive for improvement)
+  - reasoning: Explanation of why these parameters were chosen
+  - constraintsSatisfied: (optional) Whether constraints are met
+  - gradientInfo: (optional) Gradient values for each parameter
+  - metadata: (optional) Any algorithm-specific information
+- nextEntryNeeded: (optional) Set to false when optimization is complete
+- totalEntries: (optional) Estimated total iterations needed
+
+The AI should:
+1. Choose an appropriate optimization algorithm based on the problem
+2. Initialize parameters reasonably
+3. Compute objective function values accurately
+4. Calculate improvements correctly (current - previous)
+5. Provide clear reasoning for each iteration
+6. Check constraint satisfaction when applicable
+7. Decide when convergence is achieved
+8. Set nextEntryNeeded to false when done
+
+Example usage:
+{
+  "entry": "Initial gradient descent iteration with random initialization",
+  "entryNumber": 1,
+  "iteration": {
+    "parameters": {"x": 1.5, "y": 2.0},
+    "objectiveValue": 4.25,
+    "improvement": 0,
+    "reasoning": "Random initialization within bounds",
+    "constraintsSatisfied": true,
+    "gradientInfo": {"x": -3.0, "y": -4.0}
+  },
+  "nextEntryNeeded": true,
+  "totalEntries": 10
+}`,
+			inputSchema: {
+				type: "object" as const,
+				properties: {
+					entry: {
+						type: "string",
+						description: "Description of this optimization iteration",
+					},
+					entryNumber: {
+						type: "integer",
+						description: "Current iteration number",
+						minimum: 1,
+					},
+					iteration: {
+						type: "object",
+						description: "Optimization iteration data",
+						properties: {
+							parameters: {
+								type: "object",
+								description: "Parameter values for this iteration",
+								additionalProperties: { type: "number" },
+							},
+							objectiveValue: {
+								type: "number",
+								description: "Objective function value",
+							},
+							improvement: {
+								type: "number",
+								description: "Improvement from previous iteration",
+							},
+							reasoning: {
+								type: "string",
+								description: "Explanation of this iteration",
+							},
+							constraintsSatisfied: {
+								type: "boolean",
+								description: "Whether constraints are satisfied",
+							},
+							gradientInfo: {
+								type: "object",
+								description: "Gradient information",
+								additionalProperties: { type: "number" },
+							},
+							metadata: {
+								type: "object",
+								description: "Additional algorithm-specific data",
+							},
+						},
+						required: ["parameters", "objectiveValue", "improvement", "reasoning"],
+					},
+					nextEntryNeeded: {
+						type: "boolean",
+						description: "Whether more iterations are needed",
+					},
+					totalEntries: {
+						type: "integer",
+						description: "Estimated total iterations",
+						minimum: 1,
+					},
+					objective: {
+						type: "string",
+						description: "Optimization objective: 'maximize' or 'minimize'",
+						enum: ["maximize", "minimize"],
+					},
+				},
+				required: ["entry", "entryNumber", "iteration"],
+			},
+		};
+	}
+}
+
+// Export singleton instance
 export default new OptimizationOperation();

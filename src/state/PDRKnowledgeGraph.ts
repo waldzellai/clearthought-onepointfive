@@ -91,9 +91,7 @@ export class PDRKnowledgeGraph {
 	createNode(data: Partial<PDRNode>): string {
 		// Enforce resource limits
 		if (this.nodes.size >= this.limits.nodes) {
-			throw new Error(
-				`Maximum node limit (${this.limits.nodes}) reached for mode ${this.mode}`,
-			);
+			throw new Error(`Maximum node limit (${this.limits.nodes}) reached for mode ${this.mode}`);
 		}
 
 		if (data.depth && data.depth > this.limits.depth) {
@@ -161,17 +159,15 @@ export class PDRKnowledgeGraph {
 	addEdge(data: Partial<PDREdge>): string {
 		// Enforce resource limits
 		if (this.edges.size >= this.limits.edges) {
-			throw new Error(
-				`Maximum edge limit (${this.limits.edges}) reached for mode ${this.mode}`,
-			);
+			throw new Error(`Maximum edge limit (${this.limits.edges}) reached for mode ${this.mode}`);
 		}
 
 		// Validate nodes exist
-		if (!data.sourceId || !data.targetId) {
+		if (!(data.sourceId && data.targetId)) {
 			throw new Error("Source and target IDs are required");
 		}
 
-		if (!this.nodes.has(data.sourceId) || !this.nodes.has(data.targetId)) {
+		if (!(this.nodes.has(data.sourceId) && this.nodes.has(data.targetId))) {
 			throw new Error("Source or target node does not exist");
 		}
 
@@ -192,7 +188,7 @@ export class PDRKnowledgeGraph {
 				createdInPass: data.metadata?.createdInPass || "initial",
 				confidence: data.metadata?.confidence || 0.5,
 				justification: data.metadata?.justification,
-				bidirectional: data.metadata?.bidirectional || false,
+				bidirectional: data.metadata?.bidirectional ?? false,
 			},
 		};
 
@@ -312,9 +308,7 @@ export class PDRKnowledgeGraph {
 	}
 
 	getSelectedNodes(): PDRNode[] {
-		return Array.from(this.nodes.values()).filter(
-			(node) => node.metadata.selected,
-		);
+		return Array.from(this.nodes.values()).filter((node) => node.metadata.selected);
 	}
 
 	// Cluster management
@@ -386,16 +380,10 @@ export class PDRKnowledgeGraph {
 				},
 			]),
 			edges: Array.from(this.edges.entries()),
-			edgesBySource: Array.from(this.edgesBySource.entries()).map(([k, v]) => [
-				k,
-				Array.from(v),
-			]),
+			edgesBySource: Array.from(this.edgesBySource.entries()).map(([k, v]) => [k, Array.from(v)]),
 			hierarchy: {
 				...this.hierarchy,
-				levels: Array.from(this.hierarchy.levels.entries()).map(([k, v]) => [
-					k,
-					Array.from(v),
-				]),
+				levels: Array.from(this.hierarchy.levels.entries()).map(([k, v]) => [k, Array.from(v)]),
 			},
 			clusters: Array.from(this.clusters.entries()).map(([id, cluster]) => [
 				id,
@@ -444,12 +432,7 @@ export class PDRKnowledgeGraph {
 		// Restore hierarchy
 		graph.hierarchy = {
 			...parsed.hierarchy,
-			levels: new Map(
-				parsed.hierarchy.levels.map(([k, v]: [number, string[]]) => [
-					k,
-					new Set(v),
-				]),
-			),
+			levels: new Map(parsed.hierarchy.levels.map(([k, v]: [number, string[]]) => [k, new Set(v)])),
 		};
 
 		// Restore clusters
@@ -482,10 +465,7 @@ export class PDRKnowledgeGraph {
 		if (!node) return false;
 
 		// Remove all edges connected to this node
-		const edgesToRemove = [
-			...this.getIncomingEdges(nodeId),
-			...this.getOutgoingEdges(nodeId),
-		];
+		const edgesToRemove = [...this.getIncomingEdges(nodeId), ...this.getOutgoingEdges(nodeId)];
 
 		edgesToRemove.forEach((edge) => this.removeEdge(edge.id));
 
