@@ -52,7 +52,7 @@ export class MdpPlanningOperation extends BaseOperation {
 		const result = solver(params);
 
 		return this.createResult({
-			prompt: context.prompt,
+			prompt: this.getParam(context.parameters, "prompt", ""),
 			...result,
 		});
 	}

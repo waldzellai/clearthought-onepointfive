@@ -71,7 +71,7 @@ export class DecisionNetworksOperation extends BaseOperation {
 		);
 
 		return this.createResult({
-			prompt: context.prompt,
+			prompt: this.getParam(context.parameters, "prompt", ""),
 			decisionVariable: params.decision.name,
 			bestDecision,
 			expectedUtilities,
