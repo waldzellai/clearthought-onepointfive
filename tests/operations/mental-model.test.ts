@@ -4,9 +4,9 @@
  * Tests validate, store, log, and return minimal metadata behavior
  */
 
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import { MentalModelOperation } from "../../src/tools/operations/core/mental-model.js";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SessionState } from "../../src/state/SessionState.js";
+import { MentalModelOperation } from "../../src/tools/operations/core/mental-model.js";
 
 describe("MentalModelOperation - Structured Journal Pattern", () => {
 	let operation: MentalModelOperation;

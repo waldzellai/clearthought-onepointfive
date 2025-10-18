@@ -40,8 +40,7 @@ export class OptimizationOperation extends BaseOperation {
 	constructor() {
 		super();
 		// Check environment variable for logging control
-		this.disableLogging =
-			(process.env.DISABLE_OPTIMIZATION_LOGGING || "").toLowerCase() === "true";
+		this.disableLogging = (process.env.DISABLE_OPTIMIZATION_LOGGING || "").toLowerCase() === "true";
 	}
 
 	/**
@@ -101,18 +100,22 @@ export class OptimizationOperation extends BaseOperation {
 			.map(([key, value]) => `${key}: ${value.toFixed(4)}`)
 			.join(", ");
 
-		const improvementStr = iteration.improvement >= 0 ? `+${iteration.improvement.toFixed(6)}` : iteration.improvement.toFixed(6);
+		const improvementStr =
+			iteration.improvement >= 0
+				? `+${iteration.improvement.toFixed(6)}`
+				: iteration.improvement.toFixed(6);
 
 		const gradientStr = iteration.gradientInfo
 			? "\n│ Gradient: " +
-			  Object.entries(iteration.gradientInfo)
+				Object.entries(iteration.gradientInfo)
 					.map(([key, value]) => `${key}: ${value.toFixed(4)}`)
 					.join(", ")
 			: "";
 
-		const constraintsStr = iteration.constraintsSatisfied !== undefined
-			? `\n│ Constraints: ${iteration.constraintsSatisfied ? "✓ Satisfied" : "✗ Violated"}`
-			: "";
+		const constraintsStr =
+			iteration.constraintsSatisfied !== undefined
+				? `\n│ Constraints: ${iteration.constraintsSatisfied ? "✓ Satisfied" : "✗ Violated"}`
+				: "";
 
 		const border = "─".repeat(80);
 
@@ -133,7 +136,10 @@ export class OptimizationOperation extends BaseOperation {
 	/**
 	 * Update best iteration tracking
 	 */
-	private updateBestIteration(iteration: OptimizationIteration, objective: "maximize" | "minimize"): void {
+	private updateBestIteration(
+		iteration: OptimizationIteration,
+		objective: "maximize" | "minimize",
+	): void {
 		if (!this.bestIteration) {
 			this.bestIteration = iteration;
 			return;
@@ -166,9 +172,7 @@ export class OptimizationOperation extends BaseOperation {
 			0,
 		);
 
-		const convergenceRate = totalIterations > 1
-			? totalImprovement / totalIterations
-			: 0;
+		const convergenceRate = totalIterations > 1 ? totalImprovement / totalIterations : 0;
 
 		const constraintsSatisfied = this.optimizationHistory.every(
 			(entry) => entry.iteration.constraintsSatisfied !== false,
@@ -217,9 +221,7 @@ export class OptimizationOperation extends BaseOperation {
 			}
 
 			// Generate summary if this is the last entry
-			const summary = !validatedInput.nextEntryNeeded
-				? this.generateSummary(objective)
-				: null;
+			const summary = !validatedInput.nextEntryNeeded ? this.generateSummary(objective) : null;
 
 			// Return minimal metadata - NEVER echo the prompt
 			return this.createResult({

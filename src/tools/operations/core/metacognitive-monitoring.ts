@@ -5,8 +5,13 @@
  * Based on Sequential Thinking MCP server pattern.
  */
 
-import { BaseOperation, type OperationContext, type OperationResult, type ToolDescription } from "../base.js";
 import chalk from "chalk";
+import {
+	BaseOperation,
+	type OperationContext,
+	type OperationResult,
+	type ToolDescription,
+} from "../base.js";
 
 interface MetacognitiveData {
 	// Core structured journal fields
@@ -163,7 +168,9 @@ You should:
 		const data = input as Record<string, unknown>;
 
 		if (!data.entry || typeof data.entry !== "string") {
-			throw new Error("Invalid entry: must be a non-empty string containing metacognitive reflection");
+			throw new Error(
+				"Invalid entry: must be a non-empty string containing metacognitive reflection",
+			);
 		}
 		if (!data.entryNumber || typeof data.entryNumber !== "number") {
 			throw new Error("Invalid entryNumber: must be a positive number");
@@ -184,7 +191,9 @@ You should:
 
 		// Validate biasCheck if provided
 		if (data.biasCheck !== undefined) {
-			if (!Array.isArray(data.biasCheck) || !data.biasCheck.every((item) => typeof item === "string")) {
+			if (
+				!(Array.isArray(data.biasCheck) && data.biasCheck.every((item) => typeof item === "string"))
+			) {
 				throw new Error("Invalid biasCheck: must be an array of strings");
 			}
 		}
@@ -237,7 +246,8 @@ You should:
 		// Add confidence to context if available
 		if (confidence !== undefined) {
 			const confidencePercent = Math.round(confidence * 100);
-			const confidenceColor = confidence >= 0.7 ? chalk.green : confidence >= 0.4 ? chalk.yellow : chalk.red;
+			const confidenceColor =
+				confidence >= 0.7 ? chalk.green : confidence >= 0.4 ? chalk.yellow : chalk.red;
 			context += ` ${confidenceColor(`[${confidencePercent}% confidence]`)}`;
 		}
 
@@ -299,10 +309,7 @@ You should:
 				historyLength: this.entryHistory.length,
 			});
 		} catch (error) {
-			return this.createError(
-				error instanceof Error ? error.message : String(error),
-				{}
-			);
+			return this.createError(error instanceof Error ? error.message : String(error), {});
 		}
 	}
 }

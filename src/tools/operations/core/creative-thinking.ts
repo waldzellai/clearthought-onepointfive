@@ -6,8 +6,8 @@
  * generate ideas - the AI generates them using the provided framework.
  */
 
-import { BaseOperation, type OperationContext, type OperationResult } from "../base.js";
 import chalk from "chalk";
+import { BaseOperation, type OperationContext, type OperationResult } from "../base.js";
 
 interface CreativeThinkingData {
 	entry: string; // The creative idea or technique application
@@ -76,7 +76,9 @@ export class CreativeThinkingOperation extends BaseOperation {
 
 	private validateData(parameters: Record<string, unknown>): CreativeThinkingData {
 		if (!parameters.entry || typeof parameters.entry !== "string") {
-			throw new Error("Invalid entry: must be a string containing the creative idea or technique application");
+			throw new Error(
+				"Invalid entry: must be a string containing the creative idea or technique application",
+			);
 		}
 		if (!parameters.entryNumber || typeof parameters.entryNumber !== "number") {
 			throw new Error("Invalid entryNumber: must be a number");
@@ -108,8 +110,16 @@ export class CreativeThinkingOperation extends BaseOperation {
 	}
 
 	private formatEntry(data: CreativeThinkingData): string {
-		const { entryNumber, totalEntries, entry, isRevision, revisesEntry, branchFromEntry, branchId, technique } =
-			data;
+		const {
+			entryNumber,
+			totalEntries,
+			entry,
+			isRevision,
+			revisesEntry,
+			branchFromEntry,
+			branchId,
+			technique,
+		} = data;
 
 		let prefix = "";
 		let context = "";

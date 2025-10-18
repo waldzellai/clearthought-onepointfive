@@ -2,9 +2,9 @@
  * Tests for Analogical Reasoning Operation - Structured Journal Pattern
  */
 
-import { beforeEach, describe, expect, it } from "@jest/globals";
+import { beforeEach, describe, expect, it } from "vitest";
 import { SessionStateManager } from "../../src/state/SessionState.js";
-import { AnologicalReasoningOperation } from "../../src/tools/operations/analysis/analogical-reasoning.js";
+import { AnalogicalReasoningOperation } from "../../src/tools/operations/analysis/analogical-reasoning.js";
 import type { OperationContext } from "../../src/tools/operations/base.js";
 
 describe("AnologicalReasoningOperation - Structured Journal Pattern", () => {

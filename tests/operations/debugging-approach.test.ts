@@ -2,9 +2,9 @@
  * Tests for DebuggingApproachOperation - Structured Journal Pattern
  */
 
-import { describe, it, expect, beforeEach } from "vitest";
-import { DebuggingApproachOperation } from "../../src/tools/operations/core/debugging-approach.js";
+import { beforeEach, describe, expect, it } from "vitest";
 import type { OperationContext } from "../../src/tools/operations/base.js";
+import { DebuggingApproachOperation } from "../../src/tools/operations/core/debugging-approach.js";
 
 describe("DebuggingApproachOperation - Structured Journal", () => {
 	let operation: DebuggingApproachOperation;

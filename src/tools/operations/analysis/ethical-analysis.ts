@@ -36,8 +36,7 @@ export class EthicalAnalysisOperation extends BaseOperation {
 
 	constructor() {
 		super();
-		this.disableLogging =
-			(process.env.DISABLE_THOUGHT_LOGGING || "").toLowerCase() === "true";
+		this.disableLogging = (process.env.DISABLE_THOUGHT_LOGGING || "").toLowerCase() === "true";
 	}
 
 	/**
@@ -162,10 +161,12 @@ export class EthicalAnalysisOperation extends BaseOperation {
 			}
 		}
 
-		output += `\n║ Stakeholders: ${assessment.stakeholders.join(", ")}`.padEnd(border.length + 3) + "║";
+		output +=
+			`\n║ Stakeholders: ${assessment.stakeholders.join(", ")}`.padEnd(border.length + 3) + "║";
 
 		if (assessment.score !== undefined) {
-			output += `\n║ Score: ${(assessment.score * 100).toFixed(1)}%`.padEnd(border.length + 3) + "║";
+			output +=
+				`\n║ Score: ${(assessment.score * 100).toFixed(1)}%`.padEnd(border.length + 3) + "║";
 		}
 
 		output += `\n║ Reasoning:`.padEnd(border.length + 3) + "║";
@@ -328,7 +329,8 @@ export class EthicalAnalysisOperation extends BaseOperation {
 			}
 		}
 
-		const avgScore = scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : undefined;
+		const avgScore =
+			scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : undefined;
 		const minScore = scores.length > 0 ? Math.min(...scores) : undefined;
 		const maxScore = scores.length > 0 ? Math.max(...scores) : undefined;
 
@@ -426,7 +428,8 @@ The AI should provide complete analysis entries, not generate partial content.`,
 							harms: {
 								type: "array",
 								items: { type: "string" },
-								description: "Negative consequences or harms (especially for utilitarian framework)",
+								description:
+									"Negative consequences or harms (especially for utilitarian framework)",
 							},
 							stakeholders: {
 								type: "array",

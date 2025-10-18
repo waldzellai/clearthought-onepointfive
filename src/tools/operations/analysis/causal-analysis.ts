@@ -56,8 +56,11 @@ export class CausalAnalysisOperation extends BaseOperation {
 		super();
 		// Check environment variable for logging control
 		this.disableLogging =
-			(process.env.DISABLE_CAUSAL_LOGGING || process.env.DISABLE_THOUGHT_LOGGING || "").toLowerCase() ===
-			"true";
+			(
+				process.env.DISABLE_CAUSAL_LOGGING ||
+				process.env.DISABLE_THOUGHT_LOGGING ||
+				""
+			).toLowerCase() === "true";
 	}
 
 	/**
@@ -76,10 +79,14 @@ export class CausalAnalysisOperation extends BaseOperation {
 			throw new Error("Invalid totalEntries: must be a number estimating total entries needed");
 		}
 		if (typeof data.nextEntryNeeded !== "boolean") {
-			throw new Error("Invalid nextEntryNeeded: must be a boolean indicating if more entries are needed");
+			throw new Error(
+				"Invalid nextEntryNeeded: must be a boolean indicating if more entries are needed",
+			);
 		}
 		if (!data.causalRelationship || typeof data.causalRelationship !== "object") {
-			throw new Error("Invalid causalRelationship: must be an object with from, to, weight, and reasoning");
+			throw new Error(
+				"Invalid causalRelationship: must be an object with from, to, weight, and reasoning",
+			);
 		}
 
 		const relationship = data.causalRelationship as Record<string, unknown>;
@@ -89,11 +96,17 @@ export class CausalAnalysisOperation extends BaseOperation {
 		if (!relationship.to || typeof relationship.to !== "string") {
 			throw new Error("Invalid causalRelationship.to: must be a string identifying the effect");
 		}
-		if (typeof relationship.weight !== "number" || relationship.weight < 0 || relationship.weight > 1) {
+		if (
+			typeof relationship.weight !== "number" ||
+			relationship.weight < 0 ||
+			relationship.weight > 1
+		) {
 			throw new Error("Invalid causalRelationship.weight: must be a number between 0 and 1");
 		}
 		if (!relationship.reasoning || typeof relationship.reasoning !== "string") {
-			throw new Error("Invalid causalRelationship.reasoning: must be a string explaining the relationship");
+			throw new Error(
+				"Invalid causalRelationship.reasoning: must be a string explaining the relationship",
+			);
 		}
 
 		return {
@@ -231,13 +244,16 @@ export class CausalAnalysisOperation extends BaseOperation {
 		);
 
 		// Find confounders (multiple outgoing edges)
-		const confounders = nodes.filter((node) => edges.filter((edge) => edge.from === node).length > 1);
+		const confounders = nodes.filter(
+			(node) => edges.filter((edge) => edge.from === node).length > 1,
+		);
 
 		// Check for cycles
 		const hasCycles = this.detectCycles();
 
 		// Calculate average edge weight
-		const avgWeight = edges.length > 0 ? edges.reduce((sum, edge) => sum + edge.weight, 0) / edges.length : 0;
+		const avgWeight =
+			edges.length > 0 ? edges.reduce((sum, edge) => sum + edge.weight, 0) / edges.length : 0;
 
 		return {
 			nodeCount: nodes.length,

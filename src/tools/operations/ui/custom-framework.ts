@@ -11,7 +11,7 @@ export class CustomFrameworkOperation extends BaseOperation {
 	category = "ui";
 
 	async execute(context: OperationContext): Promise<OperationResult> {
-		const { sessionState, prompt, parameters } = context;
+		const { sessionState, parameters } = context;
 
 		// Extract framework configuration
 		const frameworkName = this.getParam(parameters, "name", "Custom Reasoning Framework");

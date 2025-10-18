@@ -6,8 +6,8 @@
  * Rubber Duck Debugging, Five Whys, etc.
  */
 
-import { BaseOperation, type OperationContext, type OperationResult } from "../base.js";
 import chalk from "chalk";
+import { BaseOperation, type OperationContext, type OperationResult } from "../base.js";
 
 /**
  * Structured data interface for debugging entries
@@ -158,12 +158,16 @@ You should:
 			throw new Error("Invalid totalEntries: must be a number estimating total steps needed");
 		}
 		if (typeof data.nextEntryNeeded !== "boolean") {
-			throw new Error("Invalid nextEntryNeeded: must be a boolean indicating if more investigation is needed");
+			throw new Error(
+				"Invalid nextEntryNeeded: must be a boolean indicating if more investigation is needed",
+			);
 		}
 
 		// Validate optional approach field
 		if (data.approach !== undefined && typeof data.approach !== "string") {
-			throw new Error("Invalid approach: must be a string (e.g., 'binary_search', 'root_cause', 'rubber_duck')");
+			throw new Error(
+				"Invalid approach: must be a string (e.g., 'binary_search', 'root_cause', 'rubber_duck')",
+			);
 		}
 
 		return {
@@ -270,10 +274,7 @@ You should:
 				historyLength: this.entryHistory.length,
 			});
 		} catch (error) {
-			return this.createError(
-				error instanceof Error ? error.message : String(error),
-				{},
-			);
+			return this.createError(error instanceof Error ? error.message : String(error), {});
 		}
 	}
 }

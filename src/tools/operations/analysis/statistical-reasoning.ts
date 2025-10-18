@@ -280,8 +280,7 @@ export class StatisticalReasoningOperation extends BaseOperation {
 
 	constructor() {
 		super();
-		this.disableLogging =
-			(process.env.DISABLE_STATISTICAL_LOGGING || "").toLowerCase() === "true";
+		this.disableLogging = (process.env.DISABLE_STATISTICAL_LOGGING || "").toLowerCase() === "true";
 	}
 
 	/**
@@ -297,9 +296,7 @@ export class StatisticalReasoningOperation extends BaseOperation {
 			throw new Error("Invalid entryNumber: must be a number indicating current position");
 		}
 		if (!data.totalEntries || typeof data.totalEntries !== "number") {
-			throw new Error(
-				"Invalid totalEntries: must be a number estimating total analyses needed",
-			);
+			throw new Error("Invalid totalEntries: must be a number estimating total analyses needed");
 		}
 		if (typeof data.nextEntryNeeded !== "boolean") {
 			throw new Error(
@@ -383,7 +380,10 @@ export class StatisticalReasoningOperation extends BaseOperation {
 ╠${border}╣
 ║ ${description.padEnd(border.length - 2)} ║
 ╟${"─".repeat(border.length)}╢
-║ ${details.split("\n").join(`\n║ `).padEnd(border.length - 2)} ║
+║ ${details
+			.split("\n")
+			.join(`\n║ `)
+			.padEnd(border.length - 2)} ║
 ╚${border}╝`;
 	}
 
@@ -409,8 +409,7 @@ export class StatisticalReasoningOperation extends BaseOperation {
 			}
 
 			// Generate summary insights if this is the final entry
-			const insights =
-				!validatedEntry.nextEntryNeeded ? this.generateInsights() : undefined;
+			const insights = !validatedEntry.nextEntryNeeded ? this.generateInsights() : undefined;
 
 			// Return minimal metadata
 			return this.createResult({

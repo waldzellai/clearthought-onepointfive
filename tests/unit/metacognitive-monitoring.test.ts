@@ -2,10 +2,10 @@
  * Unit tests for Metacognitive Monitoring Operation - Structured Journal Pattern
  */
 
-import { describe, it, expect, beforeEach } from "vitest";
-import { MetacognitiveMonitoringOperation } from "../../src/tools/operations/core/metacognitive-monitoring.js";
+import { beforeEach, describe, expect, it } from "vitest";
 import { SessionState } from "../../src/state/SessionState.js";
 import type { OperationContext } from "../../src/tools/operations/base.js";
+import { MetacognitiveMonitoringOperation } from "../../src/tools/operations/core/metacognitive-monitoring.js";
 
 describe("MetacognitiveMonitoring Structured Journal", () => {
 	let operation: MetacognitiveMonitoringOperation;

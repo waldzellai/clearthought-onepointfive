@@ -5,106 +5,118 @@
  * This tool provides scaffolding for various creative techniques but does NOT
  * generate ideas - the AI generates them using the provided framework.
  */
-import { BaseOperation } from "../base.js";
+
 import chalk from "chalk";
+import { BaseOperation } from "../base.js";
 export class CreativeThinkingOperation extends BaseOperation {
-    name = "creative_thinking";
-    category = "core";
-    entryHistory = [];
-    branches = {};
-    async execute(context) {
-        const { parameters } = context;
-        try {
-            const validatedData = this.validateData(parameters);
-            // Auto-adjust totalEntries if current exceeds total
-            if (validatedData.entryNumber > validatedData.totalEntries) {
-                validatedData.totalEntries = validatedData.entryNumber;
-            }
-            // Store in history
-            this.entryHistory.push(validatedData);
-            // Track branches if specified
-            if (validatedData.branchFromEntry && validatedData.branchId) {
-                if (!this.branches[validatedData.branchId]) {
-                    this.branches[validatedData.branchId] = [];
-                }
-                this.branches[validatedData.branchId].push(validatedData);
-            }
-            // Log to terminal (stderr) for human visibility
-            this.logEntry(validatedData);
-            // Return minimal metadata (no echoing)
-            return this.createResult({
-                entryNumber: validatedData.entryNumber,
-                totalEntries: validatedData.totalEntries,
-                nextEntryNeeded: validatedData.nextEntryNeeded,
-                technique: validatedData.technique,
-                branches: Object.keys(this.branches),
-                historyLength: this.entryHistory.length,
-            });
-        }
-        catch (error) {
-            return this.createResult({
-                error: error instanceof Error ? error.message : String(error),
-                status: "failed",
-            }, false);
-        }
-    }
-    validateData(parameters) {
-        if (!parameters.entry || typeof parameters.entry !== "string") {
-            throw new Error("Invalid entry: must be a string containing the creative idea or technique application");
-        }
-        if (!parameters.entryNumber || typeof parameters.entryNumber !== "number") {
-            throw new Error("Invalid entryNumber: must be a number");
-        }
-        if (!parameters.totalEntries || typeof parameters.totalEntries !== "number") {
-            throw new Error("Invalid totalEntries: must be a number");
-        }
-        if (typeof parameters.nextEntryNeeded !== "boolean") {
-            throw new Error("Invalid nextEntryNeeded: must be a boolean");
-        }
-        return {
-            entry: parameters.entry,
-            entryNumber: parameters.entryNumber,
-            totalEntries: parameters.totalEntries,
-            nextEntryNeeded: parameters.nextEntryNeeded,
-            isRevision: parameters.isRevision,
-            revisesEntry: parameters.revisesEntry,
-            branchFromEntry: parameters.branchFromEntry,
-            branchId: parameters.branchId,
-            technique: parameters.technique,
-            evaluation: parameters.evaluation,
-        };
-    }
-    logEntry(data) {
-        const formatted = this.formatEntry(data);
-        console.error(formatted);
-    }
-    formatEntry(data) {
-        const { entryNumber, totalEntries, entry, isRevision, revisesEntry, branchFromEntry, branchId, technique } = data;
-        let prefix = "";
-        let context = "";
-        if (isRevision) {
-            prefix = chalk.yellow("🔄 Revision");
-            context = ` (revising entry ${revisesEntry})`;
-        }
-        else if (branchFromEntry) {
-            prefix = chalk.green("🌿 Branch");
-            context = ` (from entry ${branchFromEntry}, ID: ${branchId})`;
-        }
-        else {
-            prefix = chalk.magenta("💡 Creative");
-            context = technique ? ` [${technique}]` : "";
-        }
-        const header = `${prefix} ${entryNumber}/${totalEntries}${context}`;
-        const border = "─".repeat(Math.max(header.length, entry.length) + 4);
-        return `
+	name = "creative_thinking";
+	category = "core";
+	entryHistory = [];
+	branches = {};
+	async execute(context) {
+		const { parameters } = context;
+		try {
+			const validatedData = this.validateData(parameters);
+			// Auto-adjust totalEntries if current exceeds total
+			if (validatedData.entryNumber > validatedData.totalEntries) {
+				validatedData.totalEntries = validatedData.entryNumber;
+			}
+			// Store in history
+			this.entryHistory.push(validatedData);
+			// Track branches if specified
+			if (validatedData.branchFromEntry && validatedData.branchId) {
+				if (!this.branches[validatedData.branchId]) {
+					this.branches[validatedData.branchId] = [];
+				}
+				this.branches[validatedData.branchId].push(validatedData);
+			}
+			// Log to terminal (stderr) for human visibility
+			this.logEntry(validatedData);
+			// Return minimal metadata (no echoing)
+			return this.createResult({
+				entryNumber: validatedData.entryNumber,
+				totalEntries: validatedData.totalEntries,
+				nextEntryNeeded: validatedData.nextEntryNeeded,
+				technique: validatedData.technique,
+				branches: Object.keys(this.branches),
+				historyLength: this.entryHistory.length,
+			});
+		} catch (error) {
+			return this.createResult(
+				{
+					error: error instanceof Error ? error.message : String(error),
+					status: "failed",
+				},
+				false,
+			);
+		}
+	}
+	validateData(parameters) {
+		if (!parameters.entry || typeof parameters.entry !== "string") {
+			throw new Error(
+				"Invalid entry: must be a string containing the creative idea or technique application",
+			);
+		}
+		if (!parameters.entryNumber || typeof parameters.entryNumber !== "number") {
+			throw new Error("Invalid entryNumber: must be a number");
+		}
+		if (!parameters.totalEntries || typeof parameters.totalEntries !== "number") {
+			throw new Error("Invalid totalEntries: must be a number");
+		}
+		if (typeof parameters.nextEntryNeeded !== "boolean") {
+			throw new Error("Invalid nextEntryNeeded: must be a boolean");
+		}
+		return {
+			entry: parameters.entry,
+			entryNumber: parameters.entryNumber,
+			totalEntries: parameters.totalEntries,
+			nextEntryNeeded: parameters.nextEntryNeeded,
+			isRevision: parameters.isRevision,
+			revisesEntry: parameters.revisesEntry,
+			branchFromEntry: parameters.branchFromEntry,
+			branchId: parameters.branchId,
+			technique: parameters.technique,
+			evaluation: parameters.evaluation,
+		};
+	}
+	logEntry(data) {
+		const formatted = this.formatEntry(data);
+		console.error(formatted);
+	}
+	formatEntry(data) {
+		const {
+			entryNumber,
+			totalEntries,
+			entry,
+			isRevision,
+			revisesEntry,
+			branchFromEntry,
+			branchId,
+			technique,
+		} = data;
+		let prefix = "";
+		let context = "";
+		if (isRevision) {
+			prefix = chalk.yellow("🔄 Revision");
+			context = ` (revising entry ${revisesEntry})`;
+		} else if (branchFromEntry) {
+			prefix = chalk.green("🌿 Branch");
+			context = ` (from entry ${branchFromEntry}, ID: ${branchId})`;
+		} else {
+			prefix = chalk.magenta("💡 Creative");
+			context = technique ? ` [${technique}]` : "";
+		}
+		const header = `${prefix} ${entryNumber}/${totalEntries}${context}`;
+		const border = "─".repeat(Math.max(header.length, entry.length) + 4);
+		return `
 ┌${border}┐
 │ ${header} │
 ├${border}┤
 │ ${entry.padEnd(border.length - 2)} │
 └${border}┘`;
-    }
-    getDescription() {
-        return `Structured tool for creative problem-solving through systematic ideation.
+	}
+	getDescription() {
+		return `Structured tool for creative problem-solving through systematic ideation.
 
 This tool provides scaffolding for various creative thinking techniques. The AI generates
 ideas using these frameworks - the tool itself does NOT generate ideas.
@@ -186,6 +198,6 @@ IMPORTANT:
 - Tool returns minimal metadata, no echoing
 - Terminal shows formatted progress for human visibility
 - Supports revision and branching for iterative refinement`;
-    }
+	}
 }
 export default new CreativeThinkingOperation();

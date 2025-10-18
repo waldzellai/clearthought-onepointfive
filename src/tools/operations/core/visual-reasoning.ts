@@ -38,8 +38,7 @@ export class VisualReasoningOperation extends BaseOperation {
 
 	constructor() {
 		super();
-		this.disableLogging =
-			(process.env.DISABLE_VISUAL_LOGGING || "").toLowerCase() === "true";
+		this.disableLogging = (process.env.DISABLE_VISUAL_LOGGING || "").toLowerCase() === "true";
 	}
 
 	/**
@@ -207,10 +206,7 @@ export class VisualReasoningOperation extends BaseOperation {
 				historyLength: this.entryHistory.length,
 			});
 		} catch (error) {
-			return this.createError(
-				error instanceof Error ? error.message : String(error),
-				{},
-			);
+			return this.createError(error instanceof Error ? error.message : String(error), {});
 		}
 	}
 

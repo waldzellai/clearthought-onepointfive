@@ -1,200 +1,80 @@
-# Claude Code Configuration
+# `.claude/` Directory Index
 
-This directory contains Claude Code configuration for the Clear-Thought project.
+Configuration and automation for Claude Code development environment.
 
-## Contents
+## 📁 Directory Structure
 
-### Commands
+### [`settings.json`](settings.json)
+Claude Code configuration file
 
-**`commands/convert-to-journal.md`** - Slash command for converting operations to structured journal pattern
+### [`agents/`](agents/)
+Agent templates and specifications
+- [`core/`](agents/core/) - Core agent types (planner, tester)
+- [`hive-mind/`](agents/hive-mind/) - Hive mind coordination agents
+- [`optimization/`](agents/optimization/) - Performance and resource optimization agents
+- [`specialized/`](agents/specialized/) - Domain-specific agents
+- [`templates/`](agents/templates/) - Reusable agent templates
 
-Usage:
-```
-/convert-to-journal
-```
+### [`checklists/`](checklists/)
+Task checklists and verification guides
+- [`mcp-evals-test-checklist.md`](checklists/mcp-evals-test-checklist.md)
 
-This command provides a step-by-step workflow for converting Clear-Thought operations to use the same structured journal pattern as the Sequential Thinking MCP server.
+### [`checkpoints/`](checkpoints/)
+Checkpoint and state management
 
-### Hooks
+### [`commands/`](commands/)
+Slash commands for development workflows
 
-**`hooks/validate-vaporware.ts`** - PostToolUse hook for automatic vaporware detection
+#### Core Categories
+- [`agents/`](commands/agents/) - Agent management commands
+- [`analysis/`](commands/analysis/) - Performance and bottleneck analysis
+- [`automation/`](commands/automation/) - Automated workflow commands
+- [`coordination/`](commands/coordination/) - Swarm coordination commands
+- [`flow-nexus/`](commands/flow-nexus/) - Flow Nexus integration
+- [`github/`](commands/github/) - GitHub workflow commands
+- [`hive-mind/`](commands/hive-mind/) - Hive mind orchestration
+- [`hooks/`](commands/hooks/) - Hook management
+- [`memory/`](commands/memory/) - Memory and persistence
+- [`monitoring/`](commands/monitoring/) - System monitoring
+- [`optimization/`](commands/optimization/) - Performance optimization
+- [`pair/`](commands/pair/) - Pair programming modes
+- [`sparc/`](commands/sparc/) - SPARC methodology commands
+- [`stream-chain/`](commands/stream-chain/) - Pipeline execution
+- [`swarm/`](commands/swarm/) - Swarm management
+- [`training/`](commands/training/) - Neural training
+- [`truth/`](commands/truth/) - Truth verification
+- [`verify/`](commands/verify/) - Verification workflows
+- [`workflows/`](commands/workflows/) - Workflow automation
 
-Automatically validates operation implementations against anti-patterns:
-- Placeholder returns
-- Prompt echoing
-- Fake pattern selection
-- Vaporware algorithm claims
-- Missing implementations
-- Token waste
-- Silent failures
+#### Notable Commands
+- [`convert-to-journal.md`](commands/convert-to-journal.md) - Convert operations to journal pattern
 
-### Settings
+### [`helpers/`](helpers/)
+Utility scripts and automation
+- [`checkpoint-manager.sh`](helpers/checkpoint-manager.sh)
+- [`github-safe.js`](helpers/github-safe.js)
+- [`github-setup.sh`](helpers/github-setup.sh)
+- [`quick-start.sh`](helpers/quick-start.sh)
+- [`setup-mcp.sh`](helpers/setup-mcp.sh)
+- [`standard-checkpoint-hooks.sh`](helpers/standard-checkpoint-hooks.sh)
 
-**`settings.json`** - Hook configuration
+### [`hooks/`](hooks/)
+Claude Code hooks for automation
 
-Configures the PostToolUse hook to run on Write/Edit operations in `src/tools/operations/`.
+### [`skills/`](skills/)
+Reusable skills and patterns
+- [`model-enhancement-mcp/`](skills/model-enhancement-mcp/) - MCP server enhancement patterns
+  - [`blog-post.md`](skills/model-enhancement-mcp/blog-post.md)
+  - [`example-notebooks/`](skills/model-enhancement-mcp/example-notebooks/)
+  - [`example-servers/`](skills/model-enhancement-mcp/example-servers/)
 
-## How It Works
+## 🚀 Quick Start
 
-1. **Developer runs** `/convert-to-journal` to start conversion workflow
-2. **Developer edits** operation file following the guided process
-3. **On save**, PostToolUse hook automatically triggers
-4. **Hook validates** the implementation:
-   - Static analysis (fast, ~100ms)
-   - Claude Agent SDK analysis (if needed, ~10-30s)
-5. **If validation fails**, hook exits with code 2 (blocks operation)
-6. **Developer fixes** issues and saves again
-7. **When validation passes**, developer commits changes
+1. Browse [`commands/`](commands/) for available slash commands
+2. Check [`agents/`](agents/) for agent templates
+3. Review [`helpers/`](helpers/) for setup scripts
+4. Explore [`skills/`](skills/) for reusable patterns
 
-## Installation
+## 📖 Documentation
 
-1. Install dependencies:
-```bash
-npm install --save-dev @anthropic-ai/claude-agent-sdk tsx chalk
-```
-
-2. Make hook executable:
-```bash
-chmod +x .claude/hooks/validate-vaporware.ts
-```
-
-3. Verify configuration:
-```bash
-cat .claude/settings.json
-```
-
-## Documentation
-
-- **Full Guide**: `docs/AGENTIC_WORKFLOW_GUIDE.md`
-- **Quick Reference**: `docs/QUICK_REFERENCE_VAPORWARE_DETECTION.md`
-- **Pattern Analysis**: `reports/how-sequentialthinking-actually-works.md`
-- **Reference Implementation**: `docs/sequential-thinking-mcp-index.ts`
-- **Anti-Patterns**: `reports/analysis-clear-thought-actually-does-nothing.md`
-
-## Troubleshooting
-
-### Hook not running
-
-Check:
-- `.claude/settings.json` exists and is valid JSON
-- Hook script is executable: `chmod +x .claude/hooks/validate-vaporware.ts`
-- `tsx` is installed: `npm install -g tsx`
-- File path matches: `src/tools/operations/*.ts`
-
-### Validation always fails
-
-Check:
-- Static analysis output for specific issues
-- Claude Agent SDK feedback for detailed analysis
-- Reference implementation for correct pattern
-- Anti-pattern examples for what to avoid
-
-### Hook times out
-
-Increase timeout in `settings.json`:
-```json
-{
-  "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": "Write|Edit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "tsx \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/validate-vaporware.ts",
-            "timeout": 180
-          }
-        ]
-      }
-    ]
-  }
-}
-```
-
-## Customization
-
-### Adjust validation threshold
-
-Edit `.claude/hooks/validate-vaporware.ts`:
-
-```typescript
-// Change passing score from 70 to 80
-const finalPassed = finalScore >= 80;
-```
-
-### Skip validation for specific files
-
-Edit `.claude/hooks/validate-vaporware.ts`:
-
-```typescript
-// Skip validation for specific operations
-const skipFiles = ['legacy-operation.ts', 'experimental-operation.ts'];
-if (skipFiles.some(f => filePath.includes(f))) {
-  console.error(chalk.gray(`Skipping validation for ${filePath}`));
-  process.exit(0);
-}
-```
-
-### Add custom checks
-
-Edit `.claude/hooks/validate-vaporware.ts`:
-
-```typescript
-// Add custom static analysis check
-if (/your-pattern-here/i.test(content)) {
-  issues.push("CUSTOM: Your custom issue description");
-  score -= 10;
-}
-```
-
-## Maintenance
-
-### Update Claude Agent SDK
-
-```bash
-npm update @anthropic-ai/claude-agent-sdk
-```
-
-### Update hook script
-
-Edit `.claude/hooks/validate-vaporware.ts` and test:
-
-```bash
-# Test hook manually
-echo '{"tool_input":{"file_path":"src/tools/operations/test.ts","content":"..."}}' | \
-  tsx .claude/hooks/validate-vaporware.ts
-```
-
-### Update slash command
-
-Edit `.claude/commands/convert-to-journal.md` to refine the workflow.
-
-## Security
-
-The hook executes automatically on file saves. Review the hook script before use:
-
-```bash
-cat .claude/hooks/validate-vaporware.ts
-```
-
-The hook:
-- Only reads files (no writes)
-- Only validates TypeScript files in `src/tools/operations/`
-- Exits with code 2 to block on failure (doesn't modify files)
-- Uses Claude Agent SDK for analysis (requires API access)
-
-## Contributing
-
-When modifying the workflow:
-
-1. Update the slash command in `commands/convert-to-journal.md`
-2. Update the hook script in `hooks/validate-vaporware.ts`
-3. Update documentation in `docs/AGENTIC_WORKFLOW_GUIDE.md`
-4. Update quick reference in `docs/QUICK_REFERENCE_VAPORWARE_DETECTION.md`
-5. Test the workflow end-to-end
-6. Commit all changes together
-
-## License
-
-Same as the main project (MIT).
-
+See root [`docs/`](../docs/) directory for comprehensive guides and [`CLAUDE.md`](../CLAUDE.md) for project configuration.

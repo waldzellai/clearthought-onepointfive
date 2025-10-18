@@ -47,8 +47,7 @@ export class ResearchOperation extends BaseOperation {
 	constructor() {
 		super();
 		// Check environment variable for logging control
-		this.disableLogging =
-			(process.env.DISABLE_RESEARCH_LOGGING || "").toLowerCase() === "true";
+		this.disableLogging = (process.env.DISABLE_RESEARCH_LOGGING || "").toLowerCase() === "true";
 	}
 
 	/**
@@ -67,7 +66,9 @@ export class ResearchOperation extends BaseOperation {
 			throw new Error("Invalid totalEntries: must be a number estimating total findings needed");
 		}
 		if (typeof data.nextEntryNeeded !== "boolean") {
-			throw new Error("Invalid nextEntryNeeded: must be a boolean indicating if more research is needed");
+			throw new Error(
+				"Invalid nextEntryNeeded: must be a boolean indicating if more research is needed",
+			);
 		}
 
 		// Validate finding structure
@@ -85,9 +86,7 @@ export class ResearchOperation extends BaseOperation {
 			throw new Error("Invalid finding.sources: must be an array of sources");
 		}
 		if (!finding.reasoning || typeof finding.reasoning !== "string") {
-			throw new Error(
-				"Invalid finding.reasoning: must explain why this finding is relevant",
-			);
+			throw new Error("Invalid finding.reasoning: must explain why this finding is relevant");
 		}
 
 		// Validate sources
@@ -122,8 +121,8 @@ export class ResearchOperation extends BaseOperation {
 	private formatFinding(data: ResearchData): string {
 		const { entryNumber, totalEntries, entry, finding, isRevision, revisesEntry } = data;
 
-		let prefix = isRevision ? "🔄 Revised Finding" : "🔍 Finding";
-		let context = isRevision ? ` (revising finding ${revisesEntry})` : "";
+		const prefix = isRevision ? "🔄 Revised Finding" : "🔍 Finding";
+		const context = isRevision ? ` (revising finding ${revisesEntry})` : "";
 
 		const header = `${prefix} ${entryNumber}/${totalEntries}${context}`;
 		const border = "═".repeat(Math.max(header.length, 60));

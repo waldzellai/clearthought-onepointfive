@@ -54,7 +54,8 @@ export class MentalModelOperation extends BaseOperation {
 	// Journal storage
 	private entryHistory: MentalModelData[] = [];
 	private branches: Record<string, MentalModelData[]> = {};
-	private disableLogging = (process.env.DISABLE_MENTAL_MODEL_LOGGING || "").toLowerCase() === "true";
+	private disableLogging =
+		(process.env.DISABLE_MENTAL_MODEL_LOGGING || "").toLowerCase() === "true";
 
 	/**
 	 * Validate mental model data with strict type checking
@@ -113,8 +114,16 @@ export class MentalModelOperation extends BaseOperation {
 	 * Format entry for terminal display
 	 */
 	private formatEntry(data: MentalModelData): string {
-		const { entryNumber, totalEntries, entry, isRevision, revisesEntry, branchFromEntry, branchId, modelName } =
-			data;
+		const {
+			entryNumber,
+			totalEntries,
+			entry,
+			isRevision,
+			revisesEntry,
+			branchFromEntry,
+			branchId,
+			modelName,
+		} = data;
 
 		let prefix = "";
 		let context = "";

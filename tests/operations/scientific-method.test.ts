@@ -4,10 +4,10 @@
  * Verifies the structured journal pattern implementation
  */
 
-import { describe, it, expect, beforeEach } from "vitest";
-import { ScientificMethodOperation } from "../../src/tools/operations/core/scientific-method.js";
-import type { OperationContext } from "../../src/tools/operations/base.js";
+import { beforeEach, describe, expect, it } from "vitest";
 import { SessionState } from "../../src/state/SessionState.js";
+import type { OperationContext } from "../../src/tools/operations/base.js";
+import { ScientificMethodOperation } from "../../src/tools/operations/core/scientific-method.js";
 
 describe("ScientificMethodOperation - Structured Journal Pattern", () => {
 	let operation: ScientificMethodOperation;

@@ -32,8 +32,7 @@ export class SequentialThinkingOperation extends BaseOperation {
 	constructor() {
 		super();
 		// Check environment variable for logging control
-		this.disableLogging =
-			(process.env.DISABLE_THOUGHT_LOGGING || "").toLowerCase() === "true";
+		this.disableLogging = (process.env.DISABLE_THOUGHT_LOGGING || "").toLowerCase() === "true";
 	}
 
 	/**
@@ -52,7 +51,9 @@ export class SequentialThinkingOperation extends BaseOperation {
 			throw new Error("Invalid totalEntries: must be a number estimating total thoughts needed");
 		}
 		if (typeof data.nextEntryNeeded !== "boolean") {
-			throw new Error("Invalid nextEntryNeeded: must be a boolean indicating if more thoughts are needed");
+			throw new Error(
+				"Invalid nextEntryNeeded: must be a boolean indicating if more thoughts are needed",
+			);
 		}
 
 		return {
@@ -71,8 +72,15 @@ export class SequentialThinkingOperation extends BaseOperation {
 	 * Format entry for terminal logging with visual indicators
 	 */
 	private formatEntry(data: SequentialThinkingData): string {
-		const { entryNumber, totalEntries, entry, isRevision, revisesEntry, branchFromEntry, branchId } =
-			data;
+		const {
+			entryNumber,
+			totalEntries,
+			entry,
+			isRevision,
+			revisesEntry,
+			branchFromEntry,
+			branchId,
+		} = data;
 
 		let prefix = "";
 		let context = "";
@@ -222,7 +230,8 @@ You should:
 					},
 					nextEntryNeeded: {
 						type: "boolean",
-						description: "Whether another thought step is needed (can also use 'nextThoughtNeeded')",
+						description:
+							"Whether another thought step is needed (can also use 'nextThoughtNeeded')",
 					},
 					nextThoughtNeeded: {
 						type: "boolean",

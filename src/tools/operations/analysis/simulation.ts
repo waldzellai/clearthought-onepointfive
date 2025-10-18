@@ -259,9 +259,7 @@ Provide simulation journal entries following the format above.`;
 				previousStep = entry.simulationStep;
 			} else {
 				invalidCount++;
-				issues.push(
-					`Entry ${entry.entryNumber}: ${validation.messages.join("; ")}`,
-				);
+				issues.push(`Entry ${entry.entryNumber}: ${validation.messages.join("; ")}`);
 			}
 
 			if (validation.warnings.length > 0) {
@@ -385,9 +383,7 @@ Provide simulation journal entries following the format above.`;
 						"active_agents" in step.state ||
 						"total_agents" in step.state;
 					if (!hasAgentMetrics) {
-						warnings.push(
-							"Agent-based simulation should include agent count metrics",
-						);
+						warnings.push("Agent-based simulation should include agent count metrics");
 					}
 				}
 				break;
@@ -399,9 +395,7 @@ Provide simulation journal entries following the format above.`;
 						Object.keys(step.state).some((k) => k.includes("_mean")) ||
 						Object.keys(step.state).some((k) => k.includes("_std"));
 					if (!hasStats) {
-						warnings.push(
-							"Monte Carlo simulation should include statistical measures (mean, std)",
-						);
+						warnings.push("Monte Carlo simulation should include statistical measures (mean, std)");
 					}
 				}
 				break;
@@ -410,13 +404,9 @@ Provide simulation journal entries following the format above.`;
 				// Should have grid/cell metrics
 				if (step.state) {
 					const hasCellMetrics =
-						"alive_cells" in step.state ||
-						"density" in step.state ||
-						"cell_count" in step.state;
+						"alive_cells" in step.state || "density" in step.state || "cell_count" in step.state;
 					if (!hasCellMetrics) {
-						warnings.push(
-							"Cellular automata simulation should include cell/grid metrics",
-						);
+						warnings.push("Cellular automata simulation should include cell/grid metrics");
 					}
 				}
 				break;
@@ -424,9 +414,7 @@ Provide simulation journal entries following the format above.`;
 			case "discrete-event":
 				// Should have event-related info
 				if (step.metadata && !("event" in step.metadata) && !("events" in step.metadata)) {
-					warnings.push(
-						"Discrete-event simulation should include event information in metadata",
-					);
+					warnings.push("Discrete-event simulation should include event information in metadata");
 				}
 				break;
 		}
@@ -565,9 +553,7 @@ Provide simulation journal entries following the format above.`;
 	/**
 	 * Calculate rates of change for variables
 	 */
-	private calculateRatesOfChange(
-		trajectory: Array<Record<string, number>>,
-	): Record<string, any> {
+	private calculateRatesOfChange(trajectory: Array<Record<string, number>>): Record<string, any> {
 		const rates: Record<string, any> = {};
 
 		if (trajectory.length < 2) return rates;
@@ -629,9 +615,7 @@ Provide simulation journal entries following the format above.`;
 		}
 
 		if (processedResults.validation.warnings > 0) {
-			insights.push(
-				`${processedResults.validation.warnings} entries had validation warnings`,
-			);
+			insights.push(`${processedResults.validation.warnings} entries had validation warnings`);
 		}
 
 		// Equilibrium insights
@@ -641,9 +625,7 @@ Provide simulation journal entries following the format above.`;
 				.map(([key]) => key);
 
 			if (equilibriumVars.length > 0) {
-				insights.push(
-					`Variables reaching equilibrium: ${equilibriumVars.join(", ")}`,
-				);
+				insights.push(`Variables reaching equilibrium: ${equilibriumVars.join(", ")}`);
 			}
 		}
 
@@ -662,17 +644,13 @@ Provide simulation journal entries following the format above.`;
 		// Type-specific insights
 		switch (simulationType) {
 			case "system-dynamics":
-				insights.push(
-					"System dynamics simulation tracks continuous variable evolution over time",
-				);
+				insights.push("System dynamics simulation tracks continuous variable evolution over time");
 				if (analysis.ratesOfChange) {
 					const accelerating = Object.entries(analysis.ratesOfChange)
 						.filter(([, r]: [string, any]) => r.accelerating)
 						.map(([key]) => key);
 					if (accelerating.length > 0) {
-						insights.push(
-							`Accelerating growth detected in: ${accelerating.join(", ")}`,
-						);
+						insights.push(`Accelerating growth detected in: ${accelerating.join(", ")}`);
 					}
 				}
 				break;

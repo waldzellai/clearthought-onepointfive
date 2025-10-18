@@ -1,277 +1,301 @@
 /**
- * Statistical Reasoning Operation
+ * Statistical Reasoning Operation - Structured Journal Pattern
  *
- * Performs statistical analysis and probabilistic reasoning
+ * Tracks statistical analysis performed by AI, providing structured format
+ * for recording statistical computations, interpretations, and insights.
+ * Does NOT perform calculations - the AI provides them.
  */
 import { BaseOperation } from "../base.js";
+/**
+ * Statistical Reasoning Operation
+ * Tracks AI's statistical analysis in structured journal format
+ */
 export class StatisticalReasoningOperation extends BaseOperation {
-    name = "statistical_reasoning";
-    category = "analysis";
-    async execute(context) {
-        const { sessionState, prompt, parameters } = context;
-        const analysisType = this.getParam(parameters, "analysisType", "descriptive");
-        const data = parameters.data || this.extractNumericData(prompt);
-        const confidence = this.getParam(parameters, "confidence", 0.95);
-        const hypothesis = this.getParam(parameters, "hypothesis", "");
-        let result = {};
-        switch (analysisType) {
-            case "descriptive":
-                result = this.performDescriptiveAnalysis(data);
-                break;
-            case "hypothesis-test":
-                result = this.performHypothesisTest(data, hypothesis, confidence);
-                break;
-            case "bayesian": {
-                const prior = parameters.prior || {};
-                const likelihood = parameters.likelihood || {};
-                result = this.performBayesianUpdate(prior, likelihood);
-                break;
-            }
-            case "monte-carlo": {
-                const distribution = this.getParam(parameters, "distribution", "normal");
-                const samples = this.getParam(parameters, "samples", 1000);
-                result = this.performMonteCarloSimulation(distribution, samples, parameters);
-                break;
-            }
-            case "correlation": {
-                const dataY = parameters.dataY || [];
-                result = this.analyzeCorrelation(data, dataY);
-                break;
-            }
-            default:
-                result = { error: `Unknown analysis type: ${analysisType}` };
-        }
-        return this.createResult({
-            analysisType,
-            result,
-            dataSize: data.length,
-            interpretation: this.generateInterpretation(analysisType, result),
-            assumptions: this.listAssumptions(analysisType),
-            recommendations: this.generateRecommendations(analysisType, result),
-            sessionContext: {
-                sessionId: sessionState.sessionId,
-                stats: sessionState.getStats(),
-            },
-        });
-    }
-    extractNumericData(prompt) {
-        const numbers = prompt.match(/\b\d+(?:\.\d+)?\b/g);
-        return numbers ? numbers.map(Number).filter((n) => !isNaN(n)) : this.generateSampleData();
-    }
-    generateSampleData() {
-        // Generate sample data for demonstration
-        const data = [];
-        for (let i = 0; i < 20; i++) {
-            data.push(Math.random() * 100 + 50);
-        }
-        return data;
-    }
-    performDescriptiveAnalysis(data) {
-        if (data.length === 0) {
-            return { mean: 0, variance: 0, stddev: 0, min: 0, max: 0, n: 0 };
-        }
-        const n = data.length;
-        const mean = data.reduce((sum, x) => sum + x, 0) / n;
-        const variance = data.reduce((sum, x) => sum + (x - mean) ** 2, 0) / (n - 1);
-        const stddev = Math.sqrt(variance);
-        const min = Math.min(...data);
-        const max = Math.max(...data);
-        return { mean, variance, stddev, min, max, n };
-    }
-    performHypothesisTest(data, hypothesis, confidence) {
-        const stats = this.performDescriptiveAnalysis(data);
-        // Simple one-sample t-test against population mean of 0
-        const populationMean = 0;
-        const tStatistic = (stats.mean - populationMean) / (stats.stddev / Math.sqrt(stats.n));
-        const dof = stats.n - 1;
-        // Approximate p-value calculation (simplified)
-        const pValue = this.approximateTTestPValue(Math.abs(tStatistic), dof);
-        // Effect size (Cohen's d)
-        const effectSize = Math.abs(stats.mean - populationMean) / stats.stddev;
-        return {
-            test: "t",
-            statistic: tStatistic,
-            pValue,
-            dof,
-            effectSize,
-        };
-    }
-    approximateTTestPValue(tStat, dof) {
-        // Very simplified p-value approximation
-        if (tStat > 3)
-            return 0.001;
-        if (tStat > 2.5)
-            return 0.01;
-        if (tStat > 2)
-            return 0.05;
-        if (tStat > 1.5)
-            return 0.1;
-        return 0.2;
-    }
-    performBayesianUpdate(prior, likelihood) {
-        const posterior = {};
-        let evidence = 0;
-        // Calculate evidence (marginal likelihood)
-        for (const key in prior) {
-            evidence += (prior[key] || 0) * (likelihood[key] || 0);
-        }
-        // Calculate posterior
-        for (const key in prior) {
-            if (evidence > 0) {
-                posterior[key] = ((prior[key] || 0) * (Number(likelihood[key]) || 0)) / evidence;
-            }
-            else {
-                posterior[key] = prior[key] || 0;
-            }
-        }
-        return { prior, likelihood, posterior, evidence };
-    }
-    performMonteCarloSimulation(distribution, samples, parameters) {
-        const results = [];
-        for (let i = 0; i < samples; i++) {
-            let sample;
-            switch (distribution) {
-                case "normal": {
-                    const mean = this.getParam(parameters, "mean", 0);
-                    const stddev = this.getParam(parameters, "stddev", 1);
-                    sample = this.normalRandom(mean, stddev);
-                    break;
-                }
-                case "uniform": {
-                    const min = this.getParam(parameters, "min", 0);
-                    const max = this.getParam(parameters, "max", 1);
-                    sample = Math.random() * (max - min) + min;
-                    break;
-                }
-                case "exponential": {
-                    const lambda = this.getParam(parameters, "lambda", 1);
-                    sample = -Math.log(Math.random()) / lambda;
-                    break;
-                }
-                default:
-                    sample = Math.random();
-            }
-            results.push(sample);
-        }
-        const stats = this.performDescriptiveAnalysis(results);
-        const sorted = results.sort((a, b) => a - b);
-        return {
-            samples,
-            mean: stats.mean,
-            stddev: stats.stddev,
-            percentile: {
-                "5": sorted[Math.floor(samples * 0.05)],
-                "25": sorted[Math.floor(samples * 0.25)],
-                "50": sorted[Math.floor(samples * 0.5)],
-                "75": sorted[Math.floor(samples * 0.75)],
-                "95": sorted[Math.floor(samples * 0.95)],
-            },
-        };
-    }
-    normalRandom(mean = 0, stddev = 1) {
-        // Box-Muller transformation
-        const u1 = Math.random();
-        const u2 = Math.random();
-        const z0 = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-        return z0 * stddev + mean;
-    }
-    analyzeCorrelation(dataX, dataY) {
-        if (dataX.length !== dataY.length || dataX.length === 0) {
-            return { correlation: 0, interpretation: "Invalid or mismatched data" };
-        }
-        const n = dataX.length;
-        const meanX = dataX.reduce((sum, x) => sum + x, 0) / n;
-        const meanY = dataY.reduce((sum, y) => sum + y, 0) / n;
-        let numerator = 0;
-        let denominatorX = 0;
-        let denominatorY = 0;
-        for (let i = 0; i < n; i++) {
-            const xDiff = dataX[i] - meanX;
-            const yDiff = dataY[i] - meanY;
-            numerator += xDiff * yDiff;
-            denominatorX += xDiff * xDiff;
-            denominatorY += yDiff * yDiff;
-        }
-        const correlation = numerator / Math.sqrt(denominatorX * denominatorY);
-        let interpretation;
-        const absCorr = Math.abs(correlation);
-        if (absCorr > 0.8)
-            interpretation = "Strong correlation";
-        else if (absCorr > 0.5)
-            interpretation = "Moderate correlation";
-        else if (absCorr > 0.3)
-            interpretation = "Weak correlation";
-        else
-            interpretation = "Very weak or no correlation";
-        return { correlation, interpretation };
-    }
-    generateInterpretation(analysisType, result) {
-        const interpretations = [];
-        switch (analysisType) {
-            case "descriptive":
-                if (result.stddev < result.mean * 0.1) {
-                    interpretations.push("Data shows low variability");
-                }
-                interpretations.push(`Average value is ${result.mean.toFixed(2)}`);
-                break;
-            case "hypothesis-test":
-                if (result.pValue < 0.05) {
-                    interpretations.push("Statistically significant result (p < 0.05)");
-                }
-                else {
-                    interpretations.push("No significant evidence against null hypothesis");
-                }
-                if (result.effectSize > 0.8) {
-                    interpretations.push("Large effect size detected");
-                }
-                break;
-            case "bayesian": {
-                const maxPosterior = Math.max(...Object.values(result.posterior).map((v) => Number(v) || 0));
-                const mostLikely = Object.keys(result.posterior).find((key) => result.posterior[key] === maxPosterior);
-                interpretations.push(`Most probable outcome: ${mostLikely}`);
-                break;
-            }
-            case "monte-carlo":
-                interpretations.push(`Simulation with ${result.samples} samples completed`);
-                interpretations.push(`95% confidence interval: [${result.percentile["5"].toFixed(2)}, ${result.percentile["95"].toFixed(2)}]`);
-                break;
-        }
-        return interpretations;
-    }
-    listAssumptions(analysisType) {
-        const assumptions = [];
-        switch (analysisType) {
-            case "hypothesis-test":
-                assumptions.push("Data is normally distributed");
-                assumptions.push("Observations are independent");
-                assumptions.push("Equal variances (if comparing groups)");
-                break;
-            case "correlation":
-                assumptions.push("Linear relationship between variables");
-                assumptions.push("No extreme outliers");
-                assumptions.push("Variables are continuous");
-                break;
-            case "monte-carlo":
-                assumptions.push("Random number generator is adequate");
-                assumptions.push("Sufficient number of samples for convergence");
-                break;
-            default:
-                assumptions.push("Data quality is adequate for analysis");
-        }
-        return assumptions;
-    }
-    generateRecommendations(analysisType, result) {
-        const recommendations = [];
-        if (analysisType === "hypothesis-test" && result.pValue > 0.05) {
-            recommendations.push("Consider increasing sample size for more power");
-            recommendations.push("Check for violations of test assumptions");
-        }
-        if (analysisType === "descriptive" && result.n < 30) {
-            recommendations.push("Small sample size - interpret results cautiously");
-        }
-        recommendations.push("Validate findings with additional data or methods");
-        recommendations.push("Consider practical significance alongside statistical significance");
-        return recommendations;
-    }
+	name = "statistical_reasoning";
+	category = "analysis";
+	journal = [];
+	disableLogging = false;
+	constructor() {
+		super();
+		this.disableLogging = (process.env.DISABLE_STATISTICAL_LOGGING || "").toLowerCase() === "true";
+	}
+	/**
+	 * Validate statistical reasoning input
+	 */
+	validateEntry(input) {
+		const data = input;
+		if (!data.entry || typeof data.entry !== "string") {
+			throw new Error("Invalid entry: must be a string describing the statistical analysis");
+		}
+		if (!data.entryNumber || typeof data.entryNumber !== "number") {
+			throw new Error("Invalid entryNumber: must be a number indicating current position");
+		}
+		if (!data.totalEntries || typeof data.totalEntries !== "number") {
+			throw new Error("Invalid totalEntries: must be a number estimating total analyses needed");
+		}
+		if (typeof data.nextEntryNeeded !== "boolean") {
+			throw new Error(
+				"Invalid nextEntryNeeded: must be a boolean indicating if more analysis is needed",
+			);
+		}
+		if (!data.statistic || typeof data.statistic !== "object") {
+			throw new Error(
+				"Invalid statistic: must be an object containing statistical analysis details",
+			);
+		}
+		const statistic = data.statistic;
+		if (!statistic.type || typeof statistic.type !== "string") {
+			throw new Error(
+				"Invalid statistic.type: must be one of descriptive, inferential, bayesian, correlation, regression, monte-carlo, time-series, or distribution",
+			);
+		}
+		return {
+			entry: data.entry,
+			entryNumber: data.entryNumber,
+			totalEntries: data.totalEntries,
+			nextEntryNeeded: data.nextEntryNeeded,
+			statistic: statistic,
+			metadata: data.metadata,
+		};
+	}
+	/**
+	 * Format entry for terminal logging
+	 */
+	formatEntry(entry) {
+		const { entryNumber, totalEntries, entry: description, statistic } = entry;
+		const header = `📊 Statistical Analysis ${entryNumber}/${totalEntries} [${statistic.type}]`;
+		const border = "═".repeat(Math.max(header.length, 60));
+		let details = "";
+		switch (statistic.type) {
+			case "descriptive": {
+				const measures = Object.entries(statistic.measures)
+					.filter(([_, v]) => v !== undefined)
+					.map(([k, v]) => `${k}: ${typeof v === "number" ? v.toFixed(3) : JSON.stringify(v)}`)
+					.join(", ");
+				details = `Measures: ${measures}\nSample size: ${statistic.sampleSize}`;
+				break;
+			}
+			case "inferential":
+				details = `Test: ${statistic.test}\nStatistic: ${statistic.results.statistic.toFixed(4)}, p-value: ${statistic.results.pValue.toFixed(4)}\nConclusion: ${statistic.conclusion}`;
+				break;
+			case "bayesian":
+				details = `Prior: ${statistic.prior.distribution}\nPosterior: ${statistic.posterior.distribution}\nUpdated belief: ${statistic.posterior.updated_belief}`;
+				break;
+			case "correlation":
+				details = `Method: ${statistic.method}\nCoefficient: ${statistic.coefficient.toFixed(4)}\nInterpretation: ${statistic.interpretation}`;
+				break;
+			case "regression":
+				details = `Model: ${statistic.model}\nEquation: ${statistic.equation}\nR²: ${statistic.goodnessOfFit.rSquared?.toFixed(4) || "N/A"}`;
+				break;
+			case "monte-carlo":
+				details = `Simulations: ${statistic.simulations}\nMean: ${statistic.results.mean.toFixed(4)}, StdDev: ${statistic.results.stddev.toFixed(4)}\nInterpretation: ${statistic.interpretation}`;
+				break;
+			case "time-series":
+				details = `Trend: ${statistic.components.trend || "N/A"}\nStationary: ${statistic.stationarity?.isStationary ? "Yes" : "No"}`;
+				if (statistic.forecast) {
+					details += `\nForecast model: ${statistic.forecast.model}`;
+				}
+				break;
+			case "distribution":
+				details = `Distribution: ${statistic.distribution}\nParameters: ${JSON.stringify(statistic.parameters)}`;
+				if (statistic.goodnessOfFit) {
+					details += `\nGoodness of fit: ${statistic.goodnessOfFit.conclusion}`;
+				}
+				break;
+		}
+		return `
+╔${border}╗
+║ ${header.padEnd(border.length - 2)} ║
+╠${border}╣
+║ ${description.padEnd(border.length - 2)} ║
+╟${"─".repeat(border.length)}╢
+║ ${details
+			.split("\n")
+			.join(`\n║ `)
+			.padEnd(border.length - 2)} ║
+╚${border}╝`;
+	}
+	async execute(context) {
+		const { parameters } = context;
+		try {
+			// Validate input
+			const validatedEntry = this.validateEntry(parameters);
+			// Auto-adjust totalEntries if needed
+			if (validatedEntry.entryNumber > validatedEntry.totalEntries) {
+				validatedEntry.totalEntries = validatedEntry.entryNumber;
+			}
+			// Store in journal
+			this.journal.push(validatedEntry);
+			// Terminal logging
+			if (!this.disableLogging) {
+				const formatted = this.formatEntry(validatedEntry);
+				console.error(formatted);
+			}
+			// Generate summary insights if this is the final entry
+			const insights = !validatedEntry.nextEntryNeeded ? this.generateInsights() : undefined;
+			// Return minimal metadata
+			return this.createResult({
+				entryNumber: validatedEntry.entryNumber,
+				totalEntries: validatedEntry.totalEntries,
+				nextEntryNeeded: validatedEntry.nextEntryNeeded,
+				analysisType: validatedEntry.statistic.type,
+				journalLength: this.journal.length,
+				insights,
+			});
+		} catch (error) {
+			return this.createResult({
+				error: error instanceof Error ? error.message : String(error),
+				status: "failed",
+			});
+		}
+	}
+	/**
+	 * Generate summary insights from the complete journal
+	 */
+	generateInsights() {
+		const analysisTypes = this.journal.map((e) => e.statistic.type);
+		const typeCount = {};
+		for (const type of analysisTypes) {
+			typeCount[type] = (typeCount[type] || 0) + 1;
+		}
+		return {
+			totalAnalyses: this.journal.length,
+			analysisTypeBreakdown: typeCount,
+			journalComplete: true,
+		};
+	}
+	/**
+	 * Tool description for AI guidance
+	 */
+	getToolDescription() {
+		return {
+			name: this.name,
+			description: `A structured journal for tracking statistical reasoning and analysis.
+
+This tool provides a framework for recording statistical computations, interpretations, and insights
+in a structured format. The AI performs the statistical analysis and provides the results - this tool
+tracks and organizes those results.
+
+When to use this tool:
+- Performing statistical analysis on datasets
+- Testing hypotheses with inferential statistics
+- Bayesian inference and probability updating
+- Correlation and regression analysis
+- Monte Carlo simulations
+- Time series analysis and forecasting
+- Distribution fitting and analysis
+- Multi-step statistical investigations
+
+Key features:
+- Structured format for different types of statistical analysis
+- Tracks descriptive, inferential, Bayesian, and other statistical methods
+- Records assumptions, interpretations, and reasoning
+- Supports complex multi-step statistical investigations
+- Allows revision and branching of analytical approaches
+
+Analysis types supported:
+1. descriptive - Summary statistics (mean, median, variance, etc.)
+2. inferential - Hypothesis tests, confidence intervals, effect sizes
+3. bayesian - Prior/posterior distributions, Bayesian updating
+4. correlation - Correlation coefficients between variables
+5. regression - Linear, logistic, polynomial, multiple regression
+6. monte-carlo - Simulation-based statistical analysis
+7. time-series - Trend, seasonality, forecasting
+8. distribution - Distribution fitting and probability calculations
+
+Parameters:
+- entry: Human-readable description of the statistical analysis performed
+- entryNumber: Current analysis step number
+- totalEntries: Estimated total number of analyses needed
+- nextEntryNeeded: Whether more statistical analysis is required
+- statistic: Structured data containing the statistical analysis results
+  - type: The type of statistical analysis (see list above)
+  - [type-specific fields]: Results, interpretations, and reasoning
+- metadata: Optional context (data source, references, timestamp)
+
+Example usage:
+{
+  "entry": "Computed descriptive statistics for response times dataset",
+  "entryNumber": 1,
+  "totalEntries": 3,
+  "nextEntryNeeded": true,
+  "statistic": {
+    "type": "descriptive",
+    "measures": {
+      "mean": 45.3,
+      "median": 44.0,
+      "stddev": 8.2,
+      "min": 30.1,
+      "max": 68.5
+    },
+    "sampleSize": 100,
+    "reasoning": "Central tendency indicates average response time around 45ms with moderate variability"
+  }
 }
+
+The AI should:
+1. Perform the statistical computations
+2. Provide results in the appropriate structured format
+3. Include reasoning and interpretation
+4. Track assumptions and limitations
+5. Set nextEntryNeeded appropriately for multi-step analyses`,
+			inputSchema: {
+				type: "object",
+				properties: {
+					entry: {
+						type: "string",
+						description: "Description of the statistical analysis performed",
+					},
+					entryNumber: {
+						type: "integer",
+						description: "Current analysis step number",
+						minimum: 1,
+					},
+					totalEntries: {
+						type: "integer",
+						description: "Estimated total analyses needed",
+						minimum: 1,
+					},
+					nextEntryNeeded: {
+						type: "boolean",
+						description: "Whether more analysis is needed",
+					},
+					statistic: {
+						type: "object",
+						description: "Statistical analysis results with type-specific structure",
+						properties: {
+							type: {
+								type: "string",
+								enum: [
+									"descriptive",
+									"inferential",
+									"bayesian",
+									"correlation",
+									"regression",
+									"monte-carlo",
+									"time-series",
+									"distribution",
+								],
+								description: "Type of statistical analysis",
+							},
+						},
+						required: ["type"],
+					},
+					metadata: {
+						type: "object",
+						description: "Optional metadata about the analysis",
+						properties: {
+							dataSource: { type: "string" },
+							context: { type: "string" },
+							timestamp: { type: "string" },
+							references: { type: "array", items: { type: "string" } },
+						},
+					},
+				},
+				required: ["entry", "entryNumber", "totalEntries", "nextEntryNeeded", "statistic"],
+			},
+		};
+	}
+}
+// Export singleton instance
 export default new StatisticalReasoningOperation();

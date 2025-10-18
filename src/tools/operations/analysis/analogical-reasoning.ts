@@ -41,8 +41,7 @@ export class AnalogicalReasoningOperation extends BaseOperation {
 	constructor() {
 		super();
 		// Check environment variable for logging control
-		this.disableLogging =
-			(process.env.DISABLE_ANALOGY_LOGGING || "").toLowerCase() === "true";
+		this.disableLogging = (process.env.DISABLE_ANALOGY_LOGGING || "").toLowerCase() === "true";
 	}
 
 	/**
@@ -69,13 +68,17 @@ export class AnalogicalReasoningOperation extends BaseOperation {
 		// Validate analogy structure
 		const analogy = data.analogy as Record<string, unknown>;
 		if (!analogy || typeof analogy !== "object") {
-			throw new Error("Invalid analogy: must be an object with sourceDomain, targetDomain, mappings, and reasoning");
+			throw new Error(
+				"Invalid analogy: must be an object with sourceDomain, targetDomain, mappings, and reasoning",
+			);
 		}
 		if (!analogy.sourceDomain || typeof analogy.sourceDomain !== "string") {
 			throw new Error("Invalid analogy.sourceDomain: must be a string (e.g., 'water_flow')");
 		}
 		if (!analogy.targetDomain || typeof analogy.targetDomain !== "string") {
-			throw new Error("Invalid analogy.targetDomain: must be a string (e.g., 'electrical_current')");
+			throw new Error(
+				"Invalid analogy.targetDomain: must be a string (e.g., 'electrical_current')",
+			);
 		}
 		if (!Array.isArray(analogy.mappings)) {
 			throw new Error("Invalid analogy.mappings: must be an array of mapping objects");
@@ -169,7 +172,11 @@ export class AnalogicalReasoningOperation extends BaseOperation {
 │ Mappings: ${mappingCount.padEnd(65)} │
 │ Avg Strength: ${avgStrength.padEnd(62)} │
 │                                                                                │
-│ Mappings:${mappingDetails.split("\n").slice(1).map(line => line.padEnd(78)).join("\n")}
+│ Mappings:${mappingDetails
+			.split("\n")
+			.slice(1)
+			.map((line) => line.padEnd(78))
+			.join("\n")}
 │                                                                                │
 │ Reasoning: ${analogy.reasoning.substring(0, 64).padEnd(64)} │
 └${border}┘`;
@@ -207,7 +214,9 @@ export class AnalogicalReasoningOperation extends BaseOperation {
 		} else if (avgStrength > 0.5) {
 			insights.push(`Moderate parallels exist between ${sourceDomain} and ${targetDomain}`);
 		} else {
-			insights.push(`Weak parallels exist between ${sourceDomain} and ${targetDomain} - consider alternative analogies`);
+			insights.push(
+				`Weak parallels exist between ${sourceDomain} and ${targetDomain} - consider alternative analogies`,
+			);
 		}
 
 		// Type-specific insights
@@ -220,13 +229,17 @@ export class AnalogicalReasoningOperation extends BaseOperation {
 			insights.push(`Found ${roleCount} role mapping(s) - key entities correspond between domains`);
 		}
 		if (structureCount > 0) {
-			insights.push(`Found ${structureCount} structural mapping(s) - organizational principles align`);
+			insights.push(
+				`Found ${structureCount} structural mapping(s) - organizational principles align`,
+			);
 		}
 		if (behaviorCount > 0) {
 			insights.push(`Found ${behaviorCount} behavioral mapping(s) - dynamic patterns are similar`);
 		}
 		if (constraintCount > 0) {
-			insights.push(`Found ${constraintCount} constraint mapping(s) - limitations and boundaries match`);
+			insights.push(
+				`Found ${constraintCount} constraint mapping(s) - limitations and boundaries match`,
+			);
 		}
 
 		// Mapping diversity
@@ -248,7 +261,9 @@ export class AnalogicalReasoningOperation extends BaseOperation {
 		// Strengthen weak mappings
 		const weakMappings = mappings.filter((m) => m.strength < 0.5);
 		if (weakMappings.length > 0) {
-			steps.push(`Strengthen ${weakMappings.length} weak mapping(s) by finding more correspondences`);
+			steps.push(
+				`Strengthen ${weakMappings.length} weak mapping(s) by finding more correspondences`,
+			);
 		}
 
 		// Add missing mapping types
