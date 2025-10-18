@@ -1,451 +1,605 @@
 ---
-description: Convert a Clear-Thought operation to use structured journal pattern
-allowed-tools: Read, Write, Edit, Bash, Grep, Glob
+description: Convert a Clear-Thought operation to use structured journal pattern with automated validation
+allowed-tools: Read, Write, Edit, Bash, Grep, Glob, mcp__container-use__*
 model: claude-sonnet-4-5-20250929
 ---
 
 # Convert Operation to Structured Journal Pattern
 
-You are converting a Clear-Thought MCP operation to use the **structured journal** implementation pattern from the Sequential Thinking MCP server.
+**CRITICAL PRINCIPLE**: The server does NOT reason. The agent performs reasoning, the server provides structure.
 
-## Reference Documents
+You are converting a Clear-Thought MCP operation to use the **structured journal** implementation pattern. This command provides an **interactive, automated workflow** that:
 
-**CRITICAL**: Before starting, read these documents in full:
+- ✅ Uses container-use for isolated testing
+- ✅ Runs vaporware detection automatically
+- ✅ Creates checkpoint commits at each phase
+- ✅ Validates with MCP Inspector
+- ✅ Guides you through design decisions
 
-1. `@reports/how-sequentialthinking-actually-works.md` - Complete technical analysis of the structured journal pattern
-2. `@docs/sequential-thinking-mcp-index.ts` - Reference implementation
-3. `@reports/analysis-clear-thought-actually-does-nothing.md` - Anti-patterns to avoid
+## Workflow Overview
 
-## Core Principles
+This is a **guided, interactive process** with automated validation at each step:
 
-The structured journal pattern is **NOT** an AI reasoning engine. It is:
+```
+1. Setup Environment (automated)
+2. Analysis & Design (interactive)
+3. Implementation (automated scaffolding + your customization)
+4. Validation (automated testing)
+5. Integration (automated registration + manual review)
+```
 
-✅ **Structured journaling interface** that enforces methodical thinking through parameter discipline
-✅ **Validation + Storage + Logging + Metadata** - no computational reasoning
-✅ **Tool description is the implementation** - guides AI client behavior
-✅ **Minimal response** - return only metadata, never echo prompts
-✅ **Terminal logging** - human-readable progress on stderr
-✅ **Type validation** - strict parameter checking with descriptive errors
+---
 
-❌ **NOT** computational reasoning or algorithmic search
-❌ **NOT** generating thoughts or making decisions
-❌ **NOT** analyzing quality or providing insights
+## Phase 1: Setup Environment (AUTOMATED)
 
-## Conversion Workflow
+### Step 1.1: Create Container Environment
 
-### Phase 1: Analysis & Planning
+**Action**: I will automatically create an isolated container-use environment for this operation.
 
-1. **Read the target operation file** in `src/tools/operations/`
-2. **Identify current implementation**:
+```bash
+# This happens automatically - you'll see:
+# ✓ Environment created: <env_id>
+# ✓ Working directory: /workspace
+# ✓ Git repository cloned
+```
+
+### Step 1.2: Install Dependencies
+
+**Action**: I will install all dependencies in the isolated environment.
+
+### Step 1.3: Read Reference Materials
+
+**Action**: I will read these files to understand the pattern:
+
+- `src/tools/operations/core/scientific-method.ts` - Reference implementation
+- `src/tools/operations/core/debugging-approach.ts` - Another working example
+- `src/tools/operations/base.ts` - Base classes and interfaces
+- `.claude/skills/model-enhancement-mcp/` - Core principles
+
+---
+
+## Phase 2: Analysis & Design (INTERACTIVE)
+
+### Step 2.1: Analyze Current Operation
+
+**Action**: I will read the target operation file and analyze:
+
+**I need you to tell me which operation to convert:**
+- What is the operation name? (e.g., "sequential-thinking", "creative-thinking")
+- Where is it located? (path to the file)
+
+**After you provide this, I will analyze:**
+
+1. **Current State**:
    - What parameters does it accept?
    - What does it claim to do vs. what it actually does?
-   - Are there placeholder returns or "would dispatch" messages?
-   - Does it echo the prompt back?
-3. **Map to journal pattern**:
-   - What are the "journal entries" for this operation?
-   - What metadata tracks progress?
-   - What validation is needed?
-   - What terminal output would be helpful?
+   - Are there vaporware anti-patterns? (placeholder returns, prompt echoing, fake pattern selection)
 
-### Phase 2: Define the Interface
+2. **Vaporware Detection** (automated):
+   - [ ] Placeholder returns (`{ placeholder: true }`)
+   - [ ] Prompt echoing (returning user input verbatim)
+   - [ ] Fake pattern selection (selecting patterns that don't execute)
+   - [ ] Large responses (>100 tokens)
+   - [ ] Missing terminal logging
+   - [ ] Weak validation
 
-Create the operation's **structured journal schema**:
+**Output**: Analysis report showing current state and required changes.
 
+### Step 2.2: Design the Journal Schema (INTERACTIVE)
+
+**This is where I need your input:**
+
+For this operation, what are the "journal entries"? I'll ask you questions like:
+
+- What is the primary content of each entry? (e.g., "thought", "hypothesis", "idea")
+- What progress metadata do we track? (entry numbers, phases, states)
+- What operation-specific fields are needed? (e.g., "technique" for creative-thinking, "approach" for debugging)
+- Should it support revisions? Branching?
+
+**Example**:
 ```typescript
-interface [OperationName]Data {
-  // Required fields that structure the thinking
-  entry: string;              // The actual content (like "thought" in sequential thinking)
-  entryNumber: number;        // Progress tracking
+interface VisualReasoningData {
+  entry: string;              // The visual analysis description
+  entryNumber: number;        // Progress: 1, 2, 3...
   totalEntries: number;       // Estimated total
-  nextEntryNeeded: boolean;   // Continuation flag
-  
-  // Optional fields for operation-specific features
+  nextEntryNeeded: boolean;   // Continue flag
+
+  // Operation-specific
+  spatialRelations?: string[];
+  patterns?: string[];
+  transformations?: string[];
+
+  // Standard journal features
   isRevision?: boolean;
   revisesEntry?: number;
   branchFromEntry?: number;
   branchId?: string;
-  
-  // Operation-specific metadata
-  [operationSpecificField]?: any;
 }
 ```
 
-### Phase 3: Implement Validation
+**Output**: Finalized TypeScript interface for the operation data.
+
+### Step 2.3: Design the Tool Description (INTERACTIVE)
+
+**This is the MOST IMPORTANT PART** - it guides AI behavior.
+
+I'll help you craft the description by asking:
+
+1. **When to use this tool**: What specific scenarios/use cases?
+2. **Key features**: What makes this operation unique?
+3. **Parameters explained**: What does each parameter mean in context?
+4. **Workflow steps**: How should the AI use this step-by-step?
+
+**Template**:
+```
+A structured tool for [PURPOSE] through [METHODOLOGY].
+
+When to use this tool:
+- [Use case 1]
+- [Use case 2]
+- [Use case 3]
+
+Key features:
+- [Feature 1]
+- [Feature 2]
+
+Parameters explained:
+- entry: [What it represents for this operation]
+- [operation-specific params]
+
+You should:
+1. [Step-by-step workflow]
+```
+
+**Output**: Complete tool description ready to implement.
+
+---
+
+## Phase 3: Implementation (AUTOMATED SCAFFOLDING + YOUR CUSTOMIZATION)
+
+### Step 3.1: Create Base Structure (AUTOMATED)
+
+**Action**: I will generate the boilerplate code:
+
+```typescript
+/**
+ * [Operation Name] Operation - Structured Journal Pattern
+ */
+
+import chalk from "chalk";
+import { BaseOperation, type OperationContext, type OperationResult } from "../base.js";
+
+interface [OperationName]Data {
+  // [Generated from Step 2.2]
+}
+
+export class [OperationName]Operation extends BaseOperation {
+  name = "[operation_name]";
+  category = "[category]";
+
+  private entryHistory: [OperationName]Data[] = [];
+  private branches: Record<string, [OperationName]Data[]> = {};
+  private disableLogging = (process.env.DISABLE_[OPERATION]_LOGGING || "").toLowerCase() === "true";
+
+  // Methods will be generated...
+}
+
+export default new [OperationName]Operation();
+```
+
+### Step 3.2: Implement Validation (AUTOMATED)
+
+**Action**: I will generate strict validation based on your schema:
 
 ```typescript
 private validateData(input: unknown): [OperationName]Data {
   const data = input as Record<string, unknown>;
-  
-  // Strict type checking with descriptive errors
-  if (!data.entry || typeof data.entry !== 'string') {
-    throw new Error('Invalid entry: must be a string');
+
+  if (!data.entry || typeof data.entry !== "string") {
+    throw new Error("Invalid entry: must be a string describing [WHAT]");
   }
-  if (!data.entryNumber || typeof data.entryNumber !== 'number') {
-    throw new Error('Invalid entryNumber: must be a number');
-  }
-  // ... validate all required fields
-  
-  return {
-    entry: data.entry,
-    entryNumber: data.entryNumber,
-    totalEntries: data.totalEntries,
-    nextEntryNeeded: data.nextEntryNeeded,
-    // ... map all fields
-  };
+  // ... all field validation with descriptive errors
+
+  return { /* validated data */ };
 }
 ```
 
-### Phase 4: Implement Storage
+### Step 3.3: Implement Terminal Formatting (CUSTOMIZATION NEEDED)
 
-```typescript
-private entryHistory: [OperationName]Data[] = [];
-private branches: Record<string, [OperationName]Data[]> = {};
-
-public processEntry(input: unknown): OperationResult {
-  try {
-    const validatedInput = this.validateData(input);
-    
-    // Auto-adjust if needed
-    if (validatedInput.entryNumber > validatedInput.totalEntries) {
-      validatedInput.totalEntries = validatedInput.entryNumber;
-    }
-    
-    // Store in history
-    this.entryHistory.push(validatedInput);
-    
-    // Track branches if applicable
-    if (validatedInput.branchFromEntry && validatedInput.branchId) {
-      if (!this.branches[validatedInput.branchId]) {
-        this.branches[validatedInput.branchId] = [];
-      }
-      this.branches[validatedInput.branchId].push(validatedInput);
-    }
-    
-    // Terminal logging (stderr)
-    if (!this.disableLogging) {
-      const formattedEntry = this.formatEntry(validatedInput);
-      console.error(formattedEntry);
-    }
-    
-    // Return minimal metadata
-    return {
-      content: [{
-        type: "text",
-        text: JSON.stringify({
-          entryNumber: validatedInput.entryNumber,
-          totalEntries: validatedInput.totalEntries,
-          nextEntryNeeded: validatedInput.nextEntryNeeded,
-          branches: Object.keys(this.branches),
-          historyLength: this.entryHistory.length
-        }, null, 2)
-      }]
-    };
-  } catch (error) {
-    return {
-      content: [{
-        type: "text",
-        text: JSON.stringify({
-          error: error instanceof Error ? error.message : String(error),
-          status: 'failed'
-        }, null, 2)
-      }],
-      isError: true
-    };
-  }
-}
-```
-
-### Phase 5: Terminal Formatting
+**Action**: I will generate a template, but **you should customize**:
+- Choose an emoji for the operation (🔬 for scientific, 🐛 for debugging, etc.)
+- Choose chalk color (blue, magenta, cyan, etc.)
+- Decide what metadata to show in the header
 
 ```typescript
 private formatEntry(data: [OperationName]Data): string {
-  const { entryNumber, totalEntries, entry, isRevision, revisesEntry } = data;
-  
-  let prefix = '';
-  let context = '';
-  
-  if (isRevision) {
-    prefix = chalk.yellow('🔄 Revision');
-    context = ` (revising entry ${revisesEntry})`;
-  } else {
-    prefix = chalk.blue('📝 Entry');  // Use operation-appropriate emoji
-    context = '';
-  }
-  
-  const header = `${prefix} ${entryNumber}/${totalEntries}${context}`;
-  const border = '─'.repeat(Math.max(header.length, entry.length) + 4);
-  
-  return `
-┌${border}┐
-│ ${header} │
-├${border}┤
-│ ${entry.padEnd(border.length - 2)} │
-└${border}┘`;
+  // Generated template - customize emoji/colors
+  let prefix = chalk.[COLOR]("[EMOJI] [Name]");
+  // ... formatting logic
 }
 ```
 
-### Phase 6: Tool Description
+### Step 3.4: Implement Execute Method (AUTOMATED)
 
-**THIS IS THE MOST IMPORTANT PART** - The description guides AI behavior:
+**Action**: I will implement the standard execute pattern:
 
 ```typescript
-const TOOL_DESCRIPTION = `
-A structured tool for [operation purpose] through systematic entries.
+async execute(context: OperationContext): Promise<OperationResult> {
+  try {
+    const validatedInput = this.validateData(parameters);
 
-This tool provides scaffolding for [specific methodology], enforcing discipline
-through required parameters while allowing flexibility in approach.
+    // Auto-adjust totalEntries
+    // Store in history
+    // Track branches
+    // Log to stderr
+    // Return metadata
 
-When to use this tool:
-- [Specific use case 1]
-- [Specific use case 2]
-- [Specific use case 3]
-
-Key features:
-- Adjust totalEntries as understanding evolves
-- Mark revisions explicitly when reconsidering
-- Branch to explore alternatives
-- Express uncertainty naturally
-
-Parameters explained:
-- entry: Your current [operation-specific content]
-- nextEntryNeeded: True if more entries needed
-- entryNumber: Current position in sequence
-- totalEntries: Current estimate (adjustable)
-- isRevision: Boolean indicating reconsideration
-- revisesEntry: Which entry number is being revised
-- branchFromEntry: Branching point for alternatives
-- branchId: Identifier for exploration branch
-
-You should:
-1. Start with initial estimate, adjust as needed
-2. Mark revisions explicitly
-3. Branch when exploring alternatives
-4. Express uncertainty when present
-5. Only set nextEntryNeeded to false when truly complete
-`;
+  } catch (error) {
+    return this.createError(/* ... */);
+  }
+}
 ```
 
-### Phase 7: Remove Vaporware
+### Step 3.5: Implement getToolDescription (AUTOMATED)
 
-**CRITICAL CHECKS**:
+**Action**: I will implement using your design from Step 2.3.
 
-- [ ] No "would dispatch" messages
+---
+
+## Phase 4: Validation (AUTOMATED TESTING)
+
+### Step 4.1: Run Vaporware Detection (AUTOMATED - BLOCKING)
+
+**Action**: I will run the vaporware detection hook:
+
+```bash
+npx tsx .claude/hooks/validate-vaporware.ts < hook-input.json
+```
+
+**Checks**:
 - [ ] No placeholder returns
-- [ ] No prompt echoing in responses
-- [ ] No claims of computational reasoning
-- [ ] No unused parameters
+- [ ] No prompt echoing
 - [ ] No fake pattern selection
-- [ ] All code paths are functional
-- [ ] Terminal logging works
-- [ ] Validation throws descriptive errors
-- [ ] Storage actually stores data
+- [ ] Response size < 100 tokens
+- [ ] Terminal logging present
+- [ ] Validation errors are descriptive
+- [ ] All code paths functional
 
-### Phase 8: Testing
+**This is BLOCKING** - if it fails, we fix issues before proceeding.
 
-#### 8.1 Unit Tests
+### Step 4.2: Run TypeScript Type Check (AUTOMATED)
 
-Create a unit test file that verifies:
+**Action**: I will verify TypeScript compilation:
 
-```typescript
-describe('[OperationName] Structured Journal', () => {
-  it('validates required parameters', () => {
-    // Test missing parameters throw errors
-  });
-
-  it('stores entries in history', () => {
-    // Test history accumulation
-  });
-
-  it('auto-adjusts totalEntries', () => {
-    // Test max() logic
-  });
-
-  it('tracks branches correctly', () => {
-    // Test branch storage
-  });
-
-  it('returns minimal metadata', () => {
-    // Test response size < 100 tokens
-  });
-
-  it('logs to stderr', () => {
-    // Test terminal output
-  });
-
-  it('handles errors gracefully', () => {
-    // Test error responses
-  });
-});
+```bash
+npm run typecheck
 ```
 
-#### 8.2 MCP Integration Tests (MCPJam Evals CLI)
+### Step 4.3: Manual Review Checkpoint (INTERACTIVE)
 
-**CRITICAL**: Test the dynamic server-client MCP experience using MCPJam Evals CLI.
+**Action**: I will show you the complete implementation and ask:
 
-**Reference**: Read `.claude/checklists/mcp-evals-test-checklist.md` for the complete test checklist.
+1. Does the terminal output look good?
+2. Are the validation errors clear?
+3. Is the tool description comprehensive?
+4. Should we adjust anything before testing?
 
-**Setup**:
+### Step 4.4: Test with MCP Inspector (SEMI-AUTOMATED)
 
-1. **Read the checklist**: Open `.claude/checklists/mcp-evals-test-checklist.md` and review all test categories
+**Action**: I will build the server and provide test commands:
 
-2. **Generate tests.json**: Using the checklist, create test configuration in `evals-cli-starter/tests.json`
+```bash
+npm run build
+npx @modelcontextprotocol/inspector npx -y clearthought-onepointfive
+```
 
-**Minimum required tests** (from checklist):
+**Test Cases** (I'll guide you through):
+1. **Basic usage**: Call with valid parameters
+2. **Validation**: Call with missing/invalid parameters
+3. **Revision**: Test isRevision functionality
+4. **Branching**: Test branch tracking
+5. **Auto-adjustment**: Test totalEntries adjustment
+
+**You will manually verify** in MCP Inspector that:
+- Tool appears in list
+- Tool description is clear
+- Parameters are validated
+- Responses are minimal (<100 tokens)
+- Terminal logging appears in stderr
+- Errors are descriptive
+
+### Step 4.5: Run MCPJam Evals (AUTOMATED - CRITICAL)
+
+**Action**: I will create and run MCPJam evals to test real server-client interaction.
+
+**Reference**: See `docs/MCPJAM_EVALS_TESTING_GUIDE.md` and `.claude/checklists/mcp-evals-test-checklist.md`
+
+**Step 4.5.1: Create Test Configuration**
+
+I will create `evals-cli-starter/tests-[operation-name].json`:
 
 ```json
 [
   {
-    "title": "[Operation Name] - Basic Usage",
-    "query": "Use [operation-name] to [simple, clear task description]",
+    "title": "[Operation] - Basic Usage",
+    "query": "Use [operation] to [simple task]",
     "runs": 3,
     "model": "anthropic/claude-sonnet-4.5",
     "provider": "openrouter",
-    "expectedToolCalls": ["[operation-tool-name]"]
+    "expectedToolCalls": ["[operation_name]"]
   },
   {
-    "title": "[Operation Name] - Multi-step",
-    "query": "Use [operation-name] to [complex task requiring multiple steps/entries]",
+    "title": "[Operation] - Multi-step",
+    "query": "Use [operation] to [complex task requiring multiple entries]",
     "runs": 2,
     "model": "anthropic/claude-sonnet-4.5",
     "provider": "openrouter",
-    "expectedToolCalls": ["[operation-tool-name]"]
+    "expectedToolCalls": ["[operation_name]"]
   },
   {
-    "title": "[Operation Name] - Revision",
-    "query": "Use [operation-name] to [task]. Make [N] entries, then revise entry [X] to [improvement].",
+    "title": "[Operation] - Revision",
+    "query": "Use [operation] to [task]. Make 3 entries, then revise entry 2.",
     "runs": 2,
     "model": "anthropic/claude-sonnet-4.5",
     "provider": "openrouter",
-    "expectedToolCalls": ["[operation-tool-name]"]
+    "expectedToolCalls": ["[operation_name]"]
   },
   {
-    "title": "[Operation Name] - Branching",
-    "query": "Use [operation-name] to [task]. Make [N] entries, then explore an alternative from entry [X].",
+    "title": "[Operation] - Branching",
+    "query": "Use [operation] to [task]. Make 3 entries, then explore alternative from entry 2.",
     "runs": 2,
     "model": "anthropic/claude-sonnet-4.5",
     "provider": "openrouter",
-    "expectedToolCalls": ["[operation-tool-name]"]
+    "expectedToolCalls": ["[operation_name]"]
   },
   {
-    "title": "[Operation Name] - Error Handling",
-    "query": "Use [operation-name] but [do something invalid]",
+    "title": "[Operation] - Error Handling",
+    "query": "Use [operation] but skip entry 2 and go straight to entry 5",
     "runs": 1,
     "model": "anthropic/claude-sonnet-4.5",
     "provider": "openrouter",
-    "expectedToolCalls": ["[operation-tool-name]"]
+    "expectedToolCalls": ["[operation_name]"]
   }
 ]
 ```
 
-**IMPORTANT**: The checklist defines 10 test categories. Use ALL of them for comprehensive coverage.
-
-3. Ensure `evals-cli-starter/environment.json` is configured:
-
-```json
-{
-  "servers": {
-    "clear-thought": {
-      "command": "node",
-      "args": ["dist/server.js"],
-      "env": {}
-    }
-  }
-}
-```
-
-4. Run the evals:
+**Step 4.5.2: Run Evals**
 
 ```bash
-# Build the server first
-npm run build
-
-# Run MCPJam evals
 cd evals-cli-starter
-mcpjam evals run -t tests.json -e environment.json -l llms.json
-
-# Or use the full command
-mcpjam evals run --tests tests.json --environment environment.json --llms llms.json
+mcpjam evals run -t tests-[operation-name].json -e environment.json -l llms.json
 ```
 
-**What to verify**:
-
-- [ ] Tool is called correctly by Claude
-- [ ] Parameters are validated properly
-- [ ] Responses are minimal (<100 tokens)
-- [ ] Terminal logging appears in eval output
-- [ ] Multi-turn conversations work
-- [ ] Revisions are handled correctly
-- [ ] Branching works as expected
-- [ ] Error messages are clear and actionable
-
-**Expected output**:
-
+**Expected Output**:
 ```
-✓ [Operation Name] - Basic Usage (3/3 runs passed)
-✓ [Operation Name] - Multi-step (2/2 runs passed)
-✓ [Operation Name] - Revision (2/2 runs passed)
-✓ [Operation Name] - Branching (2/2 runs passed)
+✓ [Operation] - Basic Usage (3/3 runs passed)
+✓ [Operation] - Multi-step (2/2 runs passed)
+✓ [Operation] - Revision (2/2 runs passed)
+✓ [Operation] - Branching (2/2 runs passed)
+✗ [Operation] - Error Handling (0/1 - expected error)
 
 Summary:
-- Total tests: 4
+- Total tests: 5
 - Passed: 4
-- Failed: 0
-- Success rate: 100%
+- Expected failures: 1
+- Success rate: 100% (accounting for expected errors)
 ```
 
-**If tests fail**:
+**What We Verify**:
+- [ ] Claude discovers and uses the tool correctly
+- [ ] Tool description guides AI behavior
+- [ ] Parameters are provided correctly
+- [ ] Responses are minimal (<100 tokens)
+- [ ] Multi-turn state persists
+- [ ] Revisions work
+- [ ] Branching works
+- [ ] Error messages are actionable
 
-1. Check the eval output for specific errors
-2. Verify tool description guides AI correctly
-3. Check parameter validation is working
-4. Ensure responses are minimal
-5. Verify terminal logging is present
-6. Test manually with MCP Inspector if needed
+**This is BLOCKING** - if evals fail, we debug and fix before proceeding.
 
-## Anti-Patterns to Avoid
+**Step 4.5.3: Debug Failures (if needed)**
 
-Based on `@reports/analysis-clear-thought-actually-does-nothing.md`:
+If tests fail, I will:
+1. Review eval output for specific errors
+2. Identify root cause (tool description, validation, response format, etc.)
+3. Fix the issue
+4. Re-run evals
+5. Repeat until all tests pass
 
-1. **Placeholder Dispatch**: Never return `{ placeholder: true, message: "Would dispatch..." }`
-2. **Prompt Echoing**: Never include the user's input in the response
-3. **Fake Pattern Selection**: Don't select patterns that don't execute
-4. **Vaporware Claims**: Don't claim to do tree search/MCTS/beam search unless actually implemented
-5. **Token Waste**: Keep responses under 100 tokens
-6. **Silent Storage**: Always log to terminal for transparency
-7. **Weak Validation**: Throw descriptive errors, don't silently fail
+---
 
-## Success Criteria
+## Phase 5: Integration (AUTOMATED + MANUAL REVIEW)
 
-✅ Response size < 100 tokens (excluding errors)
-✅ No prompt echoing
-✅ Terminal logging works
-✅ Validation throws descriptive errors
-✅ All code paths functional (no placeholders)
-✅ Tests pass
-✅ Tool description guides AI behavior
-✅ Storage actually stores data
-✅ Branches tracked correctly
-✅ Auto-adjustment works
+### Step 5.1: Register Operation (AUTOMATED)
 
-## Checkpoint After Each Phase
+**Action**: I will add the operation to the registry:
 
-After completing each phase, create a checkpoint commit:
+**File**: `src/tools/operations/index.ts`
+```typescript
+import [operationName] from "./[category]/[operation-name].js";
+
+// In registerAllOperations():
+operationRegistry.register([operationName]);
+```
+
+**File**: `src/tools/index-refactored.ts`
+```typescript
+export const ClearThoughtParamsSchema = z.object({
+  operation: z.enum([
+    // ... existing operations
+    "[operation_name]",  // <-- Added
+  ])
+});
+```
+
+### Step 5.2: Update Documentation (AUTOMATED)
+
+**Action**: I will update:
+- `src/index.ts` tool description (add to operation list)
+- Create example resource if applicable
+- Update README if needed
+
+### Step 5.3: Create Checkpoint Commit (AUTOMATED)
+
+**Action**: I will create a checkpoint commit:
 
 ```bash
-git add -A && git commit --no-verify -m "checkpoint: [operation-name] phase [N] - [brief description]"
+git add -A
+git commit --no-verify -m "feat: convert [operation-name] to structured journal pattern
+
+- Implemented structured journal with validation
+- Added getToolDescription() with comprehensive AI guidance
+- Terminal logging with formatted output
+- Vaporware detection passed (score: [X]/100)
+- Tested with MCP Inspector
+
+Co-Authored-By: Claude <noreply@anthropic.com>"
 ```
 
-## Final Validation
+### Step 5.4: Final Review (INTERACTIVE)
 
-Before marking complete, run the vaporware detection hook (automatically triggered on file write).
+**Action**: I will show you a summary:
 
-The hook will check for:
-- Placeholder returns
-- Prompt echoing
-- Fake pattern selection
-- Missing implementations
-- Token waste
-- Silent failures
+```
+✅ Operation converted: [operation-name]
+✅ Vaporware detection: PASSED (score: X/100)
+✅ TypeScript: PASSING
+✅ MCP Inspector: TESTED
+✅ Registered: YES
+✅ Documented: YES
+✅ Committed: YES
 
-If the hook fails, address the issues before proceeding.
+📊 Statistics:
+- Lines of code: X
+- Response size: <100 tokens
+- Validation errors: X descriptive messages
+- Terminal output: ✓ Formatted
+- Test coverage: Manual
 
+📝 Next Steps:
+1. Run full test suite: npm test
+2. Update CHANGELOG if needed
+3. Consider adding unit tests
+4. Ready for PR!
+```
+
+---
+
+## Anti-Patterns to Avoid (AUTOMATED DETECTION)
+
+The vaporware detection hook automatically checks for:
+
+1. **Placeholder Dispatch**: ❌ `{ placeholder: true, message: "Would dispatch..." }`
+2. **Prompt Echoing**: ❌ Returning user's input verbatim
+3. **Fake Pattern Selection**: ❌ Selecting patterns that don't execute
+4. **Vaporware Claims**: ❌ Claiming algorithms without implementation
+5. **Token Waste**: ❌ Responses >100 tokens
+6. **Silent Storage**: ❌ No terminal logging
+7. **Weak Validation**: ❌ Silent failures or unclear errors
+
+**These will BLOCK the workflow if detected.**
+
+---
+
+## Container-Use Integration
+
+**Throughout this workflow**, I will use container-use to:
+
+1. **Isolate the environment**: Each conversion happens in a clean container
+2. **Test safely**: Run vaporware detection without affecting your working directory
+3. **Validate compilation**: Ensure TypeScript compiles in isolation
+4. **Run MCP server**: Test the operation in a clean environment
+
+**You'll see output like**:
+```
+🐳 Creating container environment...
+✓ Environment: env-abc123
+✓ Working directory: /workspace
+✓ Dependencies installed
+✓ Ready for conversion
+```
+
+**After completion**, the changes are applied to your actual repository.
+
+---
+
+## Usage
+
+To use this command:
+
+1. **Start the conversion**:
+   ```
+   /convert-to-journal
+   ```
+
+2. **Provide the operation name when prompted**:
+   ```
+   I'll convert: sequential-thinking
+   Located at: src/tools/operations/core/sequential-thinking.ts
+   ```
+
+3. **Follow the interactive steps** - I'll guide you through:
+   - Analysis
+   - Design decisions
+   - Customization points
+   - Testing
+   - Review
+
+4. **Automated steps happen automatically**:
+   - Environment setup
+   - Code generation
+   - Validation
+   - Registration
+   - Commits
+
+**Estimated time**: 15-30 minutes per operation
+
+---
+
+## Success Criteria Checklist
+
+At the end, this checklist must be ✅:
+
+- [ ] Response size < 100 tokens (excluding errors)
+- [ ] No prompt echoing
+- [ ] Terminal logging works (stderr)
+- [ ] Validation throws descriptive errors
+- [ ] All code paths functional (no TODOs/placeholders)
+- [ ] Tests pass (manual + vaporware detection)
+- [ ] Tool description guides AI behavior effectively
+- [ ] getToolDescription() method implemented
+- [ ] Registered in operation registry
+- [ ] Registered in ClearThoughtParamsSchema enum
+- [ ] Storage actually stores data
+- [ ] Branches tracked correctly
+- [ ] Auto-adjustment works (entryNumber > totalEntries)
+- [ ] TypeScript compiles without errors
+- [ ] Vaporware detection passes (score ≥ 70/100)
+
+---
+
+## Emergency Rollback
+
+If anything goes wrong, I can rollback using container-use:
+
+```bash
+# Discard changes and return to clean state
+# (container-use environments are isolated)
+```
+
+Or git:
+```bash
+git reset --hard HEAD^
+```
+
+---
+
+## Ready to Start?
+
+When you're ready, tell me:
+1. **Which operation to convert** (name and path)
+2. **Any special considerations** (unique features, complex parameters, etc.)
+
+I'll then begin the automated workflow, pausing at interactive decision points for your input.
+
+Let's transform vaporware into a fully functional structured journal operation! 🚀

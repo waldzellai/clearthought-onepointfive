@@ -71,6 +71,11 @@
           {
             "type": "command",
             "command": "cat | jq -r '.tool_input.file_path // .tool_input.path // empty' | tr '\\n' '\\0' | xargs -0 -I {} npx claude-flow@alpha hooks post-edit --file '{}' --format true --update-memory true"
+          },
+          {
+            "type": "command",
+            "command": "cat > /tmp/hook-input.json && FILE_PATH=$(jq -r '.tool_input.file_path // .tool_input.path // empty' /tmp/hook-input.json); if [[ \"$FILE_PATH\" == *\"src/tools/operations/\"* ]] && [[ \"$FILE_PATH\" != *\"base.ts\"* ]] && [[ \"$FILE_PATH\" != *\"registry.ts\"* ]] && [[ \"$FILE_PATH\" != *\"index.ts\"* ]]; then npx tsx .claude/hooks/validate-vaporware.ts < /tmp/hook-input.json; fi",
+            "description": "Vaporware detection for operation files - auto-blocks if score < 70"
           }
         ]
       }
