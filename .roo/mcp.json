@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "clear-thought-two": {
+      "command": "node",
+      "args": [
+        "/Users/b.c.nims/clear-thought-two/dist/index.js"
+      ],
+      "disabled": false,
+      "alwaysAllow": [
+        "sequentialthinking"
+      ]
+    }
+  }
+}

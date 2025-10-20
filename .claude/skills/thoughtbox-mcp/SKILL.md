@@ -1,31 +1,31 @@
 ---
-name: model-enhancement-servers
-description: Guide for creating MCP servers that enhance LLM reasoning through structured processes, persistence, and workflow guidance. Use when building MCP servers for structured thinking, journaling, memory systems, or other cognitive enhancement patterns.
+name: thoughtbox-servers
+description: Guide for creating thoughtbox servers (MCP servers that enhance LLM reasoning through structured processes, persistence, and workflow guidance). Use when building MCP servers for structured thinking, journaling, memory systems, or other cognitive enhancement patterns.
 ---
 
-# Model Enhancement Servers
+# Thoughtbox Servers
 
 *Based on MCP Protocol Version: 2025-06-18*
 
 ## Overview
 
-Model enhancement servers are a specialized category of MCP servers that extend LLM capabilities not by wrapping external APIs, but by providing structured reasoning frameworks, persistence mechanisms, and cognitive workflow guidance.
+Thoughtbox servers are a specialized category of MCP servers that extend LLM capabilities not by wrapping external APIs, but by providing structured reasoning frameworks, persistence mechanisms, and cognitive workflow guidance.
 
-### Wrapper Servers vs. Model Enhancement Servers
+### Wrapper Servers vs. Thoughtbox Servers
 
 **Wrapper servers** are like keys that open specific chests with specific treasures. They provide access to external services (Supabase, Gmail, Airtable) and are essential for integrating LLMs with existing systems.
 
-**Model enhancement servers** are like pen and paper: general-purpose cognitive tools natively designed for LLM use. They extend the model's abilities across a variety of circumstances, not just specific API integrations.
+**Thoughtbox servers** are like pen and paper: general-purpose cognitive tools natively designed for LLM use. They extend the model's abilities across a variety of circumstances, not just specific API integrations.
 
-Think of model enhancement servers as a **bullet journal for AI**. The model documents information with the server, which does basic heuristic processing to signal completion of steps and define next scopes. By directing the AI to consider only a small set of concerns during ongoing transactions, performance improves in tasks requiring memory, reasoning, and runtime lookup.
+Think of thoughtbox servers as a **bullet journal for AI**. The model documents information with the server, which does basic heuristic processing to signal completion of steps and define next scopes. By directing the AI to consider only a small set of concerns during ongoing transactions, performance improves in tasks requiring memory, reasoning, and runtime lookup.
 
 ### The Context Window Benefit
 
-Similar to how Getting Things Done (GTD) helps humans by offloading thoughts into documents, model enhancement servers help LLMs process more effectively. When we write down one thought instead of juggling a hundred, we can focus better. **Context window management is critical to all entities that use attention—a scarce resource.**
+Similar to how Getting Things Done (GTD) helps humans by offloading thoughts into documents, thoughtbox servers help LLMs process more effectively. When we write down one thought instead of juggling a hundred, we can focus better. **Context window management is critical to all entities that use attention—a scarce resource.**
 
-### "Do Nothing" as a core feature of Model Enhancement Servers
+### "Do Nothing" as a core feature of Thoughtbox Servers
 
-A model enhancement server does not *do* anything, any more than a real bullet journal "does" anything: its value is entirely tied to how well it
+A thoughtbox server does not *do* anything, any more than a real bullet journal "does" anything: its value is entirely tied to how well it
 facilitates the agentic process it's meant to support.
 
 Instead, the server "enhances" an agent's capabilities by externalizing some state that represents the agent's thinking process. As mentioned above, this externalized state allows the agent to focus on the current step. But further, because a representation of reasoning is lossy relative to the actual process of reasoning, creating the representation forces an agent to make choices about what is and is not important to the process: in this way, externalization can be modeled as a form of compression. Just as a human may improve their thinking through journaling or other forms of externalization, agents can improve their reasoning through externalization: the benefits of externalization are not confined to the carbon substrate.
@@ -34,11 +34,11 @@ Instead, the server "enhances" an agent's capabilities by externalizing some sta
 
 ## ⚠️ CRITICAL PRINCIPLE: The Server Does NOT Reason
 
-**The most important thing to understand about model enhancement servers:**
+**The most important thing to understand about thoughtbox servers:**
 
 ### The agent performs reasoning. The server provides structure.
 
-Model enhancement servers are **scaffolding, not reasoning engines**. They are persistence mechanisms and workflow guides, not AI models themselves.
+Thoughtbox servers are **scaffolding, not reasoning engines**. They are persistence mechanisms and workflow guides, not AI models themselves.
 
 **What the server does:**
 - ✅ Records reasoning steps (journaling)
@@ -59,7 +59,7 @@ Model enhancement servers are **scaffolding, not reasoning engines**. They are p
 
 ### Why This Matters
 
-The value of model enhancement comes from:
+The value of thoughtboxes comes from:
 1. **Simplifying possibility space**: Fewer choices → better focus
 2. **Encouraging structured workflows**: Patterns that can be evaluated and improved
 3. **Making processes transparent**: We (and the agent) can see and analyze what the agent did
@@ -280,7 +280,7 @@ import {
 ### Core Server Class Pattern
 
 ```typescript
-class EnhancementServer {
+class ThoughtboxServer {
   private state: YourStateType = initialState;
   private config: ConfigType;
 
@@ -333,7 +333,7 @@ class EnhancementServer {
 ### Tool Definition Pattern
 
 ```typescript
-const ENHANCEMENT_TOOL: Tool = {
+const THOUGHTBOX_TOOL: Tool = {
   name: "toolname",
   title: "Tool Display Name",  // Optional: display precedence: title > annotations.title > name
   
@@ -384,19 +384,19 @@ You should:
 
 ```typescript
 const server = new Server(
-  { name: "your-enhancement-server", version: "0.1.0" },
+  { name: "your-thoughtbox-server", version: "0.1.0" },
   { capabilities: { tools: {} } }
 );
 
-const enhancementServer = new EnhancementServer();
+const thoughtboxServer = new ThoughtboxServer();
 
 server.setRequestHandler(ListToolsRequestSchema, async () => ({
-  tools: [ENHANCEMENT_TOOL],
+  tools: [THOUGHTBOX_TOOL],
 }));
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   if (request.params.name === "toolname") {
-    return enhancementServer.processRequest(request.params.arguments);
+    return thoughtboxServer.processRequest(request.params.arguments);
   }
   return {
     content: [{ type: "text", text: `Unknown tool: ${request.params.name}` }],
@@ -407,7 +407,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function runServer() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error("Enhancement Server running on stdio");
+  console.error("Thoughtbox Server running on stdio");
 }
 
 runServer().catch((error) => {
@@ -444,22 +444,22 @@ runServer().catch((error) => {
 
 ## Future Directions and Use Cases
 
-As agentic networking matures, model enhancement servers enable novel patterns:
+As agentic networking matures, thoughtbox servers enable novel patterns:
 
 ### Long-Running Async Processes
 
-Model enhancement servers provide Day One mechanisms for maintaining context across extended operations:
+Thoughtbox servers provide Day One mechanisms for maintaining context across extended operations:
 - **Batch jobs**: Track progress through multi-hour processing tasks
 - **Extended research**: Maintain context during deep exploration (e.g., Exa's Websets running 30+ minutes)
 - **Multi-stage workflows**: Coordinate phases of complex work over hours or days
 
 ### Multi-Client Coordination
 
-Model enhancement servers can connect to multiple clients simultaneously, acting as a bulletin board where different clients post and retrieve information. This enables coordination between clients that have no other means of communication. **MCP servers as proxies between clients** may become the dominant use case per-server.
+Thoughtbox servers can connect to multiple clients simultaneously, acting as a bulletin board where different clients post and retrieve information. This enables coordination between clients that have no other means of communication. **MCP servers as proxies between clients** may become the dominant use case per-server.
 
 ### Formalized Workflows
 
-Enhancement servers can support highly structured methodologies with clear definitions:
+Thoughtbox servers can support highly structured methodologies with clear definitions:
 - **Scientific method**: Hypothesis generation, experimentation, validation
 - **Design thinking**: Empathy, definition, ideation, prototyping, testing
 - **Six Sigma**: DMAIC (Define, Measure, Analyze, Improve, Control)

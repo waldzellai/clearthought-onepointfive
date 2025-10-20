@@ -33,18 +33,34 @@ interface ThoughtData {
   needsMoreThoughts?: boolean;
   includeGuide?: boolean;
   nextThoughtNeeded: boolean;
+  sessionId?: string;
+}
+
+interface SessionState {
+  thoughtHistory: ThoughtData[];
+  branches: Record<string, ThoughtData[]>;
 }
 
 class ClearThoughtServer {
-  private thoughtHistory: ThoughtData[] = [];
-  private branches: Record<string, ThoughtData[]> = {};
+  private sessions: Map<string, SessionState> = new Map();
   private disableThoughtLogging: boolean;
   private patternsCookbook: string;
+  private readonly DEFAULT_SESSION_ID = "default";
 
   constructor(disableThoughtLogging: boolean = false) {
     this.disableThoughtLogging = disableThoughtLogging;
     // Use imported cookbook content (works for both STDIO and HTTP builds)
     this.patternsCookbook = PATTERNS_COOKBOOK;
+  }
+
+  private getOrCreateSession(sessionId: string): SessionState {
+    if (!this.sessions.has(sessionId)) {
+      this.sessions.set(sessionId, {
+        thoughtHistory: [],
+        branches: {}
+      });
+    }
+    return this.sessions.get(sessionId)!;
   }
 
   private validateThoughtData(input: unknown): ThoughtData {
@@ -63,6 +79,12 @@ class ClearThoughtServer {
       throw new Error('Invalid nextThoughtNeeded: must be a boolean');
     }
 
+    // Validate sessionId if provided
+    const sessionId = data.sessionId as string | undefined;
+    if (sessionId !== undefined && typeof sessionId !== 'string') {
+      throw new Error('Invalid sessionId: must be a string');
+    }
+
     return {
       thought: data.thought,
       thoughtNumber: data.thoughtNumber,
@@ -74,6 +96,7 @@ class ClearThoughtServer {
       branchId: data.branchId as string | undefined,
       needsMoreThoughts: data.needsMoreThoughts as boolean | undefined,
       includeGuide: data.includeGuide as boolean | undefined,
+      sessionId: sessionId || this.DEFAULT_SESSION_ID,
     };
   }
 
@@ -108,18 +131,20 @@ class ClearThoughtServer {
   public processThought(input: unknown): { content: Array<any>; isError?: boolean } {
     try {
       const validatedInput = this.validateThoughtData(input);
+      const sessionId = validatedInput.sessionId || this.DEFAULT_SESSION_ID;
+      const session = this.getOrCreateSession(sessionId);
 
       if (validatedInput.thoughtNumber > validatedInput.totalThoughts) {
         validatedInput.totalThoughts = validatedInput.thoughtNumber;
       }
 
-      this.thoughtHistory.push(validatedInput);
+      session.thoughtHistory.push(validatedInput);
 
       if (validatedInput.branchFromThought && validatedInput.branchId) {
-        if (!this.branches[validatedInput.branchId]) {
-          this.branches[validatedInput.branchId] = [];
+        if (!session.branches[validatedInput.branchId]) {
+          session.branches[validatedInput.branchId] = [];
         }
-        this.branches[validatedInput.branchId].push(validatedInput);
+        session.branches[validatedInput.branchId].push(validatedInput);
       }
 
       if (!this.disableThoughtLogging) {
@@ -131,11 +156,12 @@ class ClearThoughtServer {
       const content: Array<any> = [{
         type: "text",
         text: JSON.stringify({
+          sessionId: sessionId,
           thoughtNumber: validatedInput.thoughtNumber,
           totalThoughts: validatedInput.totalThoughts,
           nextThoughtNeeded: validatedInput.nextThoughtNeeded,
-          branches: Object.keys(this.branches),
-          thoughtHistoryLength: this.thoughtHistory.length
+          branches: Object.keys(session.branches),
+          thoughtHistoryLength: session.thoughtHistory.length
         }, null, 2)
       }];
 
@@ -318,6 +344,10 @@ You should:
       includeGuide: {
         type: "boolean",
         description: "Request the patterns cookbook guide as embedded resource (also provided automatically at thought 1 and final thought)"
+      },
+      sessionId: {
+        type: "string",
+        description: "Optional session identifier for isolating reasoning sessions. If not provided, uses 'default' session. Use different sessionIds to maintain separate thought histories for parallel reasoning tasks."
       }
     },
     required: ["thought", "nextThoughtNeeded", "thoughtNumber", "totalThoughts"]

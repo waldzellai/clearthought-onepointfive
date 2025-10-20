@@ -1,0 +1,8 @@
+{
+  "session_id": "5685ec5e-b34b-4c1f-93e8-2ca9d50456b8",
+  "prompts": [
+    "read the plan at @CAPABILITY_DISCOVERY_PLAN.md , then read through the @ALGORITHMS_EXTRACTED.md file to find any particularly useful algorithms you could apply to your own discovery process, or which are useful for thinking about or approaching the problems the Capability Discovery Plan describes",
+    "I'd like you to frame the three highest-utility of your recommendations (as you see it) in the form of agentic workflows/slash commands meant for your own use. Do not necessarily simply describe the algorithm in natural language. instead, consider *why* these three algorithms are so effective, and how introducing agency to them (i.e. you) could improve on their deterministic forms. \\\n\\\nhttps://docs.claude.com/en/docs/claude-code/slash-commands \\\nhttps://docs.claude.com/en/docs/claude-code/cli-reference \\\nhttps://docs.claude.com/en/api/agent-sdk/slash-commands \\\nhttps://docs.claude.com/en/api/agent-sdk/custom-tools \\\nhttps://docs.claude.com/en/docs/claude-code/headless  \\\nhttps://docs.claude.com/en/docs/claude-code/mcp   \\\nhttps://docs.claude.com/en/docs/claude-code/common-workflows"
+  ],
+  "agent_name": "Echo"
+}

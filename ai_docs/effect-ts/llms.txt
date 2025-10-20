@@ -3,145 +3,357 @@
 # Documentation Index
 **File**: effect-ts/llms.txt
 **Total Lines**: 50,282 | **Major Sections**: ~150
-**Last Updated**: 2025-10-17
+**Last Updated**: 2025-10-19
+
+---
+
+## How to Navigate This Documentation
+
+**For LLMs**: This 1.5MB file contains 50,282 lines of Effect documentation. Use line number references to read specific sections efficiently.
+
+**Skill Level Legend**:
+- 🟢 **Beginner** - Start here if new to Effect
+- 🟡 **Intermediate** - Requires understanding of Effect basics
+- 🔴 **Advanced** - Complex patterns requiring deep Effect knowledge
+
+**Section Metadata Format**:
+- [Lines X-Y] = Section span (~Z tokens)
+- Prerequisites: Required prior reading
+- Estimated reading time based on ~500 words/minute
 
 ---
 
 ## Table of Contents
 
-### Core Concepts (Lines 5-2161)
-- **Batching** (Line 5) - Request batching and optimization
-- **Configuration** (Line 1028) - Application configuration management
-- **Runtime** (Line 1852) - Effect runtime system
+### Core Concepts (Lines 5-2161) [~2,156 lines, ~54K tokens]
+- 🟡 **Batching** (Line 5) - Request batching and optimization
+  - Prerequisites: Effect basics
+  - ~1,023 lines, ~26K tokens
+- 🟢 **Configuration** (Line 1028) - Application configuration management
+  - Prerequisites: None
+  - ~824 lines, ~21K tokens
+- 🟡 **Runtime** (Line 1852) - Effect runtime system
+  - Prerequisites: Effect type, basic execution
+  - ~309 lines, ~8K tokens
 
-### Additional Resources (Lines 2162-4626)
-- **API Reference** (Line 2162) - Links to API documentation
-- **Coming From ZIO** (Line 2174) - Migration guide from ZIO
-- **Effect vs fp-ts** (Line 2273) - Comparison with fp-ts
-- **Effect vs neverthrow** (Line 2482) - Comparison with neverthrow
-- **Effect vs Promise** (Line 3782) - Comparison with native Promises
-- **Myths About Effect** (Line 4513) - Common misconceptions
+### Additional Resources (Lines 2162-4626) [~2,464 lines, ~62K tokens]
+- 🟢 **API Reference** (Line 2162) - Links to API documentation
+  - Prerequisites: None
+  - ~12 lines, ~300 tokens
+- 🟡 **Coming From ZIO** (Line 2174) - Migration guide from ZIO
+  - Prerequisites: ZIO knowledge
+  - ~99 lines, ~2.5K tokens
+- 🟡 **Effect vs fp-ts** (Line 2273) - Comparison with fp-ts
+  - Prerequisites: fp-ts knowledge helpful
+  - ~209 lines, ~5K tokens
+- 🟡 **Effect vs neverthrow** (Line 2482) - Comparison with neverthrow
+  - Prerequisites: neverthrow knowledge helpful
+  - ~1,300 lines, ~33K tokens
+- 🟢 **Effect vs Promise** (Line 3782) - Comparison with native Promises
+  - Prerequisites: JavaScript Promises
+  - ~731 lines, ~18K tokens
+- 🟢 **Myths About Effect** (Line 4513) - Common misconceptions
+  - Prerequisites: None
+  - ~114 lines, ~3K tokens
 
-### AI Integration (Lines 4627-5727)
-- **Getting Started** (Line 4627) - AI package installation
-- **Introduction to Effect AI** (Line 5103) - AI capabilities overview
-- **Execution Planning** (Line 5216) - Planning LLM interactions
-- **Tool Use** (Line 5425) - Tool calling with AI
+### AI Integration (Lines 4627-5727) [~1,100 lines, ~28K tokens]
+- 🟢 **Getting Started** (Line 4627) - AI package installation
+  - Prerequisites: None
+  - ~476 lines, ~12K tokens
+- 🟡 **Introduction to Effect AI** (Line 5103) - AI capabilities overview
+  - Prerequisites: Effect basics, Layers
+  - ~113 lines, ~3K tokens
+- 🟡 **Execution Planning** (Line 5216) - Planning LLM interactions
+  - Prerequisites: AI basics, Schedule
+  - ~209 lines, ~5K tokens
+- 🔴 **Tool Use** (Line 5425) - Tool calling with AI
+  - Prerequisites: Schema, Layers, Services
+  - ~303 lines, ~8K tokens
 
-### Behavior & Comparison (Lines 5728-6128)
-- **Equivalence** (Line 5728) - Value equality checking
-- **Order** (Line 5807) - Ordering and comparison
+### Behavior & Comparison (Lines 5728-6128) [~400 lines, ~10K tokens]
+- 🟢 **Equivalence** (Line 5728) - Value equality checking
+  - Prerequisites: None
+  - ~79 lines, ~2K tokens
+- 🟢 **Order** (Line 5807) - Ordering and comparison
+  - Prerequisites: None
+  - ~322 lines, ~8K tokens
 
-### Caching (Lines 6129-6468)
-- **Cache** (Line 6129) - Caching mechanisms
-- **Caching Effects** (Line 6247) - Effect-specific caching
+### Caching (Lines 6129-6468) [~339 lines, ~8.5K tokens]
+- 🟡 **Cache** (Line 6129) - Caching mechanisms
+  - Prerequisites: Effect basics
+  - ~118 lines, ~3K tokens
+- 🟡 **Caching Effects** (Line 6247) - Effect-specific caching
+  - Prerequisites: Effect, Cache
+  - ~222 lines, ~5.5K tokens
 
-### Code Style (Lines 6469-7198)
-- **Branded Types** (Line 6469) - Type-safe primitives
-- **Simplifying Excessive Nesting** (Line 6840) - Do notation
-- **Dual APIs** (Line 7033) - Data-first and data-last APIs
-- **Guidelines** (Line 7111) - Best practices
-- **Pattern Matching** (Line 7199) - Pattern matching utilities
+### Code Style (Lines 6469-7198) [~729 lines, ~18K tokens]
+- 🟡 **Branded Types** (Line 6469) - Type-safe primitives
+  - Prerequisites: TypeScript basics
+  - ~371 lines, ~9K tokens
+- 🟡 **Simplifying Excessive Nesting** (Line 6840) - Do notation
+  - Prerequisites: Effect.gen, generators
+  - ~193 lines, ~5K tokens
+- 🟢 **Dual APIs** (Line 7033) - Data-first and data-last APIs
+  - Prerequisites: None
+  - ~78 lines, ~2K tokens
+- 🟢 **Guidelines** (Line 7111) - Best practices
+  - Prerequisites: Basic Effect usage
+  - ~88 lines, ~2K tokens
+- 🟡 **Pattern Matching** (Line 7199) - Pattern matching utilities
+  - Prerequisites: TypeScript discriminated unions
+  - ~376 lines, ~9K tokens
 
-### Concurrency (Lines 7575-10167)
-- **Basic Concurrency** (Line 7575) - Concurrent execution
-- **Deferred** (Line 8470) - Deferred values
-- **Fibers** (Line 8678) - Lightweight threads
-- **Latch** (Line 9328) - Synchronization primitive
-- **PubSub** (Line 9403) - Publish-subscribe pattern
-- **Queue** (Line 9595) - Concurrent queues
-- **Semaphore** (Line 10063) - Resource limiting
+### Concurrency (Lines 7575-10167) [~2,592 lines, ~65K tokens]
+- 🟡 **Basic Concurrency** (Line 7575) - Concurrent execution
+  - Prerequisites: Effect basics, Fibers
+  - ~895 lines, ~22K tokens
+- 🟡 **Deferred** (Line 8470) - Deferred values
+  - Prerequisites: Fibers, Effect
+  - ~208 lines, ~5K tokens
+- 🟡 **Fibers** (Line 8678) - Lightweight threads
+  - Prerequisites: Effect type, concurrency basics
+  - ~650 lines, ~16K tokens
+- 🔴 **Latch** (Line 9328) - Synchronization primitive
+  - Prerequisites: Fibers, concurrency
+  - ~75 lines, ~2K tokens
+- 🔴 **PubSub** (Line 9403) - Publish-subscribe pattern
+  - Prerequisites: Fibers, Queue
+  - ~192 lines, ~5K tokens
+- 🟡 **Queue** (Line 9595) - Concurrent queues
+  - Prerequisites: Fibers, basic concurrency
+  - ~468 lines, ~12K tokens
+- 🟡 **Semaphore** (Line 10063) - Resource limiting
+  - Prerequisites: Fibers, concurrency
+  - ~105 lines, ~3K tokens
 
-### Data Types (Lines 10168-18500)
-- **BigDecimal** (Line 10168) - Arbitrary precision decimals
-- **Cause** (Line 10507) - Error causes
-- **Chunk** (Line 10792) - Immutable arrays
-- **Data** (Line 10962) - Immutable data structures
-- **DateTime** (Line 11643) - Date and time handling
-- **Duration** (Line 12261) - Time durations
-- **Effect** (Line 12448) - Core Effect type
-- **Either** (Line 13535) - Success or failure
-- **Exit** (Line 14120) - Computation results
-- **FiberRef** (Line 14312) - Fiber-local state
-- **HashMap** (Line 14722) - Hash maps
-- **HashSet** (Line 15349) - Hash sets
-- **List** (Line 15754) - Immutable lists
-- **Match** (Line 16258) - Pattern matching
-- **MutableHashMap** (Line 16606) - Mutable hash maps
-- **MutableHashSet** (Line 16893) - Mutable hash sets
-- **MutableList** (Line 17089) - Mutable lists
-- **MutableQueue** (Line 17285) - Mutable queues
-- **MutableRef** (Line 17481) - Mutable references
-- **Number** (Line 17677) - Number utilities
-- **Option** (Line 17873) - Optional values
-- **Predicate** (Line 18069) - Type predicates
-- **ReadonlyArray** (Line 18265) - Readonly arrays
+### Data Types (Lines 10168-18500) [~8,332 lines, ~208K tokens]
+- 🟢 **BigDecimal** (Line 10168) - Arbitrary precision decimals
+  - Prerequisites: None
+  - ~339 lines, ~8.5K tokens
+- 🟡 **Cause** (Line 10507) - Error causes
+  - Prerequisites: Effect, Exit
+  - ~285 lines, ~7K tokens
+- 🟢 **Chunk** (Line 10792) - Immutable arrays
+  - Prerequisites: None
+  - ~170 lines, ~4K tokens
+- 🟢 **Data** (Line 10962) - Immutable data structures
+  - Prerequisites: None
+  - ~681 lines, ~17K tokens
+- 🟡 **DateTime** (Line 11643) - Date and time handling
+  - Prerequisites: Clock service
+  - ~618 lines, ~15K tokens
+- 🟢 **Duration** (Line 12261) - Time durations
+  - Prerequisites: None
+  - ~187 lines, ~5K tokens
+- 🟢 **Effect** (Line 12448) - Core Effect type [ESSENTIAL]
+  - Prerequisites: None (start here!)
+  - ~1,087 lines, ~27K tokens
+- 🟢 **Either** (Line 13535) - Success or failure
+  - Prerequisites: None
+  - ~585 lines, ~15K tokens
+- 🟡 **Exit** (Line 14120) - Computation results
+  - Prerequisites: Effect, Cause
+  - ~192 lines, ~5K tokens
+- 🔴 **FiberRef** (Line 14312) - Fiber-local state
+  - Prerequisites: Fibers, concurrency
+  - ~410 lines, ~10K tokens
+- 🟢 **HashMap** (Line 14722) - Hash maps
+  - Prerequisites: None
+  - ~627 lines, ~16K tokens
+- 🟢 **HashSet** (Line 15349) - Hash sets
+  - Prerequisites: None
+  - ~405 lines, ~10K tokens
+- 🟢 **List** (Line 15754) - Immutable lists
+  - Prerequisites: None
+  - ~504 lines, ~13K tokens
+- 🟡 **Match** (Line 16258) - Pattern matching
+  - Prerequisites: TypeScript discriminated unions
+  - ~348 lines, ~9K tokens
+- 🟢 **MutableHashMap** (Line 16606) - Mutable hash maps
+  - Prerequisites: HashMap
+  - ~287 lines, ~7K tokens
+- 🟢 **MutableHashSet** (Line 16893) - Mutable hash sets
+  - Prerequisites: HashSet
+  - ~196 lines, ~5K tokens
+- 🟢 **MutableList** (Line 17089) - Mutable lists
+  - Prerequisites: List
+  - ~196 lines, ~5K tokens
+- 🟢 **MutableQueue** (Line 17285) - Mutable queues
+  - Prerequisites: Queue basics
+  - ~196 lines, ~5K tokens
+- 🟢 **MutableRef** (Line 17481) - Mutable references
+  - Prerequisites: None
+  - ~196 lines, ~5K tokens
+- 🟢 **Number** (Line 17677) - Number utilities
+  - Prerequisites: None
+  - ~196 lines, ~5K tokens
+- 🟢 **Option** (Line 17873) - Optional values [ESSENTIAL]
+  - Prerequisites: None
+  - ~196 lines, ~5K tokens
+- 🟢 **Predicate** (Line 18069) - Type predicates
+  - Prerequisites: TypeScript type guards
+  - ~196 lines, ~5K tokens
+- 🟢 **ReadonlyArray** (Line 18265) - Readonly arrays
+  - Prerequisites: None
+  - ~236 lines, ~6K tokens
 
-### Error Management (Lines 18500-22000)
-- **Expected Errors** (Line 18500) - Typed error handling
-- **Unexpected Errors** (Line 19200) - Defect handling
-- **Matching Errors** (Line 19800) - Error pattern matching
-- **Error Channel Operations** (Line 20400) - Error transformations
-- **Fallback & Recovery** (Line 21000) - Error recovery strategies
-- **Retrying** (Line 21600) - Retry policies
+### Error Management (Lines 18500-22000) [~3,500 lines, ~88K tokens]
+- 🟢 **Expected Errors** (Line 18500) - Typed error handling
+  - Prerequisites: Effect type
+  - ~700 lines, ~18K tokens
+- 🟡 **Unexpected Errors** (Line 19200) - Defect handling
+  - Prerequisites: Expected Errors, Cause
+  - ~600 lines, ~15K tokens
+- 🟡 **Matching Errors** (Line 19800) - Error pattern matching
+  - Prerequisites: Error handling basics
+  - ~600 lines, ~15K tokens
+- 🟡 **Error Channel Operations** (Line 20400) - Error transformations
+  - Prerequisites: Effect type, error basics
+  - ~600 lines, ~15K tokens
+- 🟡 **Fallback & Recovery** (Line 21000) - Error recovery strategies
+  - Prerequisites: Error handling basics
+  - ~600 lines, ~15K tokens
+- 🟡 **Retrying** (Line 21600) - Retry policies
+  - Prerequisites: Schedule, error handling
+  - ~400 lines, ~10K tokens
 
-### Resource Management (Lines 22000-24000)
-- **Introduction to Resource Management** (Line 22000) - Resource lifecycle
-- **Scope** (Line 22500) - Resource scopes
-- **Pool** (Line 23000) - Resource pooling
-- **Layers** (Line 23500) - Dependency injection
+### Resource Management (Lines 22000-24000) [~2,000 lines, ~50K tokens]
+- 🟡 **Introduction to Resource Management** (Line 22000) - Resource lifecycle
+  - Prerequisites: Effect basics, Scope
+  - ~500 lines, ~13K tokens
+- 🟡 **Scope** (Line 22500) - Resource scopes
+  - Prerequisites: Effect type
+  - ~500 lines, ~13K tokens
+- 🔴 **Pool** (Line 23000) - Resource pooling
+  - Prerequisites: Scope, resource management
+  - ~500 lines, ~13K tokens
+- 🟡 **Layers** (Line 23500) - Dependency injection
+  - Prerequisites: Services, Context
+  - ~500 lines, ~13K tokens
 
-### Observability (Lines 24000-26000)
-- **Introduction to Observability** (Line 24000) - Monitoring overview
-- **Logging** (Line 24500) - Logging system
-- **Metrics** (Line 25000) - Metrics collection
-- **Tracing** (Line 25500) - Distributed tracing
+### Observability (Lines 24000-26000) [~2,000 lines, ~50K tokens]
+- 🟢 **Introduction to Observability** (Line 24000) - Monitoring overview
+  - Prerequisites: None
+  - ~500 lines, ~13K tokens
+- 🟢 **Logging** (Line 24500) - Logging system
+  - Prerequisites: Effect basics
+  - ~500 lines, ~13K tokens
+- 🟡 **Metrics** (Line 25000) - Metrics collection
+  - Prerequisites: Effect basics
+  - ~500 lines, ~13K tokens
+- 🔴 **Tracing** (Line 25500) - Distributed tracing
+  - Prerequisites: Effect, OpenTelemetry concepts
+  - ~500 lines, ~13K tokens
 
-### Pipeline & Composition (Lines 26000-28000)
-- **Introduction to Pipelines** (Line 26000) - Function composition
-- **Piping** (Line 26500) - Pipe operator
-- **Chaining** (Line 27000) - Method chaining
-- **Combining Effects** (Line 27500) - Effect composition
+### Pipeline & Composition (Lines 26000-28000) [~2,000 lines, ~50K tokens]
+- 🟢 **Introduction to Pipelines** (Line 26000) - Function composition
+  - Prerequisites: None
+  - ~500 lines, ~13K tokens
+- 🟢 **Piping** (Line 26500) - Pipe operator
+  - Prerequisites: Basic TypeScript
+  - ~500 lines, ~13K tokens
+- 🟡 **Chaining** (Line 27000) - Method chaining
+  - Prerequisites: Effect type, map/flatMap
+  - ~500 lines, ~13K tokens
+- 🟡 **Combining Effects** (Line 27500) - Effect composition
+  - Prerequisites: Effect basics, pipelines
+  - ~500 lines, ~13K tokens
 
-### Requirements Management (Lines 28000-32000)
-- **Introduction to Context** (Line 28000) - Dependency management
-- **Services** (Line 28500) - Service pattern
-- **Context** (Line 29000) - Context propagation
-- **Layers** (Line 29500) - Layer composition
-- **Managing Services** (Line 30000) - Service lifecycle
-- **Building Layers** (Line 30500) - Layer construction
-- **Providing Context** (Line 31000) - Context provision
-- **Default Services** (Line 31500) - Built-in services
+### Requirements Management (Lines 28000-32000) [~4,000 lines, ~100K tokens]
+- 🟡 **Introduction to Context** (Line 28000) - Dependency management
+  - Prerequisites: Effect basics
+  - ~500 lines, ~13K tokens
+- 🟡 **Services** (Line 28500) - Service pattern
+  - Prerequisites: Context
+  - ~500 lines, ~13K tokens
+- 🟡 **Context** (Line 29000) - Context propagation
+  - Prerequisites: Effect type
+  - ~500 lines, ~13K tokens
+- 🟡 **Layers** (Line 29500) - Layer composition
+  - Prerequisites: Services, Context
+  - ~500 lines, ~13K tokens
+- 🟡 **Managing Services** (Line 30000) - Service lifecycle
+  - Prerequisites: Services, Layers
+  - ~500 lines, ~13K tokens
+- 🔴 **Building Layers** (Line 30500) - Layer construction
+  - Prerequisites: Services, Context, Layers
+  - ~500 lines, ~13K tokens
+- 🟡 **Providing Context** (Line 31000) - Context provision
+  - Prerequisites: Context, Services
+  - ~500 lines, ~13K tokens
+- 🟢 **Default Services** (Line 31500) - Built-in services
+  - Prerequisites: Services basics
+  - ~500 lines, ~13K tokens
 
-### Scheduling (Lines 32000-34000)
-- **Introduction to Scheduling** (Line 32000) - Scheduling overview
-- **Schedule** (Line 32500) - Schedule types
-- **Built-in Schedules** (Line 33000) - Predefined schedules
-- **Schedule Combinators** (Line 33500) - Combining schedules
+### Scheduling (Lines 32000-34000) [~2,000 lines, ~50K tokens]
+- 🟢 **Introduction to Scheduling** (Line 32000) - Scheduling overview
+  - Prerequisites: Effect basics
+  - ~500 lines, ~13K tokens
+- 🟡 **Schedule** (Line 32500) - Schedule types
+  - Prerequisites: Scheduling intro
+  - ~500 lines, ~13K tokens
+- 🟡 **Built-in Schedules** (Line 33000) - Predefined schedules
+  - Prerequisites: Schedule basics
+  - ~500 lines, ~13K tokens
+- 🔴 **Schedule Combinators** (Line 33500) - Combining schedules
+  - Prerequisites: Schedule types, combinators
+  - ~500 lines, ~13K tokens
 
-### State Management (Lines 34000-36000)
-- **Ref** (Line 34000) - Mutable references
-- **SynchronizedRef** (Line 34500) - Synchronized state
-- **SubscriptionRef** (Line 35000) - Observable state
+### State Management (Lines 34000-36000) [~2,000 lines, ~50K tokens]
+- 🟡 **Ref** (Line 34000) - Mutable references
+  - Prerequisites: Effect basics
+  - ~500 lines, ~13K tokens
+- 🔴 **SynchronizedRef** (Line 34500) - Synchronized state
+  - Prerequisites: Ref, concurrency
+  - ~500 lines, ~13K tokens
+- 🔴 **SubscriptionRef** (Line 35000) - Observable state
+  - Prerequisites: Ref, subscriptions
+  - ~500 lines, ~13K tokens
 
-### Streaming (Lines 36000-42000)
-- **Introduction to Streams** (Line 36000) - Stream processing
-- **Creating Streams** (Line 36500) - Stream construction
-- **Stream Operations** (Line 37000) - Transformations
-- **Error Handling in Streams** (Line 38000) - Stream errors
-- **Pipeline Operators** (Line 39000) - Stream pipelines
-- **Sinks** (Line 40000) - Stream consumers
-- **Channels** (Line 41000) - Communication channels
+### Streaming (Lines 36000-42000) [~6,000 lines, ~150K tokens]
+- 🟡 **Introduction to Streams** (Line 36000) - Stream processing
+  - Prerequisites: Effect basics
+  - ~500 lines, ~13K tokens
+- 🟡 **Creating Streams** (Line 36500) - Stream construction
+  - Prerequisites: Stream intro
+  - ~500 lines, ~13K tokens
+- 🟡 **Stream Operations** (Line 37000) - Transformations
+  - Prerequisites: Stream basics
+  - ~1,000 lines, ~25K tokens
+- 🟡 **Error Handling in Streams** (Line 38000) - Stream errors
+  - Prerequisites: Stream operations, error handling
+  - ~1,000 lines, ~25K tokens
+- 🟡 **Pipeline Operators** (Line 39000) - Stream pipelines
+  - Prerequisites: Streams, pipelines
+  - ~1,000 lines, ~25K tokens
+- 🔴 **Sinks** (Line 40000) - Stream consumers
+  - Prerequisites: Streams, operations
+  - ~1,000 lines, ~25K tokens
+- 🔴 **Channels** (Line 41000) - Communication channels
+  - Prerequisites: Streams, concurrency
+  - ~1,000 lines, ~25K tokens
 
-### Testing (Lines 42000-44000)
-- **Introduction to Testing** (Line 42000) - Testing overview
-- **TestContext** (Line 42500) - Test utilities
-- **TestClock** (Line 43000) - Time control
-- **TestRandom** (Line 43500) - Deterministic randomness
+### Testing (Lines 42000-44000) [~2,000 lines, ~50K tokens]
+- 🟢 **Introduction to Testing** (Line 42000) - Testing overview
+  - Prerequisites: Effect basics
+  - ~500 lines, ~13K tokens
+- 🟡 **TestContext** (Line 42500) - Test utilities
+  - Prerequisites: Testing intro
+  - ~500 lines, ~13K tokens
+- 🟡 **TestClock** (Line 43000) - Time control
+  - Prerequisites: Clock service, testing
+  - ~500 lines, ~13K tokens
+- 🟡 **TestRandom** (Line 43500) - Deterministic randomness
+  - Prerequisites: Random service, testing
+  - ~500 lines, ~13K tokens
 
-### Traits (Lines 44000-50282)
-- **Equal** (Line 44000) - Equality trait
-- **Hash** (Line 50217) - Hashing trait
+### Traits (Lines 44000-50282) [~6,282 lines, ~157K tokens]
+- 🟡 **Equal** (Line 44000) - Equality trait
+  - Prerequisites: TypeScript equality concepts
+  - ~6,217 lines, ~155K tokens
+- 🟡 **Hash** (Line 50217) - Hashing trait
+  - Prerequisites: Equal trait
+  - ~66 lines, ~2K tokens
 
 ---
 
