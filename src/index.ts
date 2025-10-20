@@ -20,6 +20,11 @@ export const configSchema = z.object({
     .optional()
     .default(false)
     .describe("Disable thought output to stderr (useful for production deployments)"),
+  maxHistorySize: z.number()
+    .int()
+    .positive()
+    .optional()
+    .describe("Maximum number of thoughts to retain per session (FIFO eviction). Unlimited if not specified."),
 });
 
 interface ThoughtData {
@@ -46,9 +51,11 @@ class ClearThoughtServer {
   private disableThoughtLogging: boolean;
   private patternsCookbook: string;
   private readonly DEFAULT_SESSION_ID = "default";
+  private maxHistorySize?: number;
 
-  constructor(disableThoughtLogging: boolean = false) {
+  constructor(disableThoughtLogging: boolean = false, maxHistorySize?: number) {
     this.disableThoughtLogging = disableThoughtLogging;
+    this.maxHistorySize = maxHistorySize;
     // Use imported cookbook content (works for both STDIO and HTTP builds)
     this.patternsCookbook = PATTERNS_COOKBOOK;
   }
@@ -139,6 +146,14 @@ class ClearThoughtServer {
       }
 
       session.thoughtHistory.push(validatedInput);
+
+      // Apply FIFO eviction if maxHistorySize is set
+      if (this.maxHistorySize && session.thoughtHistory.length > this.maxHistorySize) {
+        const evicted = session.thoughtHistory.shift(); // Remove oldest thought
+        if (!this.disableThoughtLogging && evicted) {
+          console.error(chalk.gray(`⚠️  Evicted thought ${evicted.thoughtNumber} (history size limit: ${this.maxHistorySize})`));
+        }
+      }
 
       if (validatedInput.branchFromThought && validatedInput.branchId) {
         if (!session.branches[validatedInput.branchId]) {
@@ -455,7 +470,7 @@ export default function createServer({
     }
   );
 
-  const thinkingServer = new ClearThoughtServer(config.disableThoughtLogging);
+  const thinkingServer = new ClearThoughtServer(config.disableThoughtLogging, config.maxHistorySize);
 
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
     tools: [CLEAR_THOUGHT_TOOL, RESET_SESSION_TOOL],
@@ -590,13 +605,16 @@ TIP: The patterns cookbook guide is automatically provided at thought 1 for deta
 
 // STDIO transport for backward compatibility
 async function runServer() {
-  // Get configuration from environment variable (backward compatible)
+  // Get configuration from environment variables (backward compatible)
   const disableThoughtLogging = (process.env.DISABLE_THOUGHT_LOGGING || "").toLowerCase() === "true";
+  const maxHistorySizeEnv = process.env.MAX_HISTORY_SIZE;
+  const maxHistorySize = maxHistorySizeEnv ? parseInt(maxHistorySizeEnv, 10) : undefined;
 
   // Create server using the exported function
   const server = createServer({
     config: {
       disableThoughtLogging,
+      maxHistorySize,
     },
   });
 
