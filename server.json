@@ -1,0 +1,17 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
+  "name": "io.github.kastalien-research/clear-thought-two",
+  "title": "Clear Thought 2.0",
+  "description": "Sequential thinking and problem-solving through detailed, step-by-step thinking process with support for revisions, branching, and multi-path reasoning",
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@kastalien-research/clear-thought-two",
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

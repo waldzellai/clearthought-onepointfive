@@ -1,0 +1,52 @@
+name: Publish to MCP Registry
+
+on:
+  push:
+    tags: ["v*"]  # Triggers on version tags like v1.0.0
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write  # Required for GitHub OIDC authentication with MCP registry
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm run test --if-present
+
+      - name: Build package (stdio version for npm)
+        run: npm run build:stdio
+
+      - name: Sync version in server.json with package version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          npm version $VERSION --no-git-tag-version --allow-same-version
+          node -e "const fs=require('fs'); const s=JSON.parse(fs.readFileSync('server.json')); s.version='$VERSION'; s.packages[0].version='$VERSION'; fs.writeFileSync('server.json', JSON.stringify(s, null, 2));"
+
+      - name: Publish to npm
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Install MCP Publisher
+        run: |
+          curl -L "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher
+
+      - name: Login to MCP Registry
+        run: ./mcp-publisher login github-oidc
+
+      - name: Publish to MCP Registry
+        run: ./mcp-publisher publish

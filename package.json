@@ -6,6 +6,7 @@
   "author": "glassBead at Kastalien Research",
   "homepage": "https://github.com/Kastalien-Research",
   "bugs": "https://github.com/Kastalien-Research/clear-thought-two/issues",
+  "mcpName": "io.github.kastalien-research/clear-thought-two",
   "type": "module",
   "module": "src/index.ts",
   "bin": {
