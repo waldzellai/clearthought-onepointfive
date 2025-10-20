@@ -204,6 +204,65 @@ class ClearThoughtServer {
       };
     }
   }
+
+  public resetSession(sessionId?: string): { content: Array<any>; isError?: boolean } {
+    try {
+      if (sessionId) {
+        // Reset specific session
+        if (this.sessions.has(sessionId)) {
+          this.sessions.delete(sessionId);
+          return {
+            content: [{
+              type: "text",
+              text: JSON.stringify({
+                status: 'success',
+                message: `Session '${sessionId}' has been reset`,
+                sessionId: sessionId
+              }, null, 2)
+            }]
+          };
+        } else {
+          return {
+            content: [{
+              type: "text",
+              text: JSON.stringify({
+                status: 'success',
+                message: `Session '${sessionId}' does not exist (nothing to reset)`,
+                sessionId: sessionId
+              }, null, 2)
+            }]
+          };
+        }
+      } else {
+        // Reset all sessions
+        const sessionCount = this.sessions.size;
+        const sessionIds = Array.from(this.sessions.keys());
+        this.sessions.clear();
+        return {
+          content: [{
+            type: "text",
+            text: JSON.stringify({
+              status: 'success',
+              message: `All sessions have been reset`,
+              sessionsCleared: sessionCount,
+              sessionIds: sessionIds
+            }, null, 2)
+          }]
+        };
+      }
+    } catch (error) {
+      return {
+        content: [{
+          type: "text",
+          text: JSON.stringify({
+            error: error instanceof Error ? error.message : String(error),
+            status: 'failed'
+          }, null, 2)
+        }],
+        isError: true
+      };
+    }
+  }
 }
 
 const THINK_START_PROMPT = {
@@ -217,6 +276,29 @@ const THINK_START_PROMPT = {
       required: true
     }
   ]
+};
+
+const RESET_SESSION_TOOL: Tool = {
+  name: "reset_session",
+  description: `Reset thought history and branches for a specific session or all sessions.
+
+Use this tool to clear accumulated state when:
+- Starting a new unrelated reasoning task
+- Cleaning up after completing a reasoning session
+- Preventing state pollution between different tasks
+- Managing memory in long-running server instances
+
+If sessionId is provided, only that specific session is reset.
+If sessionId is omitted, ALL sessions are reset (use with caution).`,
+  inputSchema: {
+    type: "object",
+    properties: {
+      sessionId: {
+        type: "string",
+        description: "Optional session identifier to reset. If not provided, resets ALL sessions."
+      }
+    }
+  }
 };
 
 const CLEAR_THOUGHT_TOOL: Tool = {
@@ -376,12 +458,17 @@ export default function createServer({
   const thinkingServer = new ClearThoughtServer(config.disableThoughtLogging);
 
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
-    tools: [CLEAR_THOUGHT_TOOL],
+    tools: [CLEAR_THOUGHT_TOOL, RESET_SESSION_TOOL],
   }));
 
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
     if (request.params.name === "clear_thought") {
       return thinkingServer.processThought(request.params.arguments);
+    }
+    
+    if (request.params.name === "reset_session") {
+      const sessionId = request.params.arguments?.sessionId as string | undefined;
+      return thinkingServer.resetSession(sessionId);
     }
 
     return {
