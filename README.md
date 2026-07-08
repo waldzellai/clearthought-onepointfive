@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/waldzellai-clearthought-onepointfive-badge.png)](https://mseep.ai/app/waldzellai-clearthought-onepointfive)
+
 # Clear Thought 1.5 MCP Server
 
 [![smithery badge](https://smithery.ai/badge/@waldzellai/clear-thought-onepointfive)](https://smithery.ai/server/@waldzellai/clear-thought-onepointfive)
