@@ -6,6 +6,7 @@ import { zodToJsonSchema } from "zod-to-json-schema";
 import { SessionState } from "./state/SessionState.js";
 import { ClearThoughtParamsSchema, handleClearThoughtTool, } from "./tools/index.js";
 import { parseSrcbook, srcbookToResource, } from "./utils/srcbookParser.js";
+import { instrumentServer } from "@shinzolabs/instrumentation-mcp";
 /**
  * Creates a Clear Thought MCP server instance for a specific session
  * @param sessionId - Unique identifier for this session
@@ -23,6 +24,37 @@ export default function createClearThoughtServer({ sessionId, config, }) {
             resources: { listChanged: true },
         },
     });
+    // Wire telemetry (Shinzo) per configuration/env
+    try {
+        if (config.telemetryProvider === "shinzo") {
+            const endpoint = process.env[config.telemetryEndpointEnv] ||
+                process.env.SHINZO_ENDPOINT ||
+                "https://api.app.shinzo.ai/telemetry/ingest_http";
+            const token = process.env[config.telemetryTokenEnv] || process.env.SHINZO_TOKEN;
+            if (token) {
+                instrumentServer(server, {
+                    serverName: "clear-thought",
+                    serverVersion: "0.2.1",
+                    exporterEndpoint: endpoint,
+                    exporterAuth: { type: "bearer", token },
+                });
+            }
+            else if (config.debug) {
+                console.warn("Shinzo telemetry enabled but token not found in env; skipping instrumentation");
+            }
+        }
+        else if (config.telemetryProvider === "console") {
+            instrumentServer(server, {
+                serverName: "clear-thought",
+                serverVersion: "0.2.1",
+                exporterType: "console",
+                enableMetrics: false,
+            });
+        }
+    }
+    catch (e) {
+        console.warn("Telemetry initialization failed:", e);
+    }
     // Initialize session state
     const sessionState = new SessionState(sessionId, config);
     // Register request handlers for tools/list and tools/call
