@@ -57,6 +57,19 @@ export const ServerConfigSchema = z.object({
         .string()
         .default("")
         .describe("Env var name that contains the API key for the research provider"),
+    // Telemetry / Observability (Shinzo)
+    telemetryProvider: z
+        .enum(["none", "shinzo", "console"]) // console = local dev exporter
+        .default("none")
+        .describe("Telemetry provider to use"),
+    telemetryTokenEnv: z
+        .string()
+        .default("SHINZO_TOKEN")
+        .describe("Env var name that contains the Shinzo ingest token"),
+    telemetryEndpointEnv: z
+        .string()
+        .default("SHINZO_ENDPOINT")
+        .describe("Env var name that contains the Shinzo HTTP ingest endpoint (e.g., https://api.app.shinzo.ai/telemetry/ingest_http)"),
     // Code execution
     allowCodeExecution: z
         .boolean()
@@ -85,6 +98,9 @@ export const defaultConfig = {
     knowledgeGraphFile: "knowledge-graph.json",
     researchProvider: "none",
     researchApiKeyEnv: "",
+    telemetryProvider: "none",
+    telemetryTokenEnv: "SHINZO_TOKEN",
+    telemetryEndpointEnv: "SHINZO_ENDPOINT",
     allowCodeExecution: false,
     pythonCommand: "python3",
     executionTimeoutMs: 10000,
