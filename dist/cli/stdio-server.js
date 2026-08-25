@@ -2,6 +2,17 @@
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { defaultConfig } from "../src/config.js";
 import createClearThoughtServer from "../src/index.js";
+// Single idempotent shutdown path. Multiple lifecycle events can fire for one
+// disconnect (stdin end/close, transport/server close, SIGINT, SIGTERM); the
+// guard ensures only the first one shuts the process down.
+let shuttingDown = false;
+function shutdown(exitCode = 0) {
+    if (shuttingDown) {
+        return;
+    }
+    shuttingDown = true;
+    process.exit(exitCode);
+}
 async function main() {
     try {
         // Parse environment variables for diagnostic configuration
@@ -24,6 +35,15 @@ async function main() {
             sessionId: `stdio-session-${Date.now()}`,
             config,
         });
+        // MCP stdio lifecycle: when a client disconnects it closes stdin, so this
+        // process sees EOF on its input even though no signal is ever delivered.
+        // Exit on stdin end/close so we never linger as an orphaned process.
+        process.stdin.on("end", () => shutdown(0));
+        process.stdin.on("close", () => shutdown(0));
+        // Verified against @modelcontextprotocol/sdk@1.17.x: Protocol.connect()
+        // wraps the transport's onclose callback, and Protocol._onclose() invokes
+        // this server-level callback whenever the transport connection closes.
+        server.onclose = () => shutdown(0);
         // Create stdio transport
         const transport = new StdioServerTransport();
         // Connect server to transport
@@ -37,14 +57,14 @@ async function main() {
         process.exit(1);
     }
 }
-// Handle graceful shutdown
+// Handle graceful shutdown (routed through the shared idempotent guard)
 process.on("SIGINT", () => {
     console.error("\nShutting down Clear Thought stdio server...");
-    process.exit(0);
+    shutdown(0);
 });
 process.on("SIGTERM", () => {
     console.error("Received SIGTERM, shutting down...");
-    process.exit(0);
+    shutdown(0);
 });
 // Start the server
 main().catch((error) => {
